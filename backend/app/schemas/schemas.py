@@ -136,12 +136,12 @@ class HistorialEstadoOut(BaseModel):
 # --- CERTIFICADOS ---
 class CertificadoCreate(BaseModel):
     production_uid: UUID
-    cliente: str = "ALIASE"
-    despacho: str = "336"
-    factura: Optional[str] = ""
+    cliente: str = ""
+    despacho: str = ""
+    factura: str = ""
     fecha: Optional[date] = None
-    aprobado_por: str = "Susana Avila C."
-    cargo: str = "DEPTO. CONTROL DE CALIDAD"
+    aprobado_por: str = ""
+    cargo: str = ""
 
 class CertificadoOut(BaseModel):
     uid: UUID

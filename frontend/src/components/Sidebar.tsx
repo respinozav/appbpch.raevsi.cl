@@ -139,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-left transition group ${
+                className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-left transition group cursor-pointer ${
                   isActive
                     ? 'bg-[#EEF6F0] text-[#0D3B22] font-bold shadow-xs'
                     : 'text-neutral-700 hover:bg-neutral-100/70 hover:text-[#0F1F16] font-medium'
@@ -216,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
         {/* Hamburger Trigger */}
         <button
           onClick={() => setMobileOpen(true)}
-          className="p-2 -ml-2 rounded-xl text-neutral-700 hover:bg-neutral-100 transition"
+          className="p-2 -ml-2 rounded-xl text-neutral-700 hover:bg-neutral-100 transition cursor-pointer"
           aria-label="Abrir menú"
         >
           <Menu className="w-6 h-6 text-[#0D3B22]" />
@@ -234,7 +234,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
         {/* User shortcut */}
         <button
           onClick={() => onNavigate('perfil')}
-          className="w-8 h-8 rounded-full bg-[#EEF6F0] border border-[#15803D]/30 text-[#0D3B22] font-bold text-xs flex items-center justify-center"
+          className="w-8 h-8 rounded-full bg-[#EEF6F0] border border-[#15803D]/30 text-[#0D3B22] font-bold text-xs flex items-center justify-center cursor-pointer"
         >
           {user?.nombre_completo?.charAt(0) || 'U'}
         </button>
@@ -250,7 +250,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm"
+              className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm cursor-pointer"
             />
 
             {/* Slide-in Sheet */}
@@ -264,7 +264,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
               {/* Close Button top-right inside drawer */}
               <button
                 onClick={() => setMobileOpen(false)}
-                className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition z-20"
+                className="absolute top-4 right-4 p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition z-20 cursor-pointer"
                 aria-label="Cerrar menú"
               >
                 <X className="w-5 h-5" />

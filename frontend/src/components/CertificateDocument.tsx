@@ -5,10 +5,21 @@ import { Printer, CheckCircle, ShieldCheck } from 'lucide-react';
 interface CertificateDocumentProps {
   data: CertificateData;
   onPrint?: () => void;
+  isComplete?: boolean;
+  onCompleteRequest?: () => void;
 }
 
-export const CertificateDocument: React.FC<CertificateDocumentProps> = ({ data, onPrint }) => {
+export const CertificateDocument: React.FC<CertificateDocumentProps> = ({ 
+  data, 
+  onPrint, 
+  isComplete = true,
+  onCompleteRequest 
+}) => {
   const handlePrint = () => {
+    if (!isComplete && onCompleteRequest) {
+      onCompleteRequest();
+      return;
+    }
     if (onPrint) {
       onPrint();
     } else {
@@ -26,7 +37,17 @@ export const CertificateDocument: React.FC<CertificateDocumentProps> = ({ data, 
         </div>
         <button
           onClick={handlePrint}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95"
+          disabled={!isComplete}
+          title={
+            isComplete
+              ? 'Imprimir o Exportar PDF'
+              : 'Debe completar los datos obligatorios (Cliente, Despacho, Factura, Responsable y Cargo) antes de imprimir'
+          }
+          className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl shadow-sm transition ${
+            isComplete
+              ? 'bg-[#0D3B22] text-white hover:bg-[#15803D] cursor-pointer active:scale-95'
+              : 'bg-neutral-300 text-neutral-500 cursor-not-allowed opacity-60'
+          }`}
         >
           <Printer className="w-4 h-4" />
           Imprimir / Exportar PDF
@@ -134,17 +155,23 @@ export const CertificateDocument: React.FC<CertificateDocumentProps> = ({ data, 
             <div className="grid grid-cols-12">
               <span className="col-span-4 font-bold">Cliente</span>
               <span className="col-span-1">:</span>
-              <span className="col-span-7 font-semibold uppercase">{data.metadatos_despacho.cliente || 'ALIASE'}</span>
+              <span className="col-span-7 font-semibold uppercase">
+                {data.metadatos_despacho.cliente || '(PENDIENTE DE ASIGNACIÓN)'}
+              </span>
             </div>
             <div className="grid grid-cols-12">
               <span className="col-span-4 font-bold">Despacho</span>
               <span className="col-span-1">:</span>
-              <span className="col-span-7 font-mono">{data.metadatos_despacho.despacho || '336'}</span>
+              <span className="col-span-7 font-mono">
+                {data.metadatos_despacho.despacho || '(PENDIENTE)'}
+              </span>
             </div>
             <div className="grid grid-cols-12">
               <span className="col-span-4 font-bold">Factura</span>
               <span className="col-span-1">:</span>
-              <span className="col-span-7 font-mono">{data.metadatos_despacho.factura || '-'}</span>
+              <span className="col-span-7 font-mono">
+                {data.metadatos_despacho.factura || '(PENDIENTE)'}
+              </span>
             </div>
             <div className="grid grid-cols-12">
               <span className="col-span-4 font-bold">Fecha</span>
@@ -157,14 +184,14 @@ export const CertificateDocument: React.FC<CertificateDocumentProps> = ({ data, 
           <div className="col-span-6 flex flex-col justify-end items-center text-center">
             <div className="w-64 border-b-2 border-black mb-1">
               <div className="text-[10px] text-neutral-400 italic mb-2 select-none">
-                Firmado digitalmente
+                {data.responsable.nombre ? 'Firmado digitalmente' : '(Firma pendiente)'}
               </div>
             </div>
             <div className="font-bold text-xs uppercase tracking-tight">
-              {data.responsable.nombre}
+              {data.responsable.nombre || '_______________________________'}
             </div>
             <div className="font-bold text-[9px] uppercase tracking-wider text-neutral-600">
-              {data.responsable.cargo}
+              {data.responsable.cargo || 'DEPTO. CONTROL DE CALIDAD'}
             </div>
           </div>
         </div>

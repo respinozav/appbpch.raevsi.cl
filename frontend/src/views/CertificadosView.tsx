@@ -4,7 +4,7 @@ import { api, CertificateData } from '../api/client';
 import { CertificateDocument } from '../components/CertificateDocument';
 import { 
   FileCheck, Search, Printer, RefreshCw, ChevronRight, CheckCircle2, 
-  ArrowLeft, Edit3, X, Save
+  ArrowLeft, Edit3, X, Save, AlertTriangle
 } from 'lucide-react';
 
 export const CertificadosView: React.FC = () => {
@@ -23,11 +23,11 @@ export const CertificadosView: React.FC = () => {
 
   // Edit Certificate Metadata modal/form
   const [showEditMetadata, setShowEditMetadata] = useState(false);
-  const [clientInput, setClientInput] = useState('ALIASE');
-  const [despachoInput, setDespachoInput] = useState('336');
+  const [clientInput, setClientInput] = useState('');
+  const [despachoInput, setDespachoInput] = useState('');
   const [facturaInput, setFacturaInput] = useState('');
-  const [responsableInput, setResponsableInput] = useState('Susana Avila C.');
-  const [cargoInput, setCargoInput] = useState('DEPTO. CONTROL DE CALIDAD');
+  const [responsableInput, setResponsableInput] = useState('');
+  const [cargoInput, setCargoInput] = useState('');
   const [savingCert, setSavingCert] = useState(false);
 
   const fetchLiberados = async () => {
@@ -64,11 +64,11 @@ export const CertificadosView: React.FC = () => {
     try {
       const data = await api.getCertificateData(productionUid);
       setCertData(data);
-      setClientInput(data.metadatos_despacho.cliente || 'ALIASE');
-      setDespachoInput(data.metadatos_despacho.despacho || '336');
+      setClientInput(data.metadatos_despacho.cliente || '');
+      setDespachoInput(data.metadatos_despacho.despacho || '');
       setFacturaInput(data.metadatos_despacho.factura || '');
-      setResponsableInput(data.responsable.nombre || 'Susana Avila C.');
-      setCargoInput(data.responsable.cargo || 'DEPTO. CONTROL DE CALIDAD');
+      setResponsableInput(data.responsable.nombre || '');
+      setCargoInput(data.responsable.cargo || '');
     } catch (err) {
       console.error('Error fetching cert data:', err);
     } finally {
@@ -76,9 +76,38 @@ export const CertificadosView: React.FC = () => {
     }
   };
 
+  const isCertificateComplete = Boolean(
+    certData &&
+    certData.metadatos_despacho.cliente?.trim() &&
+    certData.metadatos_despacho.despacho?.trim() &&
+    certData.metadatos_despacho.factura?.trim() &&
+    certData.responsable.nombre?.trim() &&
+    certData.responsable.cargo?.trim()
+  );
+
+  const handlePrintClick = () => {
+    if (!isCertificateComplete) {
+      setShowEditMetadata(true);
+      alert('Para imprimir o emitir el certificado oficial R-CAL-07, debe completar obligatoriamente: Nombre Cliente, N° Despacho, N° Factura, Responsable de Aprobación y Cargo / Departamento.');
+      return;
+    }
+    window.print();
+  };
+
   const handleSaveMetadata = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProductionUid) return;
+
+    if (
+      !clientInput.trim() ||
+      !despachoInput.trim() ||
+      !facturaInput.trim() ||
+      !responsableInput.trim() ||
+      !cargoInput.trim()
+    ) {
+      alert('Todos los campos son obligatorios: Nombre Cliente, N° Despacho, N° Factura, Responsable de Aprobación y Cargo / Departamento.');
+      return;
+    }
 
     setSavingCert(true);
     try {
@@ -138,6 +167,30 @@ export const CertificadosView: React.FC = () => {
       {/* VIEW A: CERTIFICATE DETAIL PREVIEW */}
       {selectedProductionUid && certData ? (
         <div className="space-y-6">
+          {/* Missing mandatory fields alert banner */}
+          {!isCertificateComplete && (
+            <div className="no-print p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div className="text-xs">
+                  <span className="font-bold block text-sm text-amber-950">
+                    Datos obligatorios pendientes de emisión
+                  </span>
+                  Para imprimir o emitir este certificado R-CAL-07, debe completar obligatoriamente: <strong>Nombre Cliente</strong>, <strong>N° Despacho</strong>, <strong>N° Factura</strong>, <strong>Responsable de Aprobación</strong> y <strong>Cargo / Departamento</strong>.
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditMetadata(true)}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition shrink-0 cursor-pointer flex items-center gap-1.5"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Completar Datos Obligatorios</span>
+              </button>
+            </div>
+          )}
+
           <div className="no-print bg-white rounded-2xl border border-[#E5ECE6] p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#EEF6F0] flex items-center justify-center text-[#15803D]">
@@ -148,7 +201,7 @@ export const CertificadosView: React.FC = () => {
                   Certificado de Análisis R-CAL-07 · {certData.item.articulo}
                 </div>
                 <div className="text-xs text-neutral-500 font-mono">
-                  Código Interno: #{certData.item.codigo_interno} · Lote: {certData.item.lote} · Cliente: {certData.metadatos_despacho.cliente}
+                  Código Interno: #{certData.item.codigo_interno} · Lote: {certData.item.lote} · Cliente: {certData.metadatos_despacho.cliente || '(Sin Asignar)'}
                 </div>
               </div>
             </div>
@@ -156,14 +209,24 @@ export const CertificadosView: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowEditMetadata(true)}
-                className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-[#E5ECE6] text-neutral-700 hover:bg-[#EEF6F0] transition flex items-center gap-1.5"
+                className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-[#E5ECE6] text-neutral-700 hover:bg-[#EEF6F0] transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5 text-[#15803D]" />
-                <span>Editar Cliente / Despacho</span>
+                <span>{isCertificateComplete ? 'Modificar Datos' : 'Completar Datos'}</span>
               </button>
               <button
-                onClick={() => window.print()}
-                className="px-4 py-2 text-xs font-semibold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] transition flex items-center gap-1.5 shadow-sm"
+                onClick={handlePrintClick}
+                disabled={!isCertificateComplete}
+                title={
+                  isCertificateComplete
+                    ? 'Imprimir o guardar en PDF'
+                    : 'Debe completar los datos obligatorios antes de imprimir'
+                }
+                className={`px-4 py-2 text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm transition ${
+                  isCertificateComplete
+                    ? 'bg-[#0D3B22] text-white hover:bg-[#15803D] cursor-pointer'
+                    : 'bg-neutral-300 text-neutral-500 cursor-not-allowed opacity-60'
+                }`}
               >
                 <Printer className="w-4 h-4" />
                 <span>Imprimir / PDF</span>
@@ -171,7 +234,12 @@ export const CertificadosView: React.FC = () => {
             </div>
           </div>
 
-          <CertificateDocument data={certData} />
+          <CertificateDocument
+            data={certData}
+            onPrint={handlePrintClick}
+            isComplete={isCertificateComplete}
+            onCompleteRequest={() => setShowEditMetadata(true)}
+          />
         </div>
       ) : (
         /* VIEW B: TABLE OF LIBERADOS */
@@ -345,16 +413,20 @@ export const CertificadosView: React.FC = () => {
               </div>
 
               <form onSubmit={handleSaveMetadata} className="space-y-4 text-xs">
+                <div className="p-2.5 rounded-xl bg-[#EEF6F0] border border-[#15803D]/20 text-[11px] text-[#0D3B22]">
+                  <strong>Control de Calidad:</strong> Los 5 campos son obligatorios para validar y habilitar la impresión del documento oficial R-CAL-07.
+                </div>
+
                 <div>
                   <label className="block font-semibold text-neutral-700 mb-1">
-                    Nombre del Cliente
+                    Nombre del Cliente <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={clientInput}
                     onChange={(e) => setClientInput(e.target.value)}
-                    placeholder="Ej. ALIASE"
+                    placeholder="Ej. ALIASE SPA"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] uppercase font-semibold"
                   />
                 </div>
@@ -362,26 +434,27 @@ export const CertificadosView: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block font-semibold text-neutral-700 mb-1">
-                      N° Despacho
+                      N° Despacho <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={despachoInput}
                       onChange={(e) => setDespachoInput(e.target.value)}
-                      placeholder="336"
+                      placeholder="Ej. 336"
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono"
                     />
                   </div>
                   <div>
                     <label className="block font-semibold text-neutral-700 mb-1">
-                      N° Factura (Opcional)
+                      N° Factura <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
+                      required
                       value={facturaInput}
                       onChange={(e) => setFacturaInput(e.target.value)}
-                      placeholder="FAC-9821"
+                      placeholder="Ej. FAC-9821"
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono"
                     />
                   </div>
@@ -389,28 +462,28 @@ export const CertificadosView: React.FC = () => {
 
                 <div>
                   <label className="block font-semibold text-neutral-700 mb-1">
-                    Responsable de Aprobación
+                    Responsable de Aprobación <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={responsableInput}
                     onChange={(e) => setResponsableInput(e.target.value)}
-                    placeholder="Susana Avila C."
+                    placeholder="Ej. Susana Avila C."
                     className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-semibold"
                   />
                 </div>
 
                 <div>
                   <label className="block font-semibold text-neutral-700 mb-1">
-                    Cargo / Departamento
+                    Cargo / Departamento <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={cargoInput}
                     onChange={(e) => setCargoInput(e.target.value)}
-                    placeholder="DEPTO. CONTROL DE CALIDAD"
+                    placeholder="Ej. DEPTO. CONTROL DE CALIDAD"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] uppercase"
                   />
                 </div>

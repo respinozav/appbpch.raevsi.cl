@@ -5,7 +5,7 @@ import {
   Factory, Award, Leaf, Layers, ArrowUpRight, 
   RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck, 
   Sliders, History, Clock, ArrowRight, TrendingUp, Calendar,
-  PieChart
+  PieChart, Download
 } from 'lucide-react';
 
 const getInitialMonthDates = () => {
@@ -29,6 +29,98 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
   const [loading, setLoading] = useState(true);
   const [donutHoverIndex, setDonutHoverIndex] = useState<number | null>(null);
   const [donutViewMode, setDonutViewMode] = useState<'turnos' | 'maquinas'>('turnos');
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportData = async () => {
+    setExporting(true);
+    try {
+      const res = await api.listBatches({
+        fecha_desde: fechaDesde || undefined,
+        fecha_hasta: fechaHasta || undefined,
+        limit: 1000,
+      });
+
+      const batches = res.items || [];
+      const rows: string[][] = [
+        [
+          "Código Tirada",
+          "Fecha",
+          "Lote Inicio",
+          "Lote Fin",
+          "Total Lotes",
+          "Artículo",
+          "Material",
+          "Color Bidón",
+          "Color Asa",
+          "Máquina",
+          "Turno",
+          "Operador",
+          "Cantidad Unitaria",
+          "Total Unidades",
+          "Estado Trazabilidad",
+        ],
+      ];
+
+      if (batches.length > 0) {
+        batches.forEach((b: any) => {
+          if (
+            materialFilter !== 'all' &&
+            b.material &&
+            !b.material.toLowerCase().includes(materialFilter.toLowerCase())
+          ) {
+            return;
+          }
+
+          const fechaStr = b.fecha ? new Date(b.fecha).toLocaleDateString('es-CL') : 'N/A';
+          rows.push([
+            String(b.codigo_interno || ''),
+            fechaStr,
+            String(b.lote_inicio || ''),
+            String(b.lote_fin || ''),
+            String(b.total_lotes || ''),
+            `"${(b.articulo || '').replace(/"/g, '""')}"`,
+            `"${(b.material || '').replace(/"/g, '""')}"`,
+            `"${(b.color_bidon || '').replace(/"/g, '""')}"`,
+            `"${(b.color_asa || '').replace(/"/g, '""')}"`,
+            String(b.numero_maquina || ''),
+            String(b.turno || ''),
+            String(b.operador || ''),
+            String(b.cantidad_unitaria || ''),
+            String((b.cantidad_unitaria || 0) * (b.total_lotes || 0)),
+            `"${(b.estado?.nombre || 'Producción').replace(/"/g, '""')}"`,
+          ]);
+        });
+      } else if (data?.tendencia_diaria) {
+        rows.length = 0;
+        rows.push(["Fecha", "Unidades Producidas", "Lotes", "Meta Operativa", "Cumplimiento %"]);
+        data.tendencia_diaria.forEach((td) => {
+          rows.push([
+            td.fecha,
+            String(td.unidades),
+            String(td.lotes),
+            String(td.meta),
+            `${td.cumplimiento_pct}%`,
+          ]);
+        });
+      }
+
+      const csvContent = "\uFEFF" + rows.map((r) => r.join(";")).join("\r\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateTag = new Date().toISOString().split("T")[0];
+      link.setAttribute("href", url);
+      link.setAttribute("download", `reporte_produccion_bioplast_${dateTag}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Error al exportar datos:", err);
+      alert("No fue posible exportar los datos. Por favor reintente.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -200,10 +292,21 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
             ))}
           </select>
 
+          {/* Export button */}
+          <button
+            onClick={handleExportData}
+            disabled={exporting || loading}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-[#15803D]/30 bg-[#EEF6F0] text-[#0D3B22] hover:bg-[#15803D] hover:text-white transition shadow-2xs cursor-pointer disabled:opacity-50"
+            title="Exportar lotes del período a CSV / Excel"
+          >
+            <Download className={`w-3.5 h-3.5 ${exporting ? 'animate-bounce' : ''}`} />
+            <span>{exporting ? 'Exportando...' : 'Exportar Lotes'}</span>
+          </button>
+
           {/* Refresh button */}
           <button
             onClick={fetchMetrics}
-            className="p-2 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-xl border border-[#E5ECE6] transition"
+            className="p-2 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-xl border border-[#E5ECE6] transition cursor-pointer"
             title="Actualizar datos"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />

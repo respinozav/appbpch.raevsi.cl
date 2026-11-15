@@ -36,7 +36,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         <div className="flex items-center gap-3">
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v2.4 Vigente</span>
+            <span>Versión v2.5 Vigente</span>
           </div>
           <button
             onClick={handlePrint}
@@ -81,7 +81,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               Código: <span className="font-bold">MAN-SGI-01</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
-              Versión: <span className="font-bold">v2.4</span>
+              Versión: <span className="font-bold">v2.5</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
               Actualización: <span className="font-bold">15-Nov-2026</span>
@@ -125,13 +125,21 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
                 <td className="p-1 text-left px-2">Integración de plataforma web, módulo R-CAL-07 y sábana de trazabilidad.</td>
               </tr>
-              <tr className="bg-emerald-50/40">
-                <td className="border-r border-black p-1 font-mono font-bold">v2.4</td>
-                <td className="border-r border-black p-1 font-bold">15-Nov-2026</td>
+              <tr className="border-b border-neutral-200">
+                <td className="border-r border-black p-1 font-mono">v2.4</td>
+                <td className="border-r border-black p-1">15-Nov-2026</td>
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Susana Avila C.</td>
                 <td className="border-r border-black p-1">Dirección General</td>
-                <td className="p-1 text-left px-2 font-medium">Ajustes de inactividad de sesión, filtros fecha mes actual, gráfico donut de turnos y manual unificado.</td>
+                <td className="p-1 text-left px-2">Ajustes de inactividad de sesión, filtros fecha mes actual, gráfico donut de turnos y manual unificado.</td>
+              </tr>
+              <tr className="bg-emerald-50/40">
+                <td className="border-r border-black p-1 font-mono font-bold">v2.5</td>
+                <td className="border-r border-black p-1 font-bold">15-Nov-2026</td>
+                <td className="border-r border-black p-1">Tech Lead TI</td>
+                <td className="border-r border-black p-1">Control de Calidad</td>
+                <td className="border-r border-black p-1">Gerencia Operaciones</td>
+                <td className="p-1 text-left px-2 font-medium">Bento Header con Lotes Retenidos, evolución diaria full-width, exportación CSV, validación estricta de 5 campos en certificados e interactividad global de menú.</td>
               </tr>
             </tbody>
           </table>
@@ -161,43 +169,43 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            El Dashboard centraliza las métricas en tiempo real de la planta de producción. Brinda a la gerencia y supervisores una radiografía instantánea del volumen procesado, la eficiencia de los turnos y el cumplimiento frente a la meta operacional.
+            El Dashboard centraliza las métricas en tiempo real de la planta de producción. Brinda a la gerencia y supervisores una radiografía instantánea del volumen procesado, la eficiencia de los turnos, el cumplimiento frente a la meta operacional y la exportación masiva de datos auditados.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <div className="border border-neutral-200 p-2.5 rounded bg-white">
               <div className="font-bold text-[10.5px] text-[#0D3B22] mb-1">
-                A. Evolución de Producción Diaria vs. Meta (30.000 UND/día)
+                A. Cuadrícula Bento Header (4 Tarjetas Operativas Clave)
               </div>
               <p className="text-[10px] text-neutral-600">
-                Visualiza la producción real diaria en barras contrastadas contra la línea punteada de meta de planta. Cuenta con sincronización inteligente que ante desfases temporales ancla automáticamente la visualización al mes activo para garantizar continuidad analítica.
+                Centraliza las 4 métricas críticas de flujo: <strong>Producción Acumulada</strong> (unidades totales y tiradas), <strong>Lotes Liberados</strong> (aprobación Ficha F-0101 con porcentaje), <strong>En Proceso / Tránsito</strong> (lotes activos en planta) y <strong>Lotes Retenidos</strong> (alerta preventiva de no conformidad con bloqueo de despacho).
               </p>
             </div>
 
             <div className="border border-neutral-200 p-2.5 rounded bg-white">
               <div className="font-bold text-[10.5px] text-[#0D3B22] mb-1">
-                B. Gráfico de Barras por Estados de Trazabilidad
+                B. Evolución de Producción Diaria vs. Meta (30.000 UND/día)
               </div>
               <p className="text-[10px] text-neutral-600">
-                Refleja el volumen de lotes segmentado en las 5 etapas operativas (<em>Producción, Almacenaje, Despacho, Liberado, Retenido</em>) con porcentajes relativos y código de colores estandarizado.
+                Visualización a <strong>ancho completo (full-width)</strong> con barras diarias estilizadas y línea punteada de meta de planta. Incluye cálculo automático de días activos, promedio diario y tooltips detallados por tirada.
               </p>
             </div>
 
             <div className="border border-neutral-200 p-2.5 rounded bg-white">
               <div className="font-bold text-[10.5px] text-[#0D3B22] mb-1">
-                C. Gráfico Donut de Eficiencia por Turnos & Líneas
+                C. Simetría Inferior: Estados, Auditoría y Gráfico Donut
               </div>
               <p className="text-[10px] text-neutral-600">
-                Distribución porcentual de unidades y lotes fabricados entre Turno 1 (Mañana), Turno 2 (Tarde) y Turno 3 (Noche), acompañado del desglose por máquina de soplado.
+                Estructura balanceada en dos columnas coordinadas en altura: la columna izquierda integra el <strong>Gráfico de Barras de Trazabilidad</strong> arriba y el <strong>Timeline de Actividad Reciente</strong> en tiempo real abajo, alineada con el <strong>Donut Chart de Eficiencia por Turno y Máquina</strong> en la columna derecha.
               </p>
             </div>
 
             <div className="border border-neutral-200 p-2.5 rounded bg-white">
               <div className="font-bold text-[10.5px] text-[#0D3B22] mb-1">
-                D. Cumplimiento Ley REP N° 20.920
+                D. Exportación de Lotes a CSV / Excel con UTF-8 BOM
               </div>
               <p className="text-[10px] text-neutral-600">
-                Indicadores automáticos de kilogramos de plástico reciclado reincorporado a la cadena productiva y equivalencia en reducción de huella de carbono ($CO_2$).
+                Botón integrado en la barra de filtros que descarga instantáneamente la sábana de lotes del período seleccionado en formato delimitado por punto y coma, con codificación compatible con acentos y caracteres de Microsoft Excel.
               </p>
             </div>
           </div>
@@ -303,17 +311,25 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
             Módulo normativo reservado para la emisión de los certificados oficiales de conformidad técnica e inocuidad alimentaria que acompañan a cada despacho comercial.
           </p>
 
-          <div className="p-3 bg-amber-50 border border-amber-300 rounded text-[10.5px] text-amber-900 mb-3">
-            <strong className="block mb-1">REGLA DE NEGOCIO CRÍTICA DE CALIDAD:</strong>
-            Únicamente los lotes que se encuentren en estado <strong>"Despacho"</strong> o <strong>"Liberado"</strong> son elegibles para emitir certificados R-CAL-07. Lotes en <em>Producción</em>, <em>Almacenaje</em> o <em>Retenido</em> están estrictamente bloqueados por el sistema para impedir la salida de envases no aprobados por el Departamento de Calidad.
+          <div className="p-3 bg-amber-50 border border-amber-300 rounded text-[10.5px] text-amber-900 mb-3 space-y-1.5">
+            <strong className="block mb-1 text-amber-950 font-bold uppercase tracking-wide">REGLA DE NEGOCIO CRÍTICA DE CALIDAD & BLOQUEO PREVENTIVO:</strong>
+            <p>
+              1. <strong>Elegibilidad Operativa:</strong> Únicamente los lotes en estado <strong>"Despacho"</strong> o <strong>"Liberado"</strong> son elegibles para emitir certificados R-CAL-07. Lotes en <em>Producción</em>, <em>Almacenaje</em> o <em>Retenido</em> están estrictamente bloqueados por el sistema.
+            </p>
+            <p>
+              2. <strong>Campos Obligatorios Ineludibles:</strong> No es posible imprimir ni emitir un certificado si alguno de los siguientes 5 campos se encuentra vacío: <strong>Nombre del Cliente</strong>, <strong>N° de Despacho</strong>, <strong>N° de Factura</strong>, <strong>Responsable de Aprobación</strong> y <strong>Cargo / Departamento</strong>.
+            </p>
+            <p>
+              3. <strong>Valores Vacíos por Defecto:</strong> Para salvaguardar la veracidad legal y técnica del documento, el sistema inicializa todos estos campos vacíos por defecto, prohibiendo precargas automáticas no auditadas.
+            </p>
           </div>
 
           <div className="space-y-1.5 text-[10.5px] text-neutral-700">
             <p>
-              • <strong>Parámetros de Emisión:</strong> Requiere indicar Cliente (ej. ALIASE), N° de Guía de Despacho, N° de Factura, Fecha de entrega y responsable firmante (por defecto Susana Avila C. - Depto. Control de Calidad).
+              • <strong>Validación en Tiempo Real:</strong> El botón <em>"Imprimir / PDF"</em> permanece deshabilitado hasta que se guarden los 5 metadatos obligatorios en la base de datos de producción.
             </p>
             <p>
-              • <strong>Estandarización del Documento:</strong> Se removió cualquier correlativo numérico superfluo, manteniendo el diseño sobrio con código oficial R-CAL-07, declaraciones de conformidad técnica, condiciones de almacenamiento y firma digital de jefatura.
+              • <strong>Estandarización del Documento:</strong> Diseño corporativo formal con código oficial R-CAL-07, declaraciones de conformidad técnica Ficha Nº 0101, condiciones de almacenamiento hasta 18 meses y firma digital de jefatura.
             </p>
           </div>
         </section>

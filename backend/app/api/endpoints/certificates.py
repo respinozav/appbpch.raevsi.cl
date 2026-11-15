@@ -89,14 +89,26 @@ def emit_certificate(
             detail="Solo se pueden emitir certificados para lotes en estado 'Despacho' o 'Liberado'."
         )
 
+    cliente = (cert_in.cliente or "").strip()
+    despacho = (cert_in.despacho or "").strip()
+    factura = (cert_in.factura or "").strip()
+    aprobado_por = (cert_in.aprobado_por or "").strip()
+    cargo = (cert_in.cargo or "").strip()
+
+    if not cliente or not despacho or not factura or not aprobado_por or not cargo:
+        raise HTTPException(
+            status_code=400,
+            detail="Todos los campos son obligatorios para emitir o actualizar el certificado: Nombre Cliente, N° Despacho, N° Factura, Responsable de Aprobación y Cargo / Departamento."
+        )
+
     existing = db.query(Certificado).filter(Certificado.production_uid == prod.uid).first()
     if existing:
-        existing.cliente = cert_in.cliente.strip()
-        existing.despacho = cert_in.despacho.strip()
-        existing.factura = cert_in.factura.strip() if cert_in.factura else ""
+        existing.cliente = cliente
+        existing.despacho = despacho
+        existing.factura = factura
         existing.fecha = cert_in.fecha or date.today()
-        existing.aprobado_por = cert_in.aprobado_por.strip()
-        existing.cargo = cert_in.cargo.strip()
+        existing.aprobado_por = aprobado_por
+        existing.cargo = cargo
         db.commit()
         db.refresh(existing)
         return CertificadoOut(
@@ -124,12 +136,12 @@ def emit_certificate(
         production_uid=prod.uid,
         codigo_interno=prod.codigo_interno,
         lote=prod.lote,
-        cliente=cert_in.cliente.strip() or "ALIASE",
-        despacho=cert_in.despacho.strip() or "336",
-        factura=cert_in.factura.strip() if cert_in.factura else "",
+        cliente=cliente,
+        despacho=despacho,
+        factura=factura,
         fecha=cert_in.fecha or date.today(),
-        aprobado_por=cert_in.aprobado_por.strip() or "Susana Avila C.",
-        cargo=cert_in.cargo.strip() or "DEPTO. CONTROL DE CALIDAD"
+        aprobado_por=aprobado_por,
+        cargo=cargo
     )
     db.add(new_cert)
     db.commit()
@@ -162,12 +174,12 @@ def get_certificate_data(
 
     cert = db.query(Certificado).filter(Certificado.production_uid == prod.uid).first()
     num_cert = cert.numero_certificado if cert else "0001"
-    cliente = cert.cliente if cert else "ALIASE"
-    despacho = cert.despacho if cert else "336"
+    cliente = cert.cliente if cert else ""
+    despacho = cert.despacho if cert else ""
     factura = cert.factura if cert else ""
     fecha_cert = cert.fecha.isoformat() if cert and cert.fecha else date.today().isoformat()
-    aprobado_por = cert.aprobado_por if cert else "Susana Avila C."
-    cargo = cert.cargo if cert else "DEPTO. CONTROL DE CALIDAD"
+    aprobado_por = cert.aprobado_por if cert else ""
+    cargo = cert.cargo if cert else ""
 
     return {
         "header": {
