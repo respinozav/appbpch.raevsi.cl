@@ -4,7 +4,7 @@ import { api, DashboardMetricsData } from '../api/client';
 import { 
   Factory, Award, Leaf, Layers, ArrowUpRight, 
   RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck, 
-  Sliders, History, Clock, ArrowRight, TrendingUp, Calendar, X
+  Sliders, History, Clock, ArrowRight, TrendingUp, Calendar
 } from 'lucide-react';
 
 const getInitialMonthDates = () => {
@@ -169,18 +169,7 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
               ))}
             </div>
 
-            {/* Clear Range Button */}
-            {(fechaDesde || fechaHasta) && (
-              <button
-                type="button"
-                onClick={() => handlePreset('all')}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                title="Limpiar filtros de fecha"
-              >
-                <X className="w-3.5 h-3.5" />
-                <span>Limpiar</span>
-              </button>
-            )}
+
           </div>
 
           {/* Material dropdown */}
