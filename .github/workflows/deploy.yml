@@ -27,3 +27,5 @@ jobs:
             git reset --hard origin/main || git pull origin main
             cd /var/www/appbpch.raevsi.cl/deploy
             bash deploy.sh
+            sudo systemctl daemon-reload
+            sudo systemctl restart appbpch || true

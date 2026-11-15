@@ -329,10 +329,19 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  listBatches: (params: { estado_uid?: string; search?: string; page?: number; limit?: number }) => {
+  listBatches: (params: { 
+    estado_uid?: string; 
+    search?: string; 
+    fecha_desde?: string; 
+    fecha_hasta?: string; 
+    page?: number; 
+    limit?: number 
+  }) => {
     const q = new URLSearchParams();
     if (params.estado_uid) q.append('estado_uid', params.estado_uid);
     if (params.search) q.append('search', params.search);
+    if (params.fecha_desde) q.append('fecha_desde', params.fecha_desde);
+    if (params.fecha_hasta) q.append('fecha_hasta', params.fecha_hasta);
     if (params.page) q.append('page', String(params.page));
     if (params.limit) q.append('limit', String(params.limit));
     return request<{ items: any[]; total: number; page: number; limit: number; pages: number }>(`/production/batches?${q.toString()}`);

@@ -6,11 +6,25 @@ import {
 import { ZebraLabel } from '../components/ZebraLabel';
 import { 
   Search, ChevronDown, ChevronRight, Layers, Printer, RefreshCw, 
-  History, ArrowUpDown, X, ExternalLink
+  History, ArrowUpDown, X, ExternalLink, Calendar, RotateCcw
 } from 'lucide-react';
+
+const getDefaultDates = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return {
+    desde: `${year}-${month}-01`,
+    hasta: `${year}-${month}-${day}`,
+  };
+};
 
 export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ initialCodigoInterno }) => {
   // Filters & Pagination
+  const defaultDates = getDefaultDates();
+  const [fechaDesde, setFechaDesde] = useState<string>(defaultDates.desde);
+  const [fechaHasta, setFechaHasta] = useState<string>(defaultDates.hasta);
   const [estados, setEstados] = useState<Estado[]>([]);
   const [selectedEstadoUid, setSelectedEstadoUid] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,6 +91,8 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
       const res = await api.listBatches({
         estado_uid: selectedEstadoUid || undefined,
         search: searchTerm.trim() || undefined,
+        fecha_desde: fechaDesde || undefined,
+        fecha_hasta: fechaHasta || undefined,
         page,
         limit,
       });
@@ -92,7 +108,7 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
 
   useEffect(() => {
     fetchBatches();
-  }, [selectedEstadoUid, page, limit]);
+  }, [selectedEstadoUid, fechaDesde, fechaHasta, page, limit]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,10 +257,10 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
         })}
       </div>
 
-      {/* Search & Pagination Control Bar */}
-      <div className="bg-white rounded-2xl border border-[#E5ECE6] p-4 mb-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Search, Date Range & Pagination Control Bar */}
+      <div className="bg-white rounded-2xl border border-[#E5ECE6] p-4 mb-6 shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
         {/* Search Input */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full md:w-96">
+        <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[240px] max-w-md">
           <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -255,9 +271,56 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
           />
         </form>
 
-        <div className="flex items-center gap-3 text-xs text-neutral-500 w-full md:w-auto justify-between md:justify-end">
+        {/* Date Range Filters (Desde / Hasta) */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5ECE6] bg-[#F7FAF7]/70 text-xs">
+            <Calendar className="w-3.5 h-3.5 text-[#15803D]" />
+            <span className="font-bold text-neutral-600">Desde:</span>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => {
+                setFechaDesde(e.target.value);
+                setPage(1);
+              }}
+              className="bg-transparent font-mono text-neutral-800 text-xs focus:outline-none cursor-pointer"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E5ECE6] bg-[#F7FAF7]/70 text-xs">
+            <Calendar className="w-3.5 h-3.5 text-[#15803D]" />
+            <span className="font-bold text-neutral-600">Hasta:</span>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => {
+                setFechaHasta(e.target.value);
+                setPage(1);
+              }}
+              className="bg-transparent font-mono text-neutral-800 text-xs focus:outline-none cursor-pointer"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              const d = getDefaultDates();
+              setFechaDesde(d.desde);
+              setFechaHasta(d.hasta);
+              setPage(1);
+            }}
+            title="Restablecer al mes en curso"
+            className="px-2.5 py-1.5 text-xs font-semibold text-[#15803D] bg-[#EEF6F0] hover:bg-[#15803D] hover:text-white rounded-xl border border-[#15803D]/20 transition flex items-center gap-1.5 shadow-2xs"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span className="hidden sm:inline">Mes en curso</span>
+          </button>
+        </div>
+
+        {/* Pagination & Total Count */}
+        <div className="flex items-center gap-3 text-xs text-neutral-500 justify-between xl:justify-end">
           <div className="flex items-center gap-1.5">
-            <span>Mostrar por página:</span>
+            <span>Mostrar por pág:</span>
             <select
               value={limit}
               onChange={(e) => {
@@ -273,7 +336,7 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
             </select>
           </div>
 
-          <span className="font-mono text-neutral-700">
+          <span className="font-mono text-neutral-700 whitespace-nowrap">
             Total: <strong>{totalCount}</strong> tiradas
           </span>
         </div>

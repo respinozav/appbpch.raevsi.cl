@@ -182,6 +182,8 @@ def create_production_batch(
 def list_production_batches(
     estado_uid: Optional[str] = Query(None, description="Filtro por UUID de estado"),
     search: Optional[str] = Query(None, description="Buscar por código interno, artículo o lote"),
+    fecha_desde: Optional[str] = Query(None, description="Fecha desde (YYYY-MM-DD)"),
+    fecha_hasta: Optional[str] = Query(None, description="Fecha hasta (YYYY-MM-DD)"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=10, le=100),
     db: Session = Depends(get_db),
@@ -215,6 +217,24 @@ def list_production_batches(
 
     if estado_filter_uuid:
         query = query.filter(Production.uid_estado == estado_filter_uuid)
+
+    if fecha_desde and fecha_desde.strip():
+        try:
+            parts = [int(p) for p in fecha_desde.strip().split("-")]
+            if len(parts) == 3:
+                d_desde = datetime(parts[0], parts[1], parts[2], 0, 0, 0, tzinfo=timezone.utc)
+                query = query.filter(Production.fecha >= d_desde)
+        except Exception:
+            pass
+
+    if fecha_hasta and fecha_hasta.strip():
+        try:
+            parts = [int(p) for p in fecha_hasta.strip().split("-")]
+            if len(parts) == 3:
+                d_hasta = datetime(parts[0], parts[1], parts[2], 23, 59, 59, 999999, tzinfo=timezone.utc)
+                query = query.filter(Production.fecha <= d_hasta)
+        except Exception:
+            pass
 
     if search:
         search_term = f"%{search.strip()}%"

@@ -108,27 +108,32 @@ if [ -d "$BACKEND_DIR" ]; then
         python "$PROJECT_DIR/init_db.py" || log "Aviso: init_db.py finalizó con advertencia, continuando..."
     fi
 
-    # Reiniciar servicio systemd appbpch si existe
+    # Instalar / actualizar y reiniciar servicio systemd appbpch
     SERVICE_NAME="appbpch"
-    if ! systemctl list-unit-files --full --all | grep -q "^${SERVICE_NAME}.service" && systemctl list-unit-files --full --all | grep -q "^appbpch-api.service"; then
-        SERVICE_NAME="appbpch-api"
+    log "Configurando y reiniciando servicio systemd $SERVICE_NAME..."
+
+    if [ -f "$PROJECT_DIR/deploy/server/appbpch.service" ]; then
+        log "Copiando definicion $PROJECT_DIR/deploy/server/appbpch.service a /etc/systemd/system/$SERVICE_NAME.service..."
+        sudo cp "$PROJECT_DIR/deploy/server/appbpch.service" "/etc/systemd/system/$SERVICE_NAME.service"
     fi
 
-    if systemctl list-unit-files --full --all | grep -q "^${SERVICE_NAME}.service"; then
-        log "Reiniciando servicio systemd $SERVICE_NAME..."
-        sudo systemctl daemon-reload
-        sudo systemctl restart "$SERVICE_NAME"
-        
-        # Verificar estado del servicio
-        if systemctl is-active --quiet "$SERVICE_NAME"; then
-            log "Servicio $SERVICE_NAME reiniciado y ACTIVO."
-        else
-            log "ADVERTENCIA: $SERVICE_NAME no se encuentra activo después del reinicio."
-            sudo systemctl status "$SERVICE_NAME" --no-pager -l || true
-        fi
+    sudo systemctl daemon-reload
+    sudo systemctl enable "$SERVICE_NAME.service" || true
+
+    log "Reiniciando servicio systemd $SERVICE_NAME..."
+    sudo systemctl restart "$SERVICE_NAME" || sudo systemctl restart "appbpch-api" || true
+
+    # Forzar recarga de workers uvicorn antiguos si existieran
+    sudo pkill -f "uvicorn app.main:app" || true
+    sleep 2
+    sudo systemctl restart "$SERVICE_NAME" || true
+    
+    # Verificar estado del servicio
+    if systemctl is-active --quiet "$SERVICE_NAME"; then
+        log "Servicio $SERVICE_NAME reiniciado y ACTIVO exitosamente."
     else
-        log "AVISO: El servicio systemd $SERVICE_NAME no está instalado aún en /etc/systemd/system/."
-        log "Para instalarlo ejecuta: bash $PROJECT_DIR/deploy/server/setup_server.sh"
+        log "ADVERTENCIA: $SERVICE_NAME no se encuentra activo después del reinicio."
+        sudo systemctl status "$SERVICE_NAME" --no-pager -l || true
     fi
 else
     log "No se detectó directorio backend/. Omitiendo fase de backend."
