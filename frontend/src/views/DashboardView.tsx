@@ -95,6 +95,18 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
     { id: 'HDPE', label: 'HDPE Polietileno' },
   ];
 
+  // Métricas calculadas para Bento Header
+  const totalLotes = data?.resumen.total_lotes || 0;
+  const liberadosCount = data?.estados.find((e) => e.nombre === 'Liberado')?.count || 0;
+  const retenidosCount = data?.estados.find((e) => e.nombre === 'Retenido')?.count || 0;
+  const enProcesoCount = (data?.estados || [])
+    .filter((e) => ['Producción', 'Almacenaje', 'Despacho'].includes(e.nombre))
+    .reduce((acc, curr) => acc + curr.count, 0);
+
+  const liberadosPct = totalLotes > 0 ? ((liberadosCount / totalLotes) * 100).toFixed(1) : '100';
+  const enProcesoPct = totalLotes > 0 ? ((enProcesoCount / totalLotes) * 100).toFixed(1) : '0';
+  const retenidosPct = totalLotes > 0 ? ((retenidosCount / totalLotes) * 100).toFixed(1) : '0';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* 1. Header & Live Filter Bar */}
@@ -201,7 +213,7 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
 
       {/* 2. Top Bento Row: 4 Main KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* KPI 1: Producción Total */}
+        {/* KPI 1: Producción Acumulada */}
         <motion.div
           whileHover={{ y: -2 }}
           className="bg-white p-5 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between"
@@ -217,10 +229,9 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
               {data ? data.resumen.total_unidades.toLocaleString('es-CL') : '0'} <span className="text-sm font-normal text-neutral-400">UND</span>
             </div>
             <div className="text-xs text-neutral-500 mt-1 flex items-center gap-1.5">
-              <span className="font-mono font-bold text-[#15803D]">{data?.resumen.total_lotes || 0}</span> lotes emitidos en <span className="font-mono font-bold">{data?.resumen.distinct_batches || 0}</span> tiradas
+              <span className="font-mono font-bold text-[#15803D]">{totalLotes}</span> lotes emitidos en <span className="font-mono font-bold">{data?.resumen.distinct_batches || 0}</span> tiradas
             </div>
           </div>
-          {/* Subtle SVG Sparkline */}
           <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex items-center justify-between text-[11px] text-[#15803D] font-semibold">
             <span className="flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5" />
@@ -230,422 +241,440 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
           </div>
         </motion.div>
 
-        {/* KPI 2: Tasa de Liberación de Calidad */}
+        {/* KPI 2: Lotes Liberados */}
         <motion.div
           whileHover={{ y: -2 }}
           className="bg-white p-5 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between"
         >
           <div className="flex items-center justify-between text-neutral-500 text-xs font-semibold">
-            <span>Liberación de Calidad</span>
+            <span>Lotes Liberados</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#10B981] flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-display font-black text-[#0D3B22] tracking-tight flex items-baseline gap-1">
-              <span>{data ? data.resumen.tasa_liberacion : '100'}%</span>
-              <span className="text-xs font-bold text-[#15803D] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Meta: ≥98.5%
+            <div className="text-3xl font-display font-black text-[#0D3B22] tracking-tight flex items-baseline gap-2">
+              <span>{liberadosCount}</span>
+              <span className="text-sm font-normal text-neutral-400">LOTES</span>
+              <span className="text-xs font-bold text-[#15803D] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 ml-auto">
+                {liberadosPct}%
               </span>
             </div>
             <div className="text-xs text-neutral-500 mt-1">
-              Conformidad Ficha Técnica N° 0101
+              Aprobación Calidad Ficha F-0101
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex items-center justify-between text-[11px] text-neutral-500">
-            <span>Documento Oficial:</span>
+            <span className="text-[#15803D] font-semibold flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Certificables</span>
+            </span>
             <span className="font-mono font-bold text-[#0D3B22]">R-CAL-07</span>
           </div>
         </motion.div>
 
-        {/* KPI 3: Incorporación de Resina rPET (Ley REP) */}
+        {/* KPI 3: En Proceso / Tránsito */}
         <motion.div
           whileHover={{ y: -2 }}
           className="bg-white p-5 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between"
         >
           <div className="flex items-center justify-between text-neutral-500 text-xs font-semibold">
-            <span>Incorporación rPET</span>
-            <div className="w-8 h-8 rounded-lg bg-[#EEF6F0] text-[#15803D] flex items-center justify-center">
-              <Leaf className="w-4 h-4" />
+            <span>En Proceso / Tránsito</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-display font-black text-[#0D3B22] tracking-tight">
-              {data ? data.resumen.tasa_rpet : '38.5'}%
+            <div className="text-3xl font-display font-black text-[#0D3B22] tracking-tight flex items-baseline gap-2">
+              <span>{enProcesoCount}</span>
+              <span className="text-sm font-normal text-neutral-400">LOTES</span>
+              <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 ml-auto">
+                {enProcesoPct}%
+              </span>
             </div>
             <div className="text-xs text-neutral-500 mt-1">
-              Material reciclado post-consumo
+              Producción, Almacenaje y Despacho
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex items-center justify-between text-[11px] text-[#15803D] font-semibold">
-            <span>Ley REP 20.920</span>
-            <span className="text-neutral-500 font-mono font-normal">Meta D.S. 12</span>
+          <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex items-center justify-between text-[11px] text-neutral-500">
+            <span className="text-blue-700 font-semibold flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5" />
+              <span>Flujo logístico activo</span>
+            </span>
+            <span className="font-mono text-neutral-400 font-normal">En Planta</span>
           </div>
         </motion.div>
 
-        {/* KPI 4: Emisiones Evitadas tCO2e */}
+        {/* KPI 4: Lotes Retenidos (Tipo Advertencia) */}
         <motion.div
           whileHover={{ y: -2 }}
-          className="bg-gradient-to-br from-[#0D3B22] to-[#0A2E1A] text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between"
+          className="bg-gradient-to-br from-red-50/70 via-white to-amber-50/30 p-5 rounded-2xl border border-red-200/90 shadow-sm flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-emerald-200 text-xs font-semibold">
-            <span>Huella de Carbono Evitada</span>
-            <div className="w-8 h-8 rounded-lg bg-white/10 text-emerald-300 flex items-center justify-center backdrop-blur-xs">
-              <Award className="w-4 h-4" />
+          <div className="flex items-center justify-between text-red-800 text-xs font-semibold">
+            <span className="flex items-center gap-1.5 font-bold">
+              <span>Lotes Retenidos</span>
+            </span>
+            <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-3xl font-display font-black text-white tracking-tight">
-              {data ? data.resumen.tco2_avoided : '14.2'} <span className="text-sm font-normal text-emerald-200">tCO₂e</span>
+            <div className="text-3xl font-display font-black text-red-700 tracking-tight flex items-baseline gap-2">
+              <span>{retenidosCount}</span>
+              <span className="text-sm font-normal text-red-400">LOTES</span>
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded-full border ml-auto ${
+                  retenidosCount > 0
+                    ? 'bg-red-100 text-red-700 border-red-200'
+                    : 'bg-neutral-100 text-neutral-500 border-neutral-200'
+                }`}
+              >
+                {retenidosCount > 0 ? `${retenidosPct}%` : '0%'}
+              </span>
             </div>
-            <div className="text-xs text-emerald-100/70 mt-1">
-              Ahorro por uso de resina circular
+            <div className="text-xs text-red-600/90 mt-1 font-medium">
+              Requiere Disposición / Calidad
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-emerald-300">
-            <span>Equivalente:</span>
-            <span className="font-mono text-white font-bold">~640 árboles</span>
+          <div className="mt-4 pt-3 border-t border-red-200/60 flex items-center justify-between text-[11px] text-red-700 font-semibold">
+            <span className="flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+              <span>Bloqueo preventivo</span>
+            </span>
+            <span className="font-mono text-red-600 font-medium">No certificables</span>
           </div>
         </motion.div>
       </div>
 
-      {/* 2.5 Gráfico de Tendencia Temporal & Yield de Calidad (Executive Analytics) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Gráfico de Evolución de Producción Diaria vs Meta */}
-        <div className="lg:col-span-8 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#15803D]" />
-                <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                  Evolución de Producción Diaria vs. Meta de Planta
-                </h2>
-              </div>
-              <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="flex items-center gap-1.5 text-neutral-600">
-                  <span className="w-2.5 h-2.5 rounded bg-[#15803D]" />
-                  <span>Producción Real</span>
-                </span>
-                <span className="flex items-center gap-1.5 text-neutral-400">
-                  <span className="w-2.5 h-2.5 rounded border border-dashed border-[#0D3B22]" />
-                  <span>Meta Operativa</span>
-                </span>
-              </div>
+      {/* 2.5 Gráfico de Evolución de Producción Diaria vs Meta de Planta (Full Width) */}
+      <div className="w-full bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#15803D]" />
+              <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
+                Evolución de Producción Diaria vs. Meta de Planta
+              </h2>
             </div>
+            <div className="flex items-center gap-3 text-xs font-mono">
+              <span className="flex items-center gap-1.5 text-neutral-600">
+                <span className="w-2.5 h-2.5 rounded bg-[#15803D]" />
+                <span>Producción Real</span>
+              </span>
+              <span className="flex items-center gap-1.5 text-neutral-400">
+                <span className="w-2.5 h-2.5 rounded border border-dashed border-[#0D3B22]" />
+                <span>Meta Operativa</span>
+              </span>
+            </div>
+          </div>
 
-            {/* Bars visual representation */}
-            {data?.tendencia_diaria && data.tendencia_diaria.length > 0 ? (
-              (() => {
-                const maxUnits = Math.max(...data.tendencia_diaria.map((x) => x.unidades), 0);
-                const metaVal = data.tendencia_diaria[0]?.meta || 30000;
-                const chartMax = Math.max(maxUnits, metaVal * 1.15, 1000);
-                const metaHeightPct = Math.min(Math.round((metaVal / chartMax) * 100), 92);
-                const totalPeriodUnits = data.tendencia_diaria.reduce((acc, curr) => acc + curr.unidades, 0);
-                const activeDays = data.tendencia_diaria.filter((x) => x.unidades > 0).length;
-                const dailyAvg = activeDays > 0 ? Math.round(totalPeriodUnits / activeDays) : 0;
+          {/* Bars visual representation */}
+          {data?.tendencia_diaria && data.tendencia_diaria.length > 0 ? (
+            (() => {
+              const maxUnits = Math.max(...data.tendencia_diaria.map((x) => x.unidades), 0);
+              const metaVal = data.tendencia_diaria[0]?.meta || 30000;
+              const chartMax = Math.max(maxUnits, metaVal * 1.15, 1000);
+              const metaHeightPct = Math.min(Math.round((metaVal / chartMax) * 100), 92);
+              const totalPeriodUnits = data.tendencia_diaria.reduce((acc, curr) => acc + curr.unidades, 0);
+              const activeDays = data.tendencia_diaria.filter((x) => x.unidades > 0).length;
+              const dailyAvg = activeDays > 0 ? Math.round(totalPeriodUnits / activeDays) : 0;
 
-                return (
-                  <div className="space-y-4 pt-2">
-                    <div className="relative h-48 border-b border-[#E5ECE6] pt-8 pb-1 px-1">
-                      {/* Línea horizontal continua unificada de Meta de Planta */}
-                      <div
-                        className="absolute left-0 right-0 border-t-2 border-dashed border-[#15803D]/50 pointer-events-none z-10 flex items-center justify-end pr-1"
-                        style={{ bottom: `${metaHeightPct}%` }}
-                      >
-                        <span className="text-[10px] font-mono font-bold text-[#15803D] bg-white/95 px-2 py-0.5 rounded-full border border-[#15803D]/30 shadow-2xs -translate-y-1/2">
-                          Meta: {metaVal.toLocaleString('es-CL')} UND/día
-                        </span>
-                      </div>
-
-                      {/* Contenedor flexible de barras diarias */}
-                      <div className="flex items-end gap-1.5 sm:gap-2.5 h-full w-full">
-                        {data.tendencia_diaria.map((td, idx) => {
-                          const heightPct = Math.round((td.unidades / chartMax) * 100);
-                          const isOverMeta = td.unidades >= td.meta;
-                          const hasProduction = td.unidades > 0;
-                          const formattedDate = td.fecha.split('-').slice(1).join('/');
-
-                          return (
-                            <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative select-none">
-                              {/* Tooltip on hover */}
-                              <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2.5 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10">
-                                <div className="font-bold border-b border-white/20 pb-1 mb-1">{td.fecha}</div>
-                                <div className="flex items-center gap-2">
-                                  <span>Real: <strong>{td.unidades.toLocaleString('es-CL')}</strong> UND</span>
-                                  <span className={isOverMeta ? 'text-emerald-300 font-bold' : 'text-neutral-300'}>
-                                    ({td.cumplimiento_pct}%)
-                                  </span>
-                                </div>
-                                <div className="text-[9px] text-neutral-300 mt-0.5">
-                                  Tiradas: {td.lotes} lotes · Meta: {td.meta.toLocaleString('es-CL')} UND
-                                </div>
-                              </div>
-
-                              {/* Indicador numérico sobre barras activas */}
-                              {hasProduction && (
-                                <span className="text-[9px] font-mono font-bold text-[#0D3B22] mb-1 truncate max-w-full">
-                                  {td.unidades >= 1000 ? `${Math.round(td.unidades / 1000)}k` : td.unidades}
-                                </span>
-                              )}
-
-                              {/* Barra con altura CSS fluida y confiable */}
-                              <div
-                                style={{ height: hasProduction ? `${Math.max(heightPct, 10)}%` : '6px' }}
-                                className={`w-full rounded-t-md transition-all duration-500 ease-out cursor-pointer ${
-                                  !hasProduction
-                                    ? 'bg-neutral-200/70 hover:bg-neutral-300'
-                                    : isOverMeta
-                                    ? 'bg-gradient-to-t from-[#15803D] to-[#22C55E] hover:brightness-110 shadow-xs'
-                                    : 'bg-gradient-to-t from-[#0D3B22] to-[#15803D] hover:brightness-110 shadow-xs'
-                                }`}
-                              />
-
-                              {/* Etiqueta de fecha */}
-                              <span className={`text-[10px] font-mono mt-2 truncate w-full text-center ${hasProduction ? 'font-bold text-[#0D3B22]' : 'text-neutral-400'}`}>
-                                {formattedDate}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between text-xs text-neutral-500 font-mono gap-2 pt-1">
-                      <span>
-                        Días activos: <strong className="text-[#0D3B22]">{activeDays}</strong> de {data.tendencia_diaria.length} días
-                      </span>
-                      <span className="text-[#15803D] font-bold">
-                        Promedio diario activo: {dailyAvg.toLocaleString('es-CL')} UND/día
+              return (
+                <div className="space-y-4 pt-2">
+                  <div className="relative h-52 border-b border-[#E5ECE6] pt-8 pb-1 px-1">
+                    {/* Línea horizontal continua unificada de Meta de Planta */}
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-dashed border-[#15803D]/50 pointer-events-none z-10 flex items-center justify-end pr-2"
+                      style={{ bottom: `${metaHeightPct}%` }}
+                    >
+                      <span className="text-[10px] font-mono font-bold text-[#15803D] bg-white/95 px-2.5 py-0.5 rounded-full border border-[#15803D]/30 shadow-2xs -translate-y-1/2">
+                        Meta: {metaVal.toLocaleString('es-CL')} UND/día
                       </span>
                     </div>
-                  </div>
-                );
-              })()
-            ) : (
-              <div className="p-8 text-center text-xs text-neutral-400">
-                Selecciona un rango de fechas con tiradas activas para visualizar la curva de producción.
-              </div>
-            )}
-          </div>
 
-          <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex flex-wrap items-center justify-between text-xs text-neutral-500">
-            <span>Control de velocidad de inyección y soplado</span>
-            <span className="font-semibold text-[#0D3B22]">Estándar Industrial Bioplast Chile</span>
-          </div>
-        </div>
-
-        {/* Panel de Calidad & Resina Circular (4 cols) */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Card 1: Rendimiento de Calidad / Yield */}
-          <div className="bg-white p-5 rounded-2xl border border-[#E5ECE6] shadow-sm">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5ECE6] mb-3">
-              <span className="text-xs font-bold text-[#0D3B22] uppercase tracking-wide flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-                <span>Control de Calidad (Yield %)</span>
-              </span>
-              <span className="font-mono text-xs font-black text-[#10B981]">
-                {data?.resumen.tasa_liberacion || 100}%
-              </span>
-            </div>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between items-center text-neutral-600">
-                <span>Lotes Liberados:</span>
-                <strong className="font-mono text-[#10B981]">
-                  {data?.estados.find((e) => e.nombre === 'Liberado')?.count || 0} lotes
-                </strong>
-              </div>
-              <div className="flex justify-between items-center text-neutral-600">
-                <span>Lotes Retenidos:</span>
-                <strong className="font-mono text-red-600">
-                  {data?.estados.find((e) => e.nombre === 'Retenido')?.count || 0} lotes
-                </strong>
-              </div>
-              <div className="flex justify-between items-center text-neutral-600">
-                <span>En Proceso / Tránsito:</span>
-                <strong className="font-mono text-neutral-800">
-                  {(data?.resumen.total_lotes || 0) - (data?.estados.find((e) => e.nombre === 'Liberado')?.count || 0) - (data?.estados.find((e) => e.nombre === 'Retenido')?.count || 0)} lotes
-                </strong>
-              </div>
-              {/* Quality Bar */}
-              <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden mt-2">
-                <div
-                  className="h-full bg-[#10B981] rounded-full"
-                  style={{ width: `${data?.resumen.tasa_liberacion || 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Material Sustentable Procesado */}
-          <div className="bg-gradient-to-br from-[#EEF6F0] to-[#E5ECE6]/60 p-5 rounded-2xl border border-[#15803D]/25 shadow-sm">
-            <div className="flex items-center justify-between pb-2 border-b border-[#15803D]/15 mb-3">
-              <span className="text-xs font-bold text-[#0D3B22] uppercase tracking-wide flex items-center gap-1.5">
-                <Leaf className="w-4 h-4 text-[#15803D]" />
-                <span>Material Sustentable (rPET)</span>
-              </span>
-              <span className="text-[10px] font-mono font-bold text-[#15803D] uppercase">Ley REP</span>
-            </div>
-            <div className="mt-1">
-              <div className="text-2xl font-display font-black text-[#0D3B22] tracking-tight">
-                {data?.resumen.kilos_reciclados ? (data.resumen.kilos_reciclados >= 1000 ? `${(data.resumen.kilos_reciclados / 1000).toFixed(2)} Ton` : `${data.resumen.kilos_reciclados.toLocaleString('es-CL')} Kg`) : '12.4 Ton'}
-              </div>
-              <p className="text-xs text-neutral-600 mt-1">
-                Polímero recuperado post-consumo integrado a tiradas activas de envases.
-              </p>
-            </div>
-            <div className="mt-3 pt-2 border-t border-[#15803D]/15 flex items-center justify-between text-[11px] text-[#0D3B22] font-semibold">
-              <span>Tasa Circular:</span>
-              <span className="font-mono">{data?.resumen.tasa_rpet || 38.5}% rPET</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Middle Bento Row: Dual Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Col 1: Gráfico de Barras de Trazabilidad por Estado (7 cols) */}
-        <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-4">
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#15803D]" />
-                <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                  Distribución por Estados de Trazabilidad
-                </h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
-                  {data?.resumen.total_lotes || 0} Lotes Totales
-                </span>
-              </div>
-            </div>
-
-            {/* Vertical Bar Chart */}
-            {data?.estados && data.estados.length > 0 ? (
-              (() => {
-                const maxStateCount = Math.max(...data.estados.map((e) => e.count), 1);
-                
-                // Color gradients map per state
-                const stateGradients: Record<string, { bar: string; badge: string; text: string }> = {
-                  'Producción': {
-                    bar: 'from-[#15803D] via-[#16A34A] to-[#22C55E]',
-                    badge: 'bg-emerald-50 text-[#15803D] border-[#15803D]/30',
-                    text: 'text-[#15803D]'
-                  },
-                  'Almacenaje': {
-                    bar: 'from-[#1D4ED8] via-[#2563EB] to-[#60A5FA]',
-                    badge: 'bg-blue-50 text-blue-700 border-blue-200',
-                    text: 'text-blue-700'
-                  },
-                  'Despacho': {
-                    bar: 'from-[#6D28D9] via-[#7C3AED] to-[#A78BFA]',
-                    badge: 'bg-purple-50 text-purple-700 border-purple-200',
-                    text: 'text-purple-700'
-                  },
-                  'Liberado': {
-                    bar: 'from-[#047857] via-[#059669] to-[#34D399]',
-                    badge: 'bg-teal-50 text-teal-700 border-teal-200',
-                    text: 'text-teal-700'
-                  },
-                  'Retenido': {
-                    bar: 'from-[#B91C1C] via-[#DC2626] to-[#F87171]',
-                    badge: 'bg-red-50 text-red-700 border-red-200',
-                    text: 'text-red-700'
-                  },
-                };
-
-                return (
-                  <div className="space-y-3 pt-2">
-                    {/* Bars Grid Container */}
-                    <div className="h-52 flex items-end justify-between gap-2 sm:gap-4 px-2 pt-8 pb-2 border-b border-[#E5ECE6]">
-                      {data.estados.map((est, idx) => {
-                        const heightPct = Math.round((est.count / maxStateCount) * 100);
-                        const hasLots = est.count > 0;
-                        const colors = stateGradients[est.nombre] || {
-                          bar: 'from-[#15803D] to-[#22C55E]',
-                          badge: 'bg-emerald-50 text-[#15803D] border-emerald-200',
-                          text: 'text-[#15803D]'
-                        };
+                    {/* Contenedor flexible de barras diarias */}
+                    <div className="flex items-end gap-1.5 sm:gap-2.5 h-full w-full">
+                      {data.tendencia_diaria.map((td, idx) => {
+                        const heightPct = Math.round((td.unidades / chartMax) * 100);
+                        const isOverMeta = td.unidades >= td.meta;
+                        const hasProduction = td.unidades > 0;
+                        const formattedDate = td.fecha.split('-').slice(1).join('/');
 
                         return (
-                          <div
-                            key={est.uid || idx}
-                            className="flex-1 flex flex-col items-center h-full justify-end group relative select-none"
-                          >
-                            {/* Floating Tooltip */}
-                            <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10 text-center">
-                              <div className="font-bold">{est.nombre}</div>
-                              <div className="text-emerald-300 font-bold">{est.count} lotes ({est.percentage}%)</div>
+                          <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative select-none">
+                            {/* Tooltip on hover */}
+                            <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2.5 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10">
+                              <div className="font-bold border-b border-white/20 pb-1 mb-1">{td.fecha}</div>
+                              <div className="flex items-center gap-2">
+                                <span>Real: <strong>{td.unidades.toLocaleString('es-CL')}</strong> UND</span>
+                                <span className={isOverMeta ? 'text-emerald-300 font-bold' : 'text-neutral-300'}>
+                                  ({td.cumplimiento_pct}%)
+                                </span>
+                              </div>
+                              <div className="text-[9px] text-neutral-300 mt-0.5">
+                                Tiradas: {td.lotes} lotes · Meta: {td.meta.toLocaleString('es-CL')} UND
+                              </div>
                             </div>
 
-                            {/* Lot Count Pill Badge */}
-                            <span
-                              className={`text-[10px] font-mono font-black mb-1.5 px-2 py-0.5 rounded-full border shadow-2xs transition-transform group-hover:scale-105 ${
-                                hasLots ? colors.badge : 'bg-neutral-100 text-neutral-400 border-neutral-200'
-                              }`}
-                            >
-                              {est.count}
-                            </span>
+                            {/* Indicador numérico sobre barras activas */}
+                            {hasProduction && (
+                              <span className="text-[9px] font-mono font-bold text-[#0D3B22] mb-1 truncate max-w-full">
+                                {td.unidades >= 1000 ? `${Math.round(td.unidades / 1000)}k` : td.unidades}
+                              </span>
+                            )}
 
-                            {/* Vertical Bar */}
+                            {/* Barra con altura CSS fluida */}
                             <div
-                              style={{ height: hasLots ? `${Math.max(heightPct, 12)}%` : '6px' }}
-                              className={`w-full max-w-[54px] rounded-t-xl transition-all duration-500 ease-out shadow-xs cursor-pointer ${
-                                hasLots
-                                  ? `bg-gradient-to-t ${colors.bar} hover:brightness-110 shadow-sm`
-                                  : 'bg-neutral-200/80 hover:bg-neutral-300'
+                              style={{ height: hasProduction ? `${Math.max(heightPct, 10)}%` : '6px' }}
+                              className={`w-full max-w-[54px] rounded-t-lg transition-all duration-500 ease-out cursor-pointer ${
+                                !hasProduction
+                                  ? 'bg-neutral-200/70 hover:bg-neutral-300'
+                                  : isOverMeta
+                                  ? 'bg-gradient-to-t from-[#15803D] to-[#22C55E] hover:brightness-110 shadow-xs'
+                                  : 'bg-gradient-to-t from-[#0D3B22] to-[#15803D] hover:brightness-110 shadow-xs'
                               }`}
                             />
 
-                            {/* Percentage Tag */}
-                            <span className="text-[10px] font-mono font-semibold text-neutral-500 mt-2">
-                              {est.percentage}%
-                            </span>
-
-                            {/* State Label Name */}
-                            <span
-                              className={`text-[11px] font-bold mt-0.5 truncate w-full text-center ${
-                                hasLots ? colors.text : 'text-neutral-400'
-                              }`}
-                            >
-                              {est.nombre}
+                            {/* Etiqueta de fecha */}
+                            <span className={`text-[10px] font-mono mt-2 truncate w-full text-center ${hasProduction ? 'font-bold text-[#0D3B22]' : 'text-neutral-400'}`}>
+                              {formattedDate}
                             </span>
                           </div>
                         );
                       })}
                     </div>
-
-                    {/* Operational Flow Subtitle */}
-                    <div className="flex items-center justify-between text-[11px] text-neutral-500 font-mono px-1">
-                      <span>Flujo secuencial: Producción ➔ Almacén ➔ Despacho ➔ Liberado</span>
-                      <span className="text-[#15803D] font-bold">100% Trazable</span>
-                    </div>
                   </div>
-                );
-              })()
-            ) : (
-              <div className="p-8 text-center text-xs text-neutral-400">
-                No hay lotes registrados para los filtros actuales.
+
+                  <div className="flex flex-wrap items-center justify-between text-xs text-neutral-500 font-mono gap-2 pt-1">
+                    <span>
+                      Días activos: <strong className="text-[#0D3B22]">{activeDays}</strong> de {data.tendencia_diaria.length} días
+                    </span>
+                    <span className="text-[#15803D] font-bold">
+                      Promedio diario activo: {dailyAvg.toLocaleString('es-CL')} UND/día
+                    </span>
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="p-8 text-center text-xs text-neutral-400">
+              Selecciona un rango de fechas con tiradas activas para visualizar la curva de producción.
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex flex-wrap items-center justify-between text-xs text-neutral-500">
+          <span>Control de velocidad de inyección y soplado</span>
+          <span className="font-semibold text-[#0D3B22]">Estándar Industrial Bioplast Chile</span>
+        </div>
+      </div>
+
+      {/* 3. Lower Bento Row: Dual Symmetric Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Columna Izquierda (7 cols): Distribución por Estados + Actividad Reciente */}
+        <div className="lg:col-span-7 flex flex-col gap-6 justify-between">
+          {/* Card A: Gráfico de Barras de Trazabilidad por Estado */}
+          <div className="bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between flex-1">
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-[#15803D]" />
+                  <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
+                    Distribución por Estados de Trazabilidad
+                  </h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
+                    {totalLotes} Lotes Totales
+                  </span>
+                </div>
               </div>
-            )}
+
+              {/* Vertical Bar Chart */}
+              {data?.estados && data.estados.length > 0 ? (
+                (() => {
+                  const maxStateCount = Math.max(...data.estados.map((e) => e.count), 1);
+                  
+                  const stateGradients: Record<string, { bar: string; badge: string; text: string }> = {
+                    'Producción': {
+                      bar: 'from-[#15803D] via-[#16A34A] to-[#22C55E]',
+                      badge: 'bg-emerald-50 text-[#15803D] border-[#15803D]/30',
+                      text: 'text-[#15803D]'
+                    },
+                    'Almacenaje': {
+                      bar: 'from-[#1D4ED8] via-[#2563EB] to-[#60A5FA]',
+                      badge: 'bg-blue-50 text-blue-700 border-blue-200',
+                      text: 'text-blue-700'
+                    },
+                    'Despacho': {
+                      bar: 'from-[#6D28D9] via-[#7C3AED] to-[#A78BFA]',
+                      badge: 'bg-purple-50 text-purple-700 border-purple-200',
+                      text: 'text-purple-700'
+                    },
+                    'Liberado': {
+                      bar: 'from-[#047857] via-[#059669] to-[#34D399]',
+                      badge: 'bg-teal-50 text-teal-700 border-teal-200',
+                      text: 'text-teal-700'
+                    },
+                    'Retenido': {
+                      bar: 'from-[#B91C1C] via-[#DC2626] to-[#F87171]',
+                      badge: 'bg-red-50 text-red-700 border-red-200',
+                      text: 'text-red-700'
+                    },
+                  };
+
+                  return (
+                    <div className="space-y-3 pt-2">
+                      <div className="h-44 flex items-end justify-between gap-2 sm:gap-4 px-2 pt-6 pb-2 border-b border-[#E5ECE6]">
+                        {data.estados.map((est, idx) => {
+                          const heightPct = Math.round((est.count / maxStateCount) * 100);
+                          const hasLots = est.count > 0;
+                          const colors = stateGradients[est.nombre] || {
+                            bar: 'from-[#15803D] to-[#22C55E]',
+                            badge: 'bg-emerald-50 text-[#15803D] border-emerald-200',
+                            text: 'text-[#15803D]'
+                          };
+
+                          return (
+                            <div
+                              key={est.uid || idx}
+                              className="flex-1 flex flex-col items-center h-full justify-end group relative select-none"
+                            >
+                              <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10 text-center">
+                                <div className="font-bold">{est.nombre}</div>
+                                <div className="text-emerald-300 font-bold">{est.count} lotes ({est.percentage}%)</div>
+                              </div>
+
+                              <span
+                                className={`text-[10px] font-mono font-black mb-1 px-2 py-0.5 rounded-full border shadow-2xs transition-transform group-hover:scale-105 ${
+                                  hasLots ? colors.badge : 'bg-neutral-100 text-neutral-400 border-neutral-200'
+                                }`}
+                              >
+                                {est.count}
+                              </span>
+
+                              <div
+                                style={{ height: hasLots ? `${Math.max(heightPct, 12)}%` : '6px' }}
+                                className={`w-full max-w-[48px] rounded-t-xl transition-all duration-500 ease-out shadow-xs cursor-pointer ${
+                                  hasLots
+                                    ? `bg-gradient-to-t ${colors.bar} hover:brightness-110 shadow-sm`
+                                    : 'bg-neutral-200/80 hover:bg-neutral-300'
+                                }`}
+                              />
+
+                              <span className="text-[10px] font-mono font-semibold text-neutral-500 mt-1.5">
+                                {est.percentage}%
+                              </span>
+
+                              <span
+                                className={`text-[11px] font-bold mt-0.5 truncate w-full text-center ${
+                                  hasLots ? colors.text : 'text-neutral-400'
+                                }`}
+                              >
+                                {est.nombre}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-neutral-500 font-mono px-1">
+                        <span>Flujo: Producción ➔ Almacén ➔ Despacho ➔ Liberado</span>
+                        <span className="text-[#15803D] font-bold">100% Trazable</span>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="p-8 text-center text-xs text-neutral-400">
+                  No hay lotes registrados para los filtros actuales.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex items-center justify-between text-xs text-neutral-500">
+              <span>Trazabilidad auditada con correlativo estricto</span>
+              {onNavigate && (
+                <button
+                  onClick={() => onNavigate('produccion')}
+                  className="text-[#15803D] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Ver Sábana Completa</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex items-center justify-between text-xs text-neutral-500">
-            <span>Trazabilidad auditada con correlativo estricto</span>
-            {onNavigate && (
-              <button
-                onClick={() => onNavigate('produccion')}
-                className="text-[#15803D] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-              >
-                <span>Ver Sábana Completa</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* Card B: Actividad Reciente & Transiciones de Estado */}
+          <div className="bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between flex-1">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-3">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-[#15803D]" />
+                  <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
+                    Actividad Reciente & Transiciones de Estado
+                  </h2>
+                </div>
+                <span className="text-xs text-neutral-400 font-mono flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Tiempo Real</span>
+                </span>
+              </div>
+
+              {/* Audit Stream List */}
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {data?.actividad_reciente && data.actividad_reciente.length > 0 ? (
+                  data.actividad_reciente.map((item) => (
+                    <div
+                      key={item.uid}
+                      className="p-2.5 rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] hover:bg-white transition flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: item.estado_color }}
+                        />
+                        <div>
+                          <div className="font-bold text-[#0F1F16]">
+                            {item.articulo} · Lote #{item.lote}
+                          </div>
+                          <div className="text-[11px] text-neutral-500">
+                            Tirada #{item.codigo_interno} · Por <strong className="text-neutral-700">{item.responsable}</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span
+                          className="px-2 py-0.5 rounded text-[10px] font-bold text-white inline-block"
+                          style={{ backgroundColor: item.estado_color }}
+                        >
+                          {item.estado_nuevo}
+                        </span>
+                        <div className="text-[10px] font-mono text-neutral-400 mt-0.5">
+                          {new Date(item.fecha_hora).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-xs text-neutral-400">
+                    No hay transiciones recientes registradas en planta.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-[#E5ECE6] text-[11px] text-neutral-400 font-mono flex justify-between">
+              <span>Auditoría inmutable persistida en AWS RDS</span>
+              <span>Cadena de custodia</span>
+            </div>
           </div>
         </div>
 
-        {/* Col 2: Gráfico de Torta / Donut Chart - Eficiencia por Turno & Máquina (5 cols) */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
+        {/* Columna Derecha (5 cols): Eficiencia de Líneas & Turnos (Donut Chart) */}
+        <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between h-full">
           <div>
             {/* Header with Title and Mode Switcher */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-4">
@@ -745,7 +774,6 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
               const totalDonutUnits = rawList.reduce((acc, it) => acc + it.unidades, 0);
               const totalDonutLotes = rawList.reduce((acc, it) => acc + it.lotes, 0);
 
-              // Donut SVG constants
               const radius = 76;
               const circumference = 2 * Math.PI * radius; // ~477.52
               let accumulatedLength = 0;
@@ -766,7 +794,6 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                           viewBox="0 0 220 220"
                           className="w-48 h-48 sm:w-52 sm:h-52 -rotate-90 transform"
                         >
-                          {/* Background Track Circle */}
                           <circle
                             cx="110"
                             cy="110"
@@ -776,7 +803,6 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                             strokeWidth="20"
                           />
 
-                          {/* Data Slices */}
                           {rawList.map((item, idx) => {
                             const pct = totalDonutUnits > 0 ? item.unidades / totalDonutUnits : 0;
                             const segmentLength = pct * circumference;
@@ -894,130 +920,6 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
           <div className="mt-5 pt-3 border-t border-[#E5ECE6] text-[11px] text-neutral-400 flex items-center justify-between">
             <span>Control horario de operadores en planta</span>
             <span className="font-mono text-[#15803D] font-bold">OEE Óptimo</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Bottom Bento Row: Ley REP & Recent Activity Stream */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Ley REP 20.920 Card (5 cols) */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-4">
-              <div className="flex items-center gap-2">
-                <Leaf className="w-4 h-4 text-[#15803D]" />
-                <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                  Cumplimiento Ley REP 20.920
-                </h2>
-              </div>
-              <span className="text-[11px] font-mono text-[#15803D] font-bold">D.S. 12 MMA</span>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <p className="text-neutral-600 leading-relaxed">
-                Bioplast Chile certifica la incorporación de material reciclado y garantiza la trazabilidad para la declaración en ventanilla única <strong>SINADER</strong>.
-              </p>
-
-              <div className="p-4 rounded-xl bg-[#EEF6F0] border border-[#15803D]/20 space-y-2">
-                <div className="flex justify-between items-center font-bold text-[#0D3B22]">
-                  <span>Meta de Recolección & Valorización 2026:</span>
-                  <span className="font-mono">{data?.ley_rep.meta_actual_pct}%</span>
-                </div>
-                <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#15803D] to-[#22C55E] rounded-full"
-                    style={{ width: `${Math.min(data?.ley_rep.cumplimiento_actual_pct || 38.5, 100)}%` }}
-                  />
-                </div>
-                <div className="text-[11px] text-neutral-600 flex justify-between">
-                  <span>Cumplimiento estimado:</span>
-                  <strong className="text-[#15803D]">{data?.ley_rep.cumplimiento_actual_pct}%</strong>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6]">
-                <span className="font-semibold text-neutral-700">Certificados R-CAL-07 Emitidos:</span>
-                <span className="font-mono font-bold text-[#0D3B22] text-sm">
-                  {data?.ley_rep.certificados_emitidos || 0}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {onNavigate && (
-            <button
-              onClick={() => onNavigate('certificados')}
-              className="w-full mt-4 py-2.5 px-4 rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] transition text-xs font-bold flex items-center justify-center gap-2 shadow-xs"
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span>Ver Módulo de Certificados</span>
-            </button>
-          )}
-        </div>
-
-        {/* Real-Time Audit Activity Log Stream (7 cols) */}
-        <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-4">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-[#15803D]" />
-                <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                  Actividad Reciente & Transiciones de Estado
-                </h2>
-              </div>
-              <span className="text-xs text-neutral-400 font-mono flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                <span>Tiempo Real</span>
-              </span>
-            </div>
-
-            {/* Audit Stream List */}
-            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-              {data?.actividad_reciente && data.actividad_reciente.length > 0 ? (
-                data.actividad_reciente.map((item) => (
-                  <div
-                    key={item.uid}
-                    className="p-3 rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] hover:bg-white transition flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: item.estado_color }}
-                      />
-                      <div>
-                        <div className="font-bold text-[#0F1F16]">
-                          {item.articulo} · Lote #{item.lote}
-                        </div>
-                        <div className="text-[11px] text-neutral-500">
-                          Tirada #{item.codigo_interno} · Por <strong className="text-neutral-700">{item.responsable}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span
-                        className="px-2 py-0.5 rounded text-[10px] font-bold text-white inline-block"
-                        style={{ backgroundColor: item.estado_color }}
-                      >
-                        {item.estado_nuevo}
-                      </span>
-                      <div className="text-[10px] font-mono text-neutral-400 mt-0.5">
-                        {new Date(item.fecha_hora).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-xs text-neutral-400">
-                  No hay transiciones recientes registradas en planta.
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-[#E5ECE6] text-[11px] text-neutral-400 font-mono flex justify-between">
-            <span>Auditoría inmutable persistida en AWS RDS</span>
-            <span>Seguridad de cadena de custodia</span>
           </div>
         </div>
       </div>
