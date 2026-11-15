@@ -628,9 +628,11 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
 
                   return (
                     <div className="space-y-3 pt-2">
-                      <div className="h-44 flex items-end justify-between gap-2 sm:gap-4 px-2 pt-6 pb-2 border-b border-[#E5ECE6]">
+                      {/* Área gráfica de barras con línea base inferior */}
+                      <div className="h-40 flex items-end justify-between gap-2 sm:gap-4 px-2 pt-6 pb-1 border-b border-[#E5ECE6]">
                         {data.estados.map((est, idx) => {
-                          const heightPct = Math.round((est.count / maxStateCount) * 100);
+                          // Máximo 78% para que el badge superior descanse holgadamente dentro del área de la barra
+                          const heightPct = Math.round((est.count / maxStateCount) * 78);
                           const hasLots = est.count > 0;
                           const colors = stateGradients[est.nombre] || {
                             bar: 'from-[#15803D] to-[#22C55E]',
@@ -643,34 +645,50 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                               key={est.uid || idx}
                               className="flex-1 flex flex-col items-center h-full justify-end group relative select-none"
                             >
-                              <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10 text-center">
+                              {/* Floating Tooltip */}
+                              <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10 text-center">
                                 <div className="font-bold">{est.nombre}</div>
                                 <div className="text-emerald-300 font-bold">{est.count} lotes ({est.percentage}%)</div>
                               </div>
 
+                              {/* Lot Count Pill Badge */}
                               <span
-                                className={`text-[10px] font-mono font-black mb-1 px-2 py-0.5 rounded-full border shadow-2xs transition-transform group-hover:scale-105 ${
+                                className={`text-[10px] font-mono font-black mb-1.5 px-2 py-0.5 rounded-full border shadow-2xs transition-transform group-hover:scale-105 shrink-0 ${
                                   hasLots ? colors.badge : 'bg-neutral-100 text-neutral-400 border-neutral-200'
                                 }`}
                               >
                                 {est.count}
                               </span>
 
+                              {/* Vertical Bar */}
                               <div
                                 style={{ height: hasLots ? `${Math.max(heightPct, 12)}%` : '6px' }}
-                                className={`w-full max-w-[48px] rounded-t-xl transition-all duration-500 ease-out shadow-xs cursor-pointer ${
+                                className={`w-full max-w-[50px] rounded-t-xl transition-all duration-500 ease-out shadow-xs cursor-pointer shrink-0 ${
                                   hasLots
                                     ? `bg-gradient-to-t ${colors.bar} hover:brightness-110 shadow-sm`
                                     : 'bg-neutral-200/80 hover:bg-neutral-300'
                                 }`}
                               />
+                            </div>
+                          );
+                        })}
+                      </div>
 
-                              <span className="text-[10px] font-mono font-semibold text-neutral-500 mt-1.5">
+                      {/* Etiquetas inferiores: Porcentaje y Nombre del Estado completamente visibles debajo de la línea base */}
+                      <div className="flex items-start justify-between gap-2 sm:gap-4 px-2 pt-1">
+                        {data.estados.map((est, idx) => {
+                          const hasLots = est.count > 0;
+                          const colors = stateGradients[est.nombre] || {
+                            text: 'text-[#15803D]'
+                          };
+
+                          return (
+                            <div key={est.uid || idx} className="flex-1 flex flex-col items-center text-center">
+                              <span className="text-[11px] font-mono font-bold text-neutral-600">
                                 {est.percentage}%
                               </span>
-
                               <span
-                                className={`text-[11px] font-bold mt-0.5 truncate w-full text-center ${
+                                className={`text-[11px] sm:text-xs font-bold mt-0.5 leading-tight ${
                                   hasLots ? colors.text : 'text-neutral-400'
                                 }`}
                               >
@@ -681,7 +699,8 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                         })}
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px] text-neutral-500 font-mono px-1">
+                      {/* Subtítulo de flujo secuencial */}
+                      <div className="flex items-center justify-between text-[11px] text-neutral-500 font-mono px-1 pt-1">
                         <span>Flujo: Producción ➔ Almacén ➔ Despacho ➔ Liberado</span>
                         <span className="text-[#15803D] font-bold">100% Trazable</span>
                       </div>
