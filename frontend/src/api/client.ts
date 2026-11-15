@@ -149,6 +149,7 @@ export interface DashboardMetricsData {
     tasa_liberacion: number;
     tasa_rpet: number;
     tco2_avoided: number;
+    kilos_reciclados?: number;
   };
   estados: {
     uid: string;
@@ -176,6 +177,13 @@ export interface DashboardMetricsData {
     lotes: number;
     unidades: number;
   }[];
+  tendencia_diaria?: {
+    fecha: string;
+    unidades: number;
+    lotes: number;
+    meta: number;
+    cumplimiento_pct: number;
+  }[];
   actividad_reciente: {
     uid: string;
     fecha_hora: string;
@@ -194,6 +202,7 @@ export interface DashboardMetricsData {
     meta_actual_pct: number;
     cumplimiento_actual_pct: number;
     certificados_emitidos: number;
+    kilos_rpet_estimados?: number;
   };
 }
 

@@ -36,7 +36,7 @@ export const PublicTrazabilidadView: React.FC<{ uid: string }> = ({ uid }) => {
           <h2 className="font-display font-bold text-lg text-[#0D3B22]">
             Verificando Registro en Bioplast Chile...
           </h2>
-          <p className="text-xs text-neutral-500 font-mono">UID: {uid}</p>
+          <p className="text-xs text-neutral-500">Consultando base de datos oficial...</p>
         </div>
       </div>
     );
@@ -117,14 +117,7 @@ export const PublicTrazabilidadView: React.FC<{ uid: string }> = ({ uid }) => {
           </div>
 
           {/* Key Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-6">
-            <div className="p-3.5 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6]">
-              <span className="text-[10px] uppercase font-bold text-neutral-400 block">UID (UUID)</span>
-              <span className="font-mono text-xs font-extrabold text-[#0D3B22] truncate block" title={String(data.uid)}>
-                {String(data.uid).slice(0, 8)}...
-              </span>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
             <div className="p-3.5 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6]">
               <span className="text-[10px] uppercase font-bold text-neutral-400 block">Código Interno</span>
               <span className="font-mono text-base font-extrabold text-[#0D3B22]">#{data.codigo_interno}</span>

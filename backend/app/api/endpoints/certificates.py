@@ -20,11 +20,12 @@ def list_liberados(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    estado_liberado = db.query(Estado).filter(Estado.nombre == "Liberado").first()
-    if not estado_liberado:
+    estados_validos = db.query(Estado).filter(Estado.nombre.in_(["Despacho", "Liberado"])).all()
+    estados_uids = [e.uid for e in estados_validos]
+    if not estados_uids:
         return {"items": [], "total": 0, "page": page, "limit": limit, "pages": 1}
 
-    query = db.query(Production).filter(Production.uid_estado == estado_liberado.uid)
+    query = db.query(Production).filter(Production.uid_estado.in_(estados_uids))
 
     if search:
         s = search.strip()
@@ -55,6 +56,8 @@ def list_liberados(
             "material": p.material,
             "color_bidon": p.color_bidon,
             "color_asa": p.color_asa,
+            "estado_nombre": p.estado.nombre if p.estado else "Liberado",
+            "estado_color": p.estado.color if p.estado else "#10B981",
             "certificado_emitido": cert is not None,
             "numero_certificado": cert.numero_certificado if cert else None,
             "certificado_uid": str(cert.uid) if cert else None

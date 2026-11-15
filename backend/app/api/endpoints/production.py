@@ -179,17 +179,13 @@ def list_production_batches(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Default state is 'Producción' if no filter specified
+    # Si estado_uid es None o 'all', no se aplica filtro (se muestran todos los estados)
     estado_filter_uuid = None
-    if estado_uid:
+    if estado_uid and estado_uid.lower() not in ("all", "null", "undefined", ""):
         try:
             estado_filter_uuid = uuid.UUID(estado_uid)
         except ValueError:
             pass
-    else:
-        estado_prod = db.query(Estado).filter(Estado.nombre == "Producción").first()
-        if estado_prod:
-            estado_filter_uuid = estado_prod.uid
 
     query = db.query(
         Production.codigo_interno,
@@ -225,7 +221,8 @@ def list_production_batches(
     query = query.group_by(Production.codigo_interno)
     total_count = query.count()
 
-    results = query.order_by(desc("fecha"), desc(Production.codigo_interno)).offset((page - 1) * limit).limit(limit).all()
+    # Ordenar estrictamente descendente: el último código interno creado aparece primero
+    results = query.order_by(desc(Production.codigo_interno)).offset((page - 1) * limit).limit(limit).all()
 
     batches_data = []
     for r in results:
@@ -266,12 +263,25 @@ def list_production_batches(
 @router.get("/batches/{codigo_interno}")
 def get_batch_details_and_lots(
     codigo_interno: int,
+    estado_uid: Optional[str] = Query(None, description="Filtro opcional por estado en sábana"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    productions = db.query(Production).filter(Production.codigo_interno == codigo_interno).order_by(Production.lote.asc()).all()
+    query_lots = db.query(Production).filter(Production.codigo_interno == codigo_interno)
+    if estado_uid and estado_uid.lower() not in ("all", "null", "undefined", ""):
+        try:
+            e_uuid = uuid.UUID(estado_uid)
+            query_lots = query_lots.filter(Production.uid_estado == e_uuid)
+        except ValueError:
+            pass
+
+    productions = query_lots.order_by(Production.lote.asc()).all()
     if not productions:
-        raise HTTPException(status_code=404, detail="Lote de producción no encontrado")
+        # Si no hay lotes con ese estado para este codigo interno, retornar lista vacía o lotes generales
+        all_prods = db.query(Production).filter(Production.codigo_interno == codigo_interno).all()
+        if not all_prods:
+            raise HTTPException(status_code=404, detail="Lote de producción no encontrado")
+        productions = []
 
     lotes_out = []
     for p in productions:
@@ -376,6 +386,27 @@ def update_single_lot_state(
     prod = db.query(Production).filter(Production.uid == production_uid).first()
     if not prod:
         raise HTTPException(status_code=404, detail="Lote no encontrado")
+
+    estado_actual_nom = prod.estado.nombre if prod.estado else ""
+    nuevo_estado_nom = nuevo_estado.nombre
+
+    # Máquina de Estados Estricta (Workflow sin saltos):
+    # Producción -> Almacenaje -> Despacho -> (Liberado o Retenido)
+    valid_transitions = {
+        "Producción": ["Almacenaje", "Retenido"],
+        "Almacenaje": ["Despacho", "Retenido"],
+        "Despacho": ["Liberado", "Retenido"],
+        "Retenido": ["Producción", "Almacenaje", "Despacho", "Liberado"],
+        "Liberado": ["Retenido"] # Por auditoría extraordinaria de Calidad
+    }
+
+    if estado_actual_nom in valid_transitions:
+        allowed = valid_transitions[estado_actual_nom]
+        if nuevo_estado_nom not in allowed and nuevo_estado_nom != estado_actual_nom:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Transición no permitida: de '{estado_actual_nom}' solo se puede avanzar a: {', '.join(allowed)}."
+            )
 
     now = datetime.now(timezone.utc)
     estado_ant = prod.uid_estado

@@ -117,7 +117,7 @@ export const CertificadosView: React.FC = () => {
             Certificados de Análisis y Emisión Oficial
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
-            Exclusivo para lotes en estado <strong>Liberado</strong>. Genera el documento oficial R-CAL-07 idéntico para exportación o impresión física.
+            Lotes en estado <strong>Despacho</strong> o <strong>Liberado</strong> listos para emisión del documento oficial R-CAL-07.
           </p>
         </div>
 
@@ -235,6 +235,7 @@ export const CertificadosView: React.FC = () => {
                       <th className="p-3.5">Artículo / Envase</th>
                       <th className="p-3.5">Material & Colores</th>
                       <th className="p-3.5">Cantidad</th>
+                      <th className="p-3.5">Estado</th>
                       <th className="p-3.5">Certificado</th>
                       <th className="p-3.5 text-right">Acción</th>
                     </tr>
@@ -260,6 +261,14 @@ export const CertificadosView: React.FC = () => {
                         </td>
                         <td className="p-3.5 font-mono font-bold">
                           {item.cantidad.toLocaleString('es-CL')} UND.
+                        </td>
+                        <td className="p-3.5">
+                          <span
+                            className="px-2.5 py-0.5 text-[11px] font-bold rounded text-white"
+                            style={{ backgroundColor: item.estado_color || (item.estado_nombre === 'Despacho' ? '#8B5CF6' : '#10B981') }}
+                          >
+                            {item.estado_nombre || 'Liberado'}
+                          </span>
                         </td>
                         <td className="p-3.5">
                           {item.certificado_emitido ? (

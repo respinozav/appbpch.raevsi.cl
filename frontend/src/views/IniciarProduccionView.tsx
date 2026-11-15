@@ -8,16 +8,16 @@ import {
 
 export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: number) => void }> = ({ onNavigateToBatch }) => {
   // Form state
-  const [numeroMaquina, setNumeroMaquina] = useState<number>(7);
-  const [turno, setTurno] = useState<number>(1);
-  const [operador, setOperador] = useState<number>(104);
-  const [cantidad, setCantidad] = useState<number>(2600);
-  const [cantidadLotes, setCantidadLotes] = useState<number>(10);
-  const [peso, setPeso] = useState<string>('N/A');
+  const [numeroMaquina, setNumeroMaquina] = useState<number | ''>('');
+  const [turno, setTurno] = useState<number | ''>('');
+  const [operador, setOperador] = useState<number | ''>('');
+  const [cantidad, setCantidad] = useState<number | ''>('');
+  const [cantidadLotes, setCantidadLotes] = useState<number | ''>(10);
+  const [peso, setPeso] = useState<string>('');
   const [articulo, setArticulo] = useState<string>('ENVASE TRAVERSO 1000-24');
   const [material, setMaterial] = useState<string>('PET');
-  const [colorBidon, setColorBidon] = useState<string>('TRANSPARENTE');
-  const [colorAsa, setColorAsa] = useState<string>('VERDE');
+  const [colorBidon, setColorBidon] = useState<string>('');
+  const [colorAsa, setColorAsa] = useState<string>('');
 
   // Request & Feedback states
   const [submitting, setSubmitting] = useState(false);
@@ -32,16 +32,16 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
 
     try {
       const res = await api.createBatch({
-        numero_maquina: Number(numeroMaquina),
-        turno: Number(turno),
-        operador: Number(operador),
-        cantidad: Number(cantidad),
-        cantidad_lotes: Number(cantidadLotes),
+        numero_maquina: Number(numeroMaquina) || 1,
+        turno: Number(turno) || 1,
+        operador: Number(operador) || 1,
+        cantidad: Number(cantidad) || 1,
+        cantidad_lotes: Number(cantidadLotes) || 1,
         peso: peso.trim() || 'N/A',
         articulo: articulo.trim().toUpperCase(),
         material: material.trim().toUpperCase(),
-        color_bidon: colorBidon.trim().toUpperCase(),
-        color_asa: colorAsa.trim().toUpperCase(),
+        color_bidon: (colorBidon.trim() || 'TRANSPARENTE').toUpperCase(),
+        color_asa: (colorAsa.trim() || 'VERDE').toUpperCase(),
       });
 
       setCreatedBatch(res);
@@ -177,7 +177,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       required
                       value={colorBidon}
                       onChange={(e) => setColorBidon(e.target.value)}
-                      placeholder="TRANSPARENTE"
+                      placeholder="Ej. Transparente, Ámbar, Blanco..."
                       className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] uppercase font-medium bg-[#F7FAF7]/40"
                     />
                   </div>
@@ -191,7 +191,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       required
                       value={colorAsa}
                       onChange={(e) => setColorAsa(e.target.value)}
-                      placeholder="VERDE"
+                      placeholder="Ej. Verde, Rojo, Azul, Negro..."
                       className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] uppercase font-medium bg-[#F7FAF7]/40"
                     />
                   </div>
@@ -216,7 +216,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     min={1}
                     required
                     value={numeroMaquina}
-                    onChange={(e) => setNumeroMaquina(Number(e.target.value))}
+                    onChange={(e) => setNumeroMaquina(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="Ej. 7"
                     className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center"
                   />
                 </div>
@@ -231,7 +232,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     max={4}
                     required
                     value={turno}
-                    onChange={(e) => setTurno(Number(e.target.value))}
+                    onChange={(e) => setTurno(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="1-4"
                     className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center"
                   />
                 </div>
@@ -245,7 +247,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     min={1}
                     required
                     value={operador}
-                    onChange={(e) => setOperador(Number(e.target.value))}
+                    onChange={(e) => setOperador(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="Ej. 104"
                     className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center"
                   />
                 </div>
@@ -259,7 +262,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     min={1}
                     required
                     value={cantidad}
-                    onChange={(e) => setCantidad(Number(e.target.value))}
+                    onChange={(e) => setCantidad(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="Ej. 2600"
                     className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center font-bold"
                   />
                 </div>

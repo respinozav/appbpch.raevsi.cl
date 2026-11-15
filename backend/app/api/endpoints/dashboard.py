@@ -175,8 +175,30 @@ def get_dashboard_metrics(
         "normativa": "Ley 20.920 · D.S. 12 MMA",
         "meta_actual_pct": 30.0,
         "cumplimiento_actual_pct": min(round(tasa_rpet, 1), 100.0),
-        "certificados_emitidos": db.query(Certificado).count()
+        "certificados_emitidos": db.query(Certificado).count(),
+        "kilos_rpet_estimados": round(rpet_units_est * 0.12, 1)  # 120 gramos por bidón
     }
+
+    # Tendencia temporal diaria de producción (para gráficos de evolución para jefatura)
+    daily_results = query.with_entities(
+        func.date(Production.fecha).label("dia"),
+        func.coalesce(func.sum(Production.cantidad), 0).label("unidades"),
+        func.count(Production.uid).label("lotes")
+    ).group_by(func.date(Production.fecha)).order_by(func.date(Production.fecha).asc()).limit(30).all()
+
+    daily_timeline = []
+    for d in daily_results:
+        dia_str = str(d.dia)
+        unidades = int(d.unidades)
+        # Meta dinámica calculada al 115% o base de 10.000 unidades
+        meta = max(int(unidades * 1.15), 10000)
+        daily_timeline.append({
+            "fecha": dia_str,
+            "unidades": unidades,
+            "lotes": int(d.lotes),
+            "meta": meta,
+            "cumplimiento_pct": min(round((unidades / meta) * 100, 1), 100.0) if meta > 0 else 100.0
+        })
 
     return {
         "resumen": {
@@ -185,12 +207,14 @@ def get_dashboard_metrics(
             "distinct_batches": distinct_batches,
             "tasa_liberacion": tasa_liberacion,
             "tasa_rpet": tasa_rpet,
-            "tco2_avoided": tco2_avoided
+            "tco2_avoided": tco2_avoided,
+            "kilos_reciclados": round(rpet_units_est * 0.12, 1)
         },
         "estados": estados_breakdown,
         "materiales": materials_breakdown,
         "maquinas": machines_breakdown,
         "turnos": turnos_breakdown,
+        "tendencia_diaria": daily_timeline,
         "actividad_reciente": activity_timeline,
         "ley_rep": rep_goals
     }

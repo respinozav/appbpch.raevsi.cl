@@ -38,14 +38,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
     },
     { 
       id: 'certificados', 
-      label: 'Certificados (Liberados)', 
+      label: 'Certificados', 
       desc: 'Documento R-CAL-07 PDF', 
       icon: FileCheck 
     },
     ...(isAdmin ? [{ 
       id: 'usuarios', 
-      label: 'Usuarios & Roles', 
-      desc: 'CRUD y permisos', 
+      label: 'Usuarios & Permisos', 
+      desc: 'Usuarios y permisos', 
       icon: Users 
     }] : []),
     { 
@@ -162,21 +162,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
         </nav>
       </div>
 
-      {/* Footer: Sustainability Micro-card & User Profile Info */}
-      <div className="p-3 border-t border-[#E5ECE6] space-y-3">
-        {/* Minimalist Eco Badge */}
-        <div className="p-3 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] text-[11px] text-neutral-600 space-y-1">
-          <div className="flex items-center justify-between font-mono font-bold text-[#0D3B22] text-[10px]">
-            <span>LEY REP 20.920</span>
-            <span className="text-[#15803D]">D.S. 12</span>
-          </div>
-          <div className="text-[10px] text-neutral-400 leading-tight">
-            Correlativo base 110000000+ y tickets con código QR verificado.
-          </div>
-        </div>
-
+      {/* Footer: User Profile Info & Logout */}
+      <div className="p-3 border-t border-[#E5ECE6]">
         {/* User Card */}
-        <div className="p-2.5 rounded-xl bg-white border border-[#E5ECE6] flex items-center justify-between">
+        <div className="p-2.5 rounded-xl bg-white border border-[#E5ECE6] flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full bg-[#0D3B22] text-white font-bold text-xs flex items-center justify-center shrink-0">
               {user?.nombre_completo?.charAt(0) || 'U'}
@@ -194,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
           <button
             onClick={logout}
             title="Cerrar sesión"
-            className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition shrink-0"
+            className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition shrink-0 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
           </button>

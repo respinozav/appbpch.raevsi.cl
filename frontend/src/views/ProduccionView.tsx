@@ -32,6 +32,7 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
     production_uid?: string;
     lote?: number;
     currentEstadoUid: string;
+    currentEstadoNombre?: string;
     isBatch: boolean;
   } | null>(null);
   const [selectedNewEstadoUid, setSelectedNewEstadoUid] = useState<string>('');
@@ -52,10 +53,7 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
       try {
         const data = await api.getEstados();
         setEstados(data);
-        const prod = data.find((e) => e.nombre === 'Producción');
-        if (prod) {
-          setSelectedEstadoUid(prod.uid);
-        }
+        // Por defecto arranca en 'Todos los Estados' (selectedEstadoUid = null)
       } catch (err) {
         console.error('Error fetching estados:', err);
       }
@@ -84,9 +82,7 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
   };
 
   useEffect(() => {
-    if (selectedEstadoUid !== null || estados.length > 0) {
-      fetchBatches();
-    }
+    fetchBatches();
   }, [selectedEstadoUid, page, limit]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -346,23 +342,6 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
                         <span className="w-1.5 h-1.5 rounded-full bg-white" />
                         <span>{batch.estado?.nombre || 'Producción'}</span>
                       </span>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setStateChangeModal({
-                            codigo_interno: batch.codigo_interno,
-                            currentEstadoUid: batch.uid_estado,
-                            isBatch: true,
-                          });
-                          setSelectedNewEstadoUid(batch.uid_estado);
-                        }}
-                        className="p-2 rounded-xl text-neutral-600 hover:text-[#0D3B22] hover:bg-neutral-200/60 border border-[#E5ECE6] text-xs font-semibold flex items-center gap-1"
-                        title="Cambiar estado a todos los lotes de esta tirada"
-                      >
-                        <ArrowUpDown className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Cambiar Estado</span>
-                      </button>
                     </div>
                   </div>
 
@@ -394,97 +373,111 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
                             <span>Desplegando sábana...</span>
                           </div>
                         ) : expandedDetails?.lotes ? (
-                          <div className="overflow-x-auto rounded-xl border border-[#E5ECE6] bg-white shadow-sm">
-                            <table className="w-full text-left border-collapse text-xs">
-                              <thead>
-                                <tr className="bg-[#EEF6F0]/60 border-b border-[#E5ECE6] text-neutral-700 font-bold uppercase text-[10px]">
-                                  <th className="p-3">UID (UUID)</th>
-                                  <th className="p-3">Lote</th>
-                                  <th className="p-3">Unid. Embalaje</th>
-                                  <th className="p-3">Cantidad</th>
-                                  <th className="p-3">Peso</th>
-                                  <th className="p-3">Máq/Turno/Op</th>
-                                  <th className="p-3">Estado</th>
-                                  <th className="p-3 text-right">Acciones</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-[#E5ECE6]">
-                                {expandedDetails.lotes.map((lot: ProductionTicket) => (
-                                  <tr key={lot.uid} className="hover:bg-[#F7FAF7]/80 transition">
-                                    <td className="p-3 font-mono text-[10px] text-neutral-500 max-w-[120px] truncate" title={lot.uid}>
-                                      {lot.uid}
-                                    </td>
-                                    <td className="p-3 font-mono font-extrabold text-[#0D3B22] text-sm">
-                                      {lot.lote}
-                                    </td>
-                                    <td className="p-3 font-mono font-bold">
-                                      {lot.unidad_embalaje}
-                                    </td>
-                                    <td className="p-3 font-mono">
-                                      {lot.cantidad.toLocaleString('es-CL')} UND.
-                                    </td>
-                                    <td className="p-3 font-mono">
-                                      {lot.peso || 'N/A'}
-                                    </td>
-                                    <td className="p-3 font-mono text-neutral-600">
-                                      {lot.numero_maquina} / {lot.turno} / {lot.operador}
-                                    </td>
-                                    <td className="p-3">
-                                      <span
-                                        className="px-2.5 py-0.5 text-[11px] font-bold rounded text-white"
-                                        style={{ backgroundColor: lot.estado?.color || '#15803D' }}
-                                      >
-                                        {lot.estado?.nombre || 'Producción'}
-                                      </span>
-                                    </td>
-                                    <td className="p-3 text-right space-x-1">
-                                      <button
-                                        onClick={() => setPrintTicket(lot)}
-                                        className="p-1.5 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-lg transition"
-                                        title="Ver / Imprimir Ticket Zebra"
-                                      >
-                                        <Printer className="w-3.5 h-3.5" />
-                                      </button>
+                          (() => {
+                            const filteredLots = (expandedDetails.lotes as ProductionTicket[]).filter((lot) => {
+                              if (!selectedEstadoUid) return true;
+                              return lot.uid_estado === selectedEstadoUid;
+                            });
 
-                                      <button
-                                        onClick={() => {
-                                          setStateChangeModal({
-                                            production_uid: lot.uid,
-                                            lote: lot.lote,
-                                            currentEstadoUid: lot.uid_estado,
-                                            isBatch: false,
-                                          });
-                                          setSelectedNewEstadoUid(lot.uid_estado);
-                                        }}
-                                        className="p-1.5 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-lg transition"
-                                        title="Cambiar estado de este lote"
-                                      >
-                                        <ArrowUpDown className="w-3.5 h-3.5" />
-                                      </button>
+                            if (filteredLots.length === 0) {
+                              return (
+                                <div className="p-6 text-center text-xs text-neutral-500 bg-white rounded-xl border border-[#E5ECE6]">
+                                  No existen lotes con el estado seleccionado en este código interno.
+                                </div>
+                              );
+                            }
 
-                                      <button
-                                        onClick={() => handleOpenHistory(lot.uid)}
-                                        className="p-1.5 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-lg transition"
-                                        title="Ver historial de auditoría de estados"
-                                      >
-                                        <History className="w-3.5 h-3.5" />
-                                      </button>
+                            return (
+                              <div className="overflow-x-auto rounded-xl border border-[#E5ECE6] bg-white shadow-sm">
+                                <table className="w-full text-left border-collapse text-xs">
+                                  <thead>
+                                    <tr className="bg-[#EEF6F0]/60 border-b border-[#E5ECE6] text-neutral-700 font-bold uppercase text-[10px]">
+                                      <th className="p-3">Lote</th>
+                                      <th className="p-3">Unid. Embalaje</th>
+                                      <th className="p-3">Cantidad</th>
+                                      <th className="p-3">Peso</th>
+                                      <th className="p-3">Máq/Turno/Op</th>
+                                      <th className="p-3">Estado</th>
+                                      <th className="p-3 text-right">Acciones</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-[#E5ECE6]">
+                                    {filteredLots.map((lot: ProductionTicket) => (
+                                      <tr key={lot.uid} className="hover:bg-[#F7FAF7]/80 transition">
+                                        <td className="p-3 font-mono font-extrabold text-[#0D3B22] text-sm">
+                                          {lot.lote}
+                                        </td>
+                                        <td className="p-3 font-mono font-bold">
+                                          {lot.unidad_embalaje}
+                                        </td>
+                                        <td className="p-3 font-mono">
+                                          {lot.cantidad.toLocaleString('es-CL')} UND.
+                                        </td>
+                                        <td className="p-3 font-mono">
+                                          {lot.peso || 'N/A'}
+                                        </td>
+                                        <td className="p-3 font-mono text-neutral-600">
+                                          {lot.numero_maquina} / {lot.turno} / {lot.operador}
+                                        </td>
+                                        <td className="p-3">
+                                          <span
+                                            className="px-2.5 py-0.5 text-[11px] font-bold rounded text-white"
+                                            style={{ backgroundColor: lot.estado?.color || '#15803D' }}
+                                          >
+                                            {lot.estado?.nombre || 'Producción'}
+                                          </span>
+                                        </td>
+                                        <td className="p-3 text-right space-x-1">
+                                          <button
+                                            onClick={() => setPrintTicket(lot)}
+                                            className="p-1.5 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-lg transition cursor-pointer"
+                                            title="Ver / Imprimir Ticket Zebra"
+                                          >
+                                            <Printer className="w-3.5 h-3.5" />
+                                          </button>
 
-                                      <a
-                                        href={`/trazabilidad/${lot.uid}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="p-1.5 text-neutral-400 hover:text-[#15803D] inline-block transition"
-                                        title="Abrir enlace público QR"
-                                      >
-                                        <ExternalLink className="w-3.5 h-3.5" />
-                                      </a>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                                          <button
+                                            onClick={() => {
+                                              setStateChangeModal({
+                                                production_uid: lot.uid,
+                                                lote: lot.lote,
+                                                currentEstadoUid: lot.uid_estado,
+                                                currentEstadoNombre: lot.estado?.nombre || 'Producción',
+                                                isBatch: false,
+                                              });
+                                              setSelectedNewEstadoUid(lot.uid_estado);
+                                            }}
+                                            className="p-1.5 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-lg transition cursor-pointer"
+                                            title="Cambiar estado de este lote"
+                                          >
+                                            <ArrowUpDown className="w-3.5 h-3.5" />
+                                          </button>
+
+                                          <button
+                                            onClick={() => handleOpenHistory(lot.uid)}
+                                            className="p-1.5 text-neutral-600 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-lg transition cursor-pointer"
+                                            title="Ver historial de auditoría de estados"
+                                          >
+                                            <History className="w-3.5 h-3.5" />
+                                          </button>
+
+                                          <a
+                                            href={`/trazabilidad/${lot.uid}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-1.5 text-neutral-400 hover:text-[#15803D] inline-block transition cursor-pointer"
+                                            title="Abrir consulta pública QR"
+                                          >
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            );
+                          })()
                         ) : null}
                       </motion.div>
                     )}
@@ -554,34 +547,63 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
               <div className="space-y-4 text-xs">
                 <div>
                   <label className="block font-semibold text-neutral-700 mb-2">
-                    Seleccionar Nuevo Estado:
+                    Avanzar al Siguiente Estado en Cadena de Trazabilidad:
                   </label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {estados.map((est) => (
-                      <label
-                        key={est.uid}
-                        className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
-                          selectedNewEstadoUid === est.uid
-                            ? 'bg-[#EEF6F0] border-[#15803D] font-bold text-[#0D3B22]'
-                            : 'border-[#E5ECE6] hover:bg-neutral-50 text-neutral-700'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="newEstado"
-                          value={est.uid}
-                          checked={selectedNewEstadoUid === est.uid}
-                          onChange={() => setSelectedNewEstadoUid(est.uid)}
-                          className="accent-[#15803D]"
-                        />
-                        <span
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: est.color }}
-                        />
-                        <span>{est.nombre}</span>
-                      </label>
-                    ))}
-                  </div>
+                  {(() => {
+                    const currentNom = stateChangeModal.currentEstadoNombre || 'Producción';
+                    const validTransitionsMap: Record<string, string[]> = {
+                      'Producción': ['Almacenaje', 'Retenido'],
+                      'Almacenaje': ['Despacho', 'Retenido'],
+                      'Despacho': ['Liberado', 'Retenido'],
+                      'Retenido': ['Producción', 'Almacenaje', 'Despacho', 'Liberado'],
+                      'Liberado': ['Retenido']
+                    };
+                    const allowedNames = validTransitionsMap[currentNom] || [];
+                    const estadosPermitidos = estados.filter((est) => allowedNames.includes(est.nombre));
+
+                    if (estadosPermitidos.length === 0) {
+                      return (
+                        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                          El lote ya se encuentra en estado <strong>{currentNom}</strong> (fase finalizada). No requiere transiciones adicionales.
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-2">
+                        <div className="text-[11px] text-neutral-500 mb-1">
+                          Flujo obligatorio: <span className="font-semibold text-[#0D3B22]">Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido</span>.
+                          Estado actual del lote: <strong className="text-[#15803D]">{currentNom}</strong>.
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {estadosPermitidos.map((est) => (
+                            <label
+                              key={est.uid}
+                              className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
+                                selectedNewEstadoUid === est.uid
+                                  ? 'bg-[#EEF6F0] border-[#15803D] font-bold text-[#0D3B22]'
+                                  : 'border-[#E5ECE6] hover:bg-neutral-50 text-neutral-700'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="newEstado"
+                                value={est.uid}
+                                checked={selectedNewEstadoUid === est.uid}
+                                onChange={() => setSelectedNewEstadoUid(est.uid)}
+                                className="accent-[#15803D]"
+                              />
+                              <span
+                                className="w-2.5 h-2.5 rounded-full"
+                                style={{ backgroundColor: est.color }}
+                              />
+                              <span>Avanzar a: <strong>{est.nombre}</strong></span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div>

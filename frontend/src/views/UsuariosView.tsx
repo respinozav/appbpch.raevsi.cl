@@ -118,16 +118,16 @@ export const UsuariosView: React.FC = () => {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0F1F16] tracking-tight mt-1">
-            Control de Usuarios y Roles (CRUD)
+            Control de Usuarios y Permisos
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
-            Gestión de permisos y accesos para Administradores, Jefatura y Colaboradores de planta.
+            Gestión de roles y accesos para Administradores, Jefatura y Colaboradores de planta.
           </p>
         </div>
 
         <button
           onClick={handleOpenCreate}
-          className="px-4 py-2.5 text-xs font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] transition flex items-center gap-2 shadow-sm self-start sm:self-auto"
+          className="px-4 py-2.5 text-xs font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] transition flex items-center gap-2 shadow-sm self-start sm:self-auto cursor-pointer"
         >
           <UserPlus className="w-4 h-4" />
           <span>Crear Nuevo Usuario</span>
@@ -146,7 +146,6 @@ export const UsuariosView: React.FC = () => {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-[#EEF6F0]/60 border-b border-[#E5ECE6] text-neutral-700 font-bold uppercase text-[10px]">
-                  <th className="p-3.5">UID (UUID)</th>
                   <th className="p-3.5">Nombre Completo</th>
                   <th className="p-3.5">Correo (Credencial)</th>
                   <th className="p-3.5">Rol del Sistema</th>
@@ -166,9 +165,6 @@ export const UsuariosView: React.FC = () => {
 
                   return (
                     <tr key={u.uid} className="hover:bg-[#F7FAF7] transition">
-                      <td className="p-3.5 font-mono text-[10px] text-neutral-400 max-w-[120px] truncate" title={u.uid}>
-                        {u.uid}
-                      </td>
                       <td className="p-3.5 font-semibold text-neutral-900">
                         {u.nombre_completo}
                       </td>
