@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, PublicTrazabilidadData } from '../api/client';
 import { 
-  CheckCircle2, Leaf, Clock, Award, AlertCircle, RefreshCw, Lock
+  CheckCircle2, Clock, Award, AlertCircle, RefreshCw, Lock
 } from 'lucide-react';
 
 export const PublicTrazabilidadView: React.FC<{ uid: string }> = ({ uid }) => {
@@ -80,17 +80,11 @@ export const PublicTrazabilidadView: React.FC<{ uid: string }> = ({ uid }) => {
         {/* Verification Banner */}
         <div className="bg-white rounded-2xl border border-[#E5ECE6] p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#15803D] to-[#22C55E] flex items-center justify-center text-white shadow-md shadow-[#15803D]/25">
-              <Leaf className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="font-display font-black text-xl tracking-tight text-[#0D3B22] block leading-none">
-                BIOPLAST CHILE
-              </span>
-              <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block mt-0.5">
-                Certificación Pública de Origen & Trazabilidad
-              </span>
-            </div>
+            <img 
+              src="/logo-bioplast.png" 
+              alt="Bioplast Ecological Innovation" 
+              className="h-11 w-auto object-contain"
+            />
           </div>
 
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold">

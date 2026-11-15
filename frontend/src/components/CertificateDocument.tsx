@@ -41,14 +41,12 @@ export const CertificateDocument: React.FC<CertificateDocumentProps> = ({ data, 
         {/* Header 3-Column Box */}
         <div className="border border-black grid grid-cols-12 mb-3">
           {/* Col 1: Logo Bioplast */}
-          <div className="col-span-3 border-r border-black p-3 flex flex-col justify-center items-center text-center">
-            <div className="flex items-center gap-1 font-black text-xl tracking-tight text-neutral-900">
-              <span className="text-[#15803D] text-2xl font-serif">🍃</span>
-              <span>BIOPLAST</span>
-            </div>
-            <span className="text-[7.5px] uppercase tracking-widest text-neutral-600 font-semibold mt-0.5">
-              ECOLOGICAL INNOVATION
-            </span>
+          <div className="col-span-3 border-r border-black p-2 flex flex-col justify-center items-center text-center bg-white">
+            <img 
+              src="/logo-bioplast.png" 
+              alt="Bioplast Ecological Innovation" 
+              className="h-11 max-h-12 w-auto object-contain"
+            />
           </div>
 
           {/* Col 2: Title Centered */}

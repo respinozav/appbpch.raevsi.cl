@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, ArrowRight, Loader2, Lock, Mail, Leaf, Award } from 'lucide-react';
+import { Shield, ArrowRight, Loader2, Lock, Mail, Award } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
   const { login } = useAuth();
@@ -30,17 +30,11 @@ export const LoginView: React.FC = () => {
         {/* Brand Header */}
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#15803D] to-[#22C55E] flex items-center justify-center text-white shadow-md shadow-[#15803D]/20">
-              <Leaf className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-display font-extrabold text-xl tracking-tight text-[#0D3B22]">
-                BIOPLAST CHILE
-              </span>
-              <span className="block text-[10px] uppercase font-bold tracking-widest text-[#15803D]">
-                Trazabilidad Industrial & Ley REP
-              </span>
-            </div>
+            <img 
+              src="/logo-bioplast.png" 
+              alt="Bioplast Ecological Innovation" 
+              className="h-10 w-auto object-contain"
+            />
           </div>
 
           <div className="mt-12">

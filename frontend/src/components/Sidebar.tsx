@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { 
   PlusCircle, Layers, FileCheck, Users, User, LogOut, 
-  Search, Leaf, Menu, X, Shield, ChevronRight, Sparkles, Factory,
+  Search, Menu, X, Shield, ChevronRight, Sparkles, Factory,
   LayoutDashboard
 } from 'lucide-react';
 
@@ -75,22 +75,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
       <div>
         {/* Brand Header */}
         <div className="p-5 border-b border-[#E5ECE6]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#15803D] to-[#22C55E] flex items-center justify-center text-white shadow-md shadow-[#15803D]/25">
-              <Leaf className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-display font-extrabold text-lg tracking-tight text-[#0D3B22] block leading-none">
-                BIOPLAST
-              </span>
-              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block mt-0.5">
-                Trazabilidad B2B
-              </span>
-            </div>
+          <div className="flex items-center">
+            <img 
+              src="/logo-bioplast.png" 
+              alt="Bioplast Ecological Innovation" 
+              className="h-10 w-auto object-contain"
+            />
           </div>
 
           {/* Plant status pill */}
-          <div className="mt-3.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF6F0] border border-[#15803D]/20 text-[11px] font-medium text-[#0D3B22]">
+          <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF6F0] border border-[#15803D]/20 text-[11px] font-medium text-[#0D3B22]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#15803D] animate-pulse" />
             <span>Planta Quilicura · En Línea</span>
           </div>
@@ -212,12 +206,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
 
         {/* Mobile Brand Title */}
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#15803D] to-[#22C55E] flex items-center justify-center text-white shadow-xs">
-            <Leaf className="w-4 h-4" />
-          </div>
-          <span className="font-display font-extrabold text-base text-[#0D3B22]">
-            BIOPLAST
-          </span>
+          <img 
+            src="/logo-bioplast.png" 
+            alt="Bioplast Ecological Innovation" 
+            className="h-7 w-auto object-contain"
+          />
         </div>
 
         {/* User shortcut */}
