@@ -13,9 +13,23 @@ class Role(Base):
     uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
     nombre = Column(String(50), unique=True, nullable=False)
     descripcion = Column(Text, nullable=True)
+    activo = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     usuarios = relationship("User", back_populates="rol")
+    modulos = relationship("RolModulo", back_populates="rol", cascade="all, delete-orphan")
+
+
+class RolModulo(Base):
+    __tablename__ = "rol_modulos"
+    __table_args__ = {"schema": "bdbioplastchile"}
+
+    uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
+    rol_uid = Column(UUID(as_uuid=True), ForeignKey("bdbioplastchile.roles.uid", ondelete="CASCADE"), nullable=False)
+    modulo_id = Column(String(50), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    rol = relationship("Role", back_populates="modulos")
 
 
 class User(Base):
@@ -126,3 +140,19 @@ class ConfiguracionSistema(Base):
     usuario_actualizador_uid = Column(UUID(as_uuid=True), ForeignKey("bdbioplastchile.usuarios.uid"), nullable=True)
 
     usuario_actualizador = relationship("User")
+
+
+class AuditoriaLogin(Base):
+    __tablename__ = "auditoria_logins"
+    __table_args__ = {"schema": "bdbioplastchile"}
+
+    uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
+    correo = Column(String(255), nullable=False)
+    usuario_uid = Column(UUID(as_uuid=True), ForeignKey("bdbioplastchile.usuarios.uid", ondelete="SET NULL"), nullable=True)
+    exitoso = Column(Boolean, default=False, nullable=False)
+    ip_origen = Column(String(100), nullable=True)
+    user_agent = Column(Text, nullable=True)
+    motivo_fallo = Column(String(255), nullable=True)
+    fecha_hora = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    usuario = relationship("User")

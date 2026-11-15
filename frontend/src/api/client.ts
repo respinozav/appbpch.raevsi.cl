@@ -4,8 +4,21 @@ const API_BASE_URL = '/api';
 
 export interface Role {
   uid: string;
-  nombre: 'Administrador' | 'Jefatura' | 'Colaborador';
+  nombre: string;
   descripcion?: string;
+  activo?: boolean;
+  modulos?: string[];
+}
+
+export interface LoginAuditItem {
+  uid: string;
+  correo: string;
+  usuario_nombre?: string;
+  exitoso: boolean;
+  ip_origen: string;
+  user_agent?: string;
+  motivo_fallo?: string;
+  fecha_hora: string;
 }
 
 export interface User {
@@ -395,11 +408,32 @@ export const api = {
   getPublicTrazabilidad: (uid: string) =>
     request<PublicTrazabilidadData>(`/public/trazabilidad/${uid}`),
 
-  // System Configuration (Session timeout, etc.)
+  // System Configuration (Session timeout, RBAC, Login Audit)
   getSessionConfig: () => request<SessionConfig>('/config/session'),
   updateSessionConfig: (timeout_minutes: number) =>
     request<SessionConfig>('/config/session', {
       method: 'PUT',
       body: JSON.stringify({ timeout_minutes }),
     }),
+
+  listRolesConfig: () => request<Role[]>('/config/roles'),
+  createRole: (data: { nombre: string; descripcion?: string; modulos: string[] }) =>
+    request<Role>('/config/roles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateRole: (uid: string, data: { nombre?: string; descripcion?: string; activo?: boolean; modulos?: string[] }) =>
+    request<Role>(`/config/roles/${uid}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  listLoginAudits: (params: { search?: string; exitoso?: boolean; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params.search) q.append('search', params.search);
+    if (params.exitoso !== undefined) q.append('exitoso', String(params.exitoso));
+    if (params.page) q.append('page', String(params.page));
+    if (params.limit) q.append('limit', String(params.limit));
+    return request<{ items: LoginAuditItem[]; total: number; page: number; limit: number; pages: number }>(`/config/audit/logins?${q.toString()}`);
+  },
 };

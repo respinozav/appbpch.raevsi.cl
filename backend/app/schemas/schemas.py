@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Any
 from datetime import datetime, date
 from uuid import UUID
@@ -7,9 +7,49 @@ from uuid import UUID
 class RoleBase(BaseModel):
     nombre: str
     descripcion: Optional[str] = None
+    activo: bool = True
 
 class RoleOut(RoleBase):
     uid: UUID
+    modulos: List[str] = []
+
+    @field_validator("modulos", mode="before")
+    @classmethod
+    def extract_modulos(cls, v):
+        if not v:
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, str):
+                res.append(item)
+            elif hasattr(item, "modulo_id"):
+                res.append(item.modulo_id)
+        return res
+
+    class Config:
+        from_attributes = True
+
+class RoleCreate(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    modulos: List[str] = []
+
+class RoleUpdate(BaseModel):
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    activo: Optional[bool] = None
+    modulos: Optional[List[str]] = None
+
+# --- AUDITORIA LOGINS ---
+class AuditoriaLoginOut(BaseModel):
+    uid: UUID
+    correo: str
+    usuario_nombre: Optional[str] = None
+    exitoso: bool
+    ip_origen: Optional[str] = None
+    user_agent: Optional[str] = None
+    motivo_fallo: Optional[str] = None
+    fecha_hora: datetime
 
     class Config:
         from_attributes = True

@@ -474,12 +474,13 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
           {/* Bars visual representation */}
           {data?.tendencia_diaria && data.tendencia_diaria.length > 0 ? (
             (() => {
-              const maxUnits = Math.max(...data.tendencia_diaria.map((x) => x.unidades), 0);
-              const metaVal = data.tendencia_diaria[0]?.meta || 30000;
+              const tendencia = data.tendencia_diaria;
+              const maxUnits = Math.max(...tendencia.map((x) => x.unidades), 0);
+              const metaVal = tendencia[0]?.meta || 30000;
               const chartMax = Math.max(maxUnits, metaVal * 1.15, 1000);
               const metaHeightPct = Math.min(Math.round((metaVal / chartMax) * 100), 92);
-              const totalPeriodUnits = data.tendencia_diaria.reduce((acc, curr) => acc + curr.unidades, 0);
-              const activeDays = data.tendencia_diaria.filter((x) => x.unidades > 0).length;
+              const totalPeriodUnits = tendencia.reduce((acc, curr) => acc + curr.unidades, 0);
+              const activeDays = tendencia.filter((x) => x.unidades > 0).length;
               const dailyAvg = activeDays > 0 ? Math.round(totalPeriodUnits / activeDays) : 0;
 
               return (
@@ -495,19 +496,72 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                       </span>
                     </div>
 
+                    {/* SVG Poligonal interactivo que traza la trayectoria continua (sube y baja) siguiendo las barras */}
+                    {tendencia.length > 1 && (
+                      <svg
+                        className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible"
+                        viewBox="0 0 1000 100"
+                        preserveAspectRatio="none"
+                      >
+                        <defs>
+                          <linearGradient id="trendGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#15803D" />
+                            <stop offset="50%" stopColor="#22C55E" />
+                            <stop offset="100%" stopColor="#0D3B22" />
+                          </linearGradient>
+                        </defs>
+                        <polyline
+                          fill="none"
+                          stroke="url(#trendGradient)"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          points={tendencia
+                            .map((td, idx) => {
+                              const total = tendencia.length;
+                              // Centro horizontal porcentual de cada barra
+                              const x = ((idx + 0.5) / total) * 1000;
+                              // Invertido para SVG (0 arriba, 100 abajo)
+                              const heightPct = Math.round((td.unidades / chartMax) * 100);
+                              const y = 100 - Math.max(heightPct, td.unidades > 0 ? 10 : 2);
+                              return `${x},${y}`;
+                            })
+                            .join(' ')}
+                        />
+                        {tendencia.map((td, idx) => {
+                          const total = tendencia.length;
+                          const x = ((idx + 0.5) / total) * 1000;
+                          const heightPct = Math.round((td.unidades / chartMax) * 100);
+                          const y = 100 - Math.max(heightPct, td.unidades > 0 ? 10 : 2);
+                          return (
+                            <circle
+                              key={`pt-${idx}`}
+                              cx={x}
+                              cy={y}
+                              r="3.5"
+                              fill="#FFFFFF"
+                              stroke="#15803D"
+                              strokeWidth="2"
+                            />
+                          );
+                        })}
+                      </svg>
+                    )}
+
                     {/* Contenedor flexible de barras diarias */}
-                    <div className="flex items-end gap-1.5 sm:gap-2.5 h-full w-full">
-                      {data.tendencia_diaria.map((td, idx) => {
+                    <div className="flex items-end gap-1.5 sm:gap-2.5 h-full w-full relative z-20">
+                      {tendencia.map((td, idx) => {
                         const heightPct = Math.round((td.unidades / chartMax) * 100);
                         const isOverMeta = td.unidades >= td.meta;
                         const hasProduction = td.unidades > 0;
-                        const formattedDate = td.fecha.split('-').slice(1).join('/');
+                        const [y, m, d] = td.fecha.split('-');
+                        const formattedDate = `${d}/${m}/${y}`;
 
                         return (
                           <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative select-none">
                             {/* Tooltip on hover */}
                             <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2.5 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10">
-                              <div className="font-bold border-b border-white/20 pb-1 mb-1">{td.fecha}</div>
+                              <div className="font-bold border-b border-white/20 pb-1 mb-1">{formattedDate}</div>
                               <div className="flex items-center gap-2">
                                 <span>Real: <strong>{td.unidades.toLocaleString('es-CL')}</strong> UND</span>
                                 <span className={isOverMeta ? 'text-emerald-300 font-bold' : 'text-neutral-300'}>
@@ -538,8 +592,8 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                               }`}
                             />
 
-                            {/* Etiqueta de fecha */}
-                            <span className={`text-[10px] font-mono mt-2 truncate w-full text-center ${hasProduction ? 'font-bold text-[#0D3B22]' : 'text-neutral-400'}`}>
+                            {/* Etiqueta de fecha completa DD/MM/AAAA */}
+                            <span className={`text-[9px] sm:text-[10px] font-mono mt-2 truncate w-full text-center ${hasProduction ? 'font-bold text-[#0D3B22]' : 'text-neutral-400'}`}>
                               {formattedDate}
                             </span>
                           </div>

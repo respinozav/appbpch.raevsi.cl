@@ -17,7 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
   const { user, isAdmin, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navItems = [
+  const rawNavItems = [
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -42,20 +42,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
       desc: 'Documento R-CAL-07 PDF',
       icon: FileCheck
     },
-    ...(isAdmin ? [
-      {
-        id: 'usuarios',
-        label: 'Usuarios & Permisos',
-        desc: 'Usuarios y permisos',
-        icon: Users
-      },
-      {
-        id: 'configuracion',
-        label: 'Configuración',
-        desc: 'Ajustes del sistema',
-        icon: Settings
-      }
-    ] : []),
+    {
+      id: 'usuarios',
+      label: 'Usuarios & Permisos',
+      desc: 'Usuarios y roles',
+      icon: Users
+    },
+    {
+      id: 'configuracion',
+      label: 'Configuración',
+      desc: 'Ajustes del sistema',
+      icon: Settings
+    },
     {
       id: 'faq',
       label: 'Manual & FAQ',
@@ -69,6 +67,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
       icon: User
     },
   ];
+
+  // RBAC Dinámico: El rol Administrador siempre tiene acceso total.
+  // Para los demás roles, se filtran según los módulos asignados en la base de datos (con fallback seguro).
+  const userModules = user?.rol?.modulos || [];
+  const navItems = rawNavItems.filter((item) => {
+    if (isAdmin) return true;
+    if (item.id === 'perfil' || item.id === 'faq') return true; // Módulos básicos siempre accesibles
+    if (userModules.length > 0) {
+      return userModules.includes(item.id);
+    }
+    // Fallback si modulos no se cargaron: jefatura ve operativos sin admin/config
+    if (user?.rol?.nombre === 'Jefatura') {
+      return ['dashboard', 'iniciar', 'produccion', 'certificados', 'faq', 'perfil'].includes(item.id);
+    }
+    return ['dashboard', 'iniciar', 'produccion', 'faq', 'perfil'].includes(item.id);
+  });
 
   const handleItemClick = (id: string) => {
     onNavigate(id);

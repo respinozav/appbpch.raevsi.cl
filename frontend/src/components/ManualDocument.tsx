@@ -36,11 +36,11 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         <div className="flex items-center gap-3">
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v2.5 Vigente</span>
+            <span>Versión v2.6 Vigente</span>
           </div>
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir / Exportar PDF</span>
@@ -81,7 +81,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               Código: <span className="font-bold">MAN-SGI-01</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
-              Versión: <span className="font-bold">v2.5</span>
+              Versión: <span className="font-bold">v2.6</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
               Actualización: <span className="font-bold">15-Nov-2026</span>
@@ -133,13 +133,21 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <td className="border-r border-black p-1">Dirección General</td>
                 <td className="p-1 text-left px-2">Ajustes de inactividad de sesión, filtros fecha mes actual, gráfico donut de turnos y manual unificado.</td>
               </tr>
-              <tr className="bg-emerald-50/40">
-                <td className="border-r border-black p-1 font-mono font-bold">v2.5</td>
-                <td className="border-r border-black p-1 font-bold">15-Nov-2026</td>
+              <tr className="border-b border-neutral-200">
+                <td className="border-r border-black p-1 font-mono">v2.5</td>
+                <td className="border-r border-black p-1">15-Nov-2026</td>
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2 font-medium">Bento Header con Lotes Retenidos, evolución diaria full-width, exportación CSV, validación estricta de 5 campos en certificados e interactividad global de menú.</td>
+                <td className="p-1 text-left px-2">Bento Header con Lotes Retenidos, evolución diaria full-width, exportación CSV, validación estricta de 5 campos en certificados e interactividad global de menú.</td>
+              </tr>
+              <tr className="bg-emerald-50/40">
+                <td className="border-r border-black p-1 font-mono font-bold">v2.6</td>
+                <td className="border-r border-black p-1 font-bold">15-Nov-2026</td>
+                <td className="border-r border-black p-1">Tech Lead TI</td>
+                <td className="border-r border-black p-1">Susana Avila C.</td>
+                <td className="border-r border-black p-1">Dirección General</td>
+                <td className="p-1 text-left px-2 font-medium">Administrador de Roles y Módulos dinámico (RBAC), registro y visor de Auditoría de Logins en tiempo real, trazado SVG de tendencia diaria y fechas formato DD/MM/AAAA.</td>
               </tr>
             </tbody>
           </table>
@@ -363,23 +371,54 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">6</span>
-              <span>Módulo 6 · Configuración del Sistema & Ajustes de Sesión</span>
+              <span>Módulo 6 · Configuración, Roles (RBAC) & Auditoría de Logins</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /configuracion</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Exclusivo para administradores del sistema. Permite parametrizar las políticas globales de seguridad operacional y gobernanza de datos de la plataforma en AWS RDS.
+            Exclusivo para el rol Administrador del sistema. Centraliza las políticas globales de seguridad operacional, control de accesos por rol y trazabilidad forense de inicios de sesión en AWS RDS.
           </p>
 
-          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 text-[10.5px] space-y-2 text-neutral-700">
-            <div className="font-bold text-neutral-900">Control de Inactividad de Sesión:</div>
-            <p>
-              Previene que terminales de planta o estaciones de trabajo queden abiertas sin supervisión. El administrador puede parametrizar el tiempo de expiración entre <strong>5 y 480 minutos</strong> (con preajustes recomendados de 15 min para planta compartida, 30 min estándar, 60 min supervisores y 120 min administración).
-            </p>
-            <p>
-              Un detector global monitorea actividad de teclado, ratón y toques. Cuando resta <strong>1 minuto</strong> para el cierre, despliega un aviso modal en pantalla con cuenta regresiva en segundos, permitiendo extender la sesión o cerrarla de manera segura.
-            </p>
+          <div className="space-y-3 text-[10.5px] text-neutral-700">
+            {/* 1. Inactividad de sesión */}
+            <div className="border border-neutral-300 p-3 rounded bg-neutral-50 space-y-1.5">
+              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#15803D]" />
+                <span>1. Control de Inactividad de Sesión:</span>
+              </div>
+              <p className="text-justify">
+                Previene que terminales de planta o estaciones de trabajo queden abiertas sin supervisión. El administrador puede parametrizar el tiempo de expiración entre <strong>5 y 480 minutos</strong> (con preajustes recomendados de 15 min para planta compartida, 30 min estándar, 60 min supervisores y 120 min administración).
+              </p>
+              <p className="text-justify">
+                Un detector global monitorea actividad de teclado, ratón y toques. Cuando resta <strong>1 minuto</strong> para el cierre, despliega un aviso modal en pantalla con cuenta regresiva en segundos, permitiendo extender la sesión o cerrarla de manera segura.
+              </p>
+            </div>
+
+            {/* 2. Administrador de Roles y Módulos */}
+            <div className="border border-neutral-300 p-3 rounded bg-white space-y-1.5">
+              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#15803D]" />
+                <span>2. Administrador de Roles & Módulos (RBAC):</span>
+              </div>
+              <p className="text-justify">
+                Permite crear nuevos perfiles operativos o desactivar temporalmente roles existentes. A través de una matriz visual de casillas de verificación, se pueden asignar o desasignar módulos del sistema (menús de navegación) de forma granular a cada rol.
+              </p>
+              <div className="p-2 bg-amber-50 border border-amber-200 rounded text-[9.5px] text-amber-900 font-medium">
+                <strong>Regla de Integridad Estricta:</strong> Por política inviolable de ciberseguridad, el rol <em>Administrador</em> nunca puede ser desactivado ni se le puede desasignar el módulo <em>Configuración</em>, garantizando que el sistema jamás quede inaccesible para la gobernanza TI.
+              </div>
+            </div>
+
+            {/* 3. Auditoría de Inicios de Sesión */}
+            <div className="border border-neutral-300 p-3 rounded bg-neutral-50 space-y-1.5">
+              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-[#15803D]" />
+                <span>3. Auditoría Forense de Inicios de Sesión:</span>
+              </div>
+              <p className="text-justify">
+                Registra cronológicamente cada intento de ingreso a la plataforma, identificando si fue <strong>exitoso</strong> o <strong>erróneo</strong>. Almacena en base de datos la dirección IP del cliente, fecha y hora local chilena, correo consultado, usuario vinculado y el motivo específico en caso de fallo (<em>"Usuario no encontrado"</em>, <em>"Contraseña incorrecta"</em>, <em>"Cuenta desactivada"</em> o <em>"Rol desactivado"</em>).
+              </p>
+            </div>
           </div>
         </section>
 
