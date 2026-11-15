@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, PlusCircle, Layers, FileCheck, Users, User, LogOut, X, LayoutDashboard, Settings } from 'lucide-react';
+import { Search, PlusCircle, Layers, FileCheck, Users, User, LogOut, X, LayoutDashboard, Settings, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CommandPaletteProps {
@@ -39,6 +39,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       { id: 'usuarios', label: 'Gestión de Usuarios & Roles', icon: Users, category: 'Administración', view: 'usuarios' },
       { id: 'configuracion', label: 'Configuración del Sistema (Ajustes de Sesión)', icon: Settings, category: 'Administración', view: 'configuracion' }
     ] : []),
+    { id: 'faq', label: 'Manual de Operaciones & FAQ (MAN-SGI-01)', icon: BookOpen, category: 'Ayuda', view: 'faq' },
     { id: 'perfil', label: 'Mi Perfil & Contraseña', icon: User, category: 'Cuenta', view: 'perfil' },
     { id: 'logout', label: 'Cerrar Sesión', icon: LogOut, category: 'Cuenta', action: logout },
   ];

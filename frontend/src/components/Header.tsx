@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { 
   PlusCircle, Layers, FileCheck, Users, User, LogOut, 
-  Search, Leaf, Shield
+  Search, Leaf, Shield, BookOpen
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -20,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onOpenC
     { id: 'produccion', label: 'Producción & Sábana', icon: Layers },
     { id: 'certificados', label: 'Certificados (Liberados)', icon: FileCheck },
     ...(isAdmin ? [{ id: 'usuarios', label: 'Usuarios & Roles', icon: Users }] : []),
+    { id: 'faq', label: 'Manual & FAQ', icon: BookOpen },
     { id: 'perfil', label: 'Mi Perfil', icon: User },
   ];
 

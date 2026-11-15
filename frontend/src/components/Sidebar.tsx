@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusCircle, Layers, FileCheck, Users, User, LogOut,
   Search, Menu, X, Shield, ChevronRight, Sparkles, Factory,
-  LayoutDashboard, Settings
+  LayoutDashboard, Settings, BookOpen
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -56,6 +56,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
         icon: Settings
       }
     ] : []),
+    {
+      id: 'faq',
+      label: 'Manual & FAQ',
+      desc: 'Documento MAN-SGI-01',
+      icon: BookOpen
+    },
     {
       id: 'perfil',
       label: 'Mi Perfil',

@@ -10,6 +10,7 @@ import { CertificadosView } from './views/CertificadosView';
 import { UsuariosView } from './views/UsuariosView';
 import { PerfilView } from './views/PerfilView';
 import { ConfiguracionView } from './views/ConfiguracionView';
+import { FaqManualView } from './views/FaqManualView';
 import { PublicTrazabilidadView } from './views/PublicTrazabilidadView';
 import { InactivityModal } from './components/InactivityModal';
 import { RefreshCw, Search } from 'lucide-react';
@@ -59,6 +60,7 @@ const MainAppContent: React.FC = () => {
     certificados: { title: 'Certificados de Calidad', subtitle: 'Emisión oficial R-CAL-07' },
     usuarios: { title: 'Administración de Usuarios', subtitle: 'Control de accesos y roles' },
     configuracion: { title: 'Configuración del Sistema', subtitle: 'Ajustes de sesión y políticas de seguridad' },
+    faq: { title: 'Manual de Operaciones & FAQ', subtitle: 'Documento controlado MAN-SGI-01 · Base de conocimiento' },
     perfil: { title: 'Mi Perfil de Usuario', subtitle: 'Configuración personal y contraseña' },
   };
 
@@ -118,6 +120,7 @@ const MainAppContent: React.FC = () => {
           {currentView === 'certificados' && <CertificadosView />}
           {currentView === 'usuarios' && <UsuariosView />}
           {currentView === 'configuracion' && <ConfiguracionView />}
+          {currentView === 'faq' && <FaqManualView />}
           {currentView === 'perfil' && <PerfilView />}
         </main>
       </div>

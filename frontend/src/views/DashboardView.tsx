@@ -4,7 +4,8 @@ import { api, DashboardMetricsData } from '../api/client';
 import { 
   Factory, Award, Leaf, Layers, ArrowUpRight, 
   RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck, 
-  Sliders, History, Clock, ArrowRight, TrendingUp, Calendar
+  Sliders, History, Clock, ArrowRight, TrendingUp, Calendar,
+  PieChart
 } from 'lucide-react';
 
 const getInitialMonthDates = () => {
@@ -26,6 +27,8 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
   const [materialFilter, setMaterialFilter] = useState<string>('all');
   const [data, setData] = useState<DashboardMetricsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [donutHoverIndex, setDonutHoverIndex] = useState<number | null>(null);
+  const [donutViewMode, setDonutViewMode] = useState<'turnos' | 'maquinas'>('turnos');
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -641,62 +644,256 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
           </div>
         </div>
 
-        {/* Col 2: Eficiencia por Máquina & Turno (5 cols) */}
+        {/* Col 2: Gráfico de Torta / Donut Chart - Eficiencia por Turno & Máquina (5 cols) */}
         <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-5">
-            <div className="flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-[#15803D]" />
-              <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                Eficiencia de Líneas & Turnos
-              </h2>
+          <div>
+            {/* Header with Title and Mode Switcher */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-[#15803D]" />
+                <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
+                  Eficiencia de Líneas & Turnos
+                </h2>
+              </div>
+              
+              {/* Toggle: Turnos vs Máquinas */}
+              <div className="inline-flex items-center p-0.5 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] text-[11px] self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDonutViewMode('turnos');
+                    setDonutHoverIndex(null);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                    donutViewMode === 'turnos'
+                      ? 'bg-white text-[#0D3B22] shadow-2xs'
+                      : 'text-neutral-500 hover:text-neutral-900'
+                  }`}
+                >
+                  Turnos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDonutViewMode('maquinas');
+                    setDonutHoverIndex(null);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition ${
+                    donutViewMode === 'maquinas'
+                      ? 'bg-white text-[#0D3B22] shadow-2xs'
+                      : 'text-neutral-500 hover:text-neutral-900'
+                  }`}
+                >
+                  Máquinas
+                </button>
+              </div>
             </div>
-            <span className="text-xs text-neutral-400 font-mono">OEE Planta</span>
+
+            {/* Donut Chart Visualizer */}
+            {(() => {
+              const colorPalettes = [
+                {
+                  id: 'c1',
+                  stroke: '#15803D',
+                  grad: 'from-[#15803D] to-[#22C55E]',
+                  badge: 'bg-emerald-50 text-[#15803D] border-emerald-200',
+                  dot: 'bg-[#15803D]',
+                  fill: '#15803D'
+                },
+                {
+                  id: 'c2',
+                  stroke: '#1D4ED8',
+                  grad: 'from-[#1D4ED8] to-[#3B82F6]',
+                  badge: 'bg-blue-50 text-blue-700 border-blue-200',
+                  dot: 'bg-[#1D4ED8]',
+                  fill: '#1D4ED8'
+                },
+                {
+                  id: 'c3',
+                  stroke: '#7C3AED',
+                  grad: 'from-[#7C3AED] to-[#A78BFA]',
+                  badge: 'bg-purple-50 text-purple-700 border-purple-200',
+                  dot: 'bg-[#7C3AED]',
+                  fill: '#7C3AED'
+                },
+                {
+                  id: 'c4',
+                  stroke: '#D97706',
+                  grad: 'from-[#D97706] to-[#F59E0B]',
+                  badge: 'bg-amber-50 text-amber-700 border-amber-200',
+                  dot: 'bg-[#D97706]',
+                  fill: '#D97706'
+                }
+              ];
+
+              const rawList = donutViewMode === 'turnos'
+                ? (data?.turnos || []).map((t, idx) => ({
+                    label: t.turno,
+                    subtitle: `Jornada ${idx === 0 ? 'Mañana' : idx === 1 ? 'Tarde' : 'Noche'}`,
+                    unidades: t.unidades,
+                    lotes: t.lotes,
+                    color: colorPalettes[idx % colorPalettes.length]
+                  }))
+                : (data?.maquinas || []).map((m, idx) => ({
+                    label: m.maquina,
+                    subtitle: `Línea de Soplado #${m.numero}`,
+                    unidades: m.unidades,
+                    lotes: m.lotes,
+                    color: colorPalettes[idx % colorPalettes.length]
+                  }));
+
+              const totalDonutUnits = rawList.reduce((acc, it) => acc + it.unidades, 0);
+              const totalDonutLotes = rawList.reduce((acc, it) => acc + it.lotes, 0);
+
+              // Donut SVG constants
+              const radius = 76;
+              const circumference = 2 * Math.PI * radius; // ~477.52
+              let accumulatedLength = 0;
+
+              const activeHovered = donutHoverIndex !== null ? rawList[donutHoverIndex] : null;
+
+              return (
+                <div>
+                  {totalDonutUnits === 0 ? (
+                    <div className="py-12 text-center text-xs text-neutral-400">
+                      Sin registros de producción en el rango seleccionado.
+                    </div>
+                  ) : (
+                    <>
+                      {/* Donut Chart with Center KPI */}
+                      <div className="relative flex items-center justify-center my-3">
+                        <svg
+                          viewBox="0 0 220 220"
+                          className="w-48 h-48 sm:w-52 sm:h-52 -rotate-90 transform"
+                        >
+                          {/* Background Track Circle */}
+                          <circle
+                            cx="110"
+                            cy="110"
+                            r={radius}
+                            fill="transparent"
+                            stroke="#F0F4F1"
+                            strokeWidth="20"
+                          />
+
+                          {/* Data Slices */}
+                          {rawList.map((item, idx) => {
+                            const pct = totalDonutUnits > 0 ? item.unidades / totalDonutUnits : 0;
+                            const segmentLength = pct * circumference;
+                            const strokeDasharray = `${Math.max(segmentLength - 3, 0)} ${circumference}`;
+                            const strokeDashoffset = -accumulatedLength;
+                            accumulatedLength += segmentLength;
+
+                            const isHovered = donutHoverIndex === idx;
+
+                            return (
+                              <circle
+                                key={idx}
+                                cx="110"
+                                cy="110"
+                                r={radius}
+                                fill="transparent"
+                                stroke={item.color.stroke}
+                                strokeWidth={isHovered ? 26 : 20}
+                                strokeDasharray={strokeDasharray}
+                                strokeDashoffset={strokeDashoffset}
+                                strokeLinecap="round"
+                                className="cursor-pointer transition-all duration-300 ease-out"
+                                style={{
+                                  opacity: donutHoverIndex === null || isHovered ? 1 : 0.45,
+                                  filter: isHovered ? 'drop-shadow(0px 2px 8px rgba(0,0,0,0.18))' : 'none'
+                                }}
+                                onMouseEnter={() => setDonutHoverIndex(idx)}
+                                onMouseLeave={() => setDonutHoverIndex(null)}
+                              />
+                            );
+                          })}
+                        </svg>
+
+                        {/* Interactive Center Box */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none select-none px-4">
+                          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest line-clamp-1">
+                            {activeHovered ? activeHovered.label : 'Volumen Total'}
+                          </span>
+                          <span className="text-xl sm:text-2xl font-display font-extrabold text-[#0D3B22] leading-tight mt-0.5">
+                            {activeHovered
+                              ? activeHovered.unidades.toLocaleString('es-CL')
+                              : totalDonutUnits.toLocaleString('es-CL')}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold mt-1 px-2.5 py-0.5 rounded-full border shadow-2xs inline-block transition-all">
+                            {activeHovered ? (
+                              <span className="text-[#15803D]">
+                                {((activeHovered.unidades / totalDonutUnits) * 100).toFixed(1)}% · {activeHovered.lotes} lotes
+                              </span>
+                            ) : (
+                              <span className="text-neutral-600 bg-neutral-100 border-neutral-200">
+                                {totalDonutLotes} Lotes en Planta
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Interactive Legend List */}
+                      <div className="space-y-2 mt-4 pt-3 border-t border-[#E5ECE6]">
+                        {rawList.map((item, idx) => {
+                          const pct = totalDonutUnits > 0 ? (item.unidades / totalDonutUnits) * 100 : 0;
+                          const isHovered = donutHoverIndex === idx;
+
+                          return (
+                            <div
+                              key={idx}
+                              onMouseEnter={() => setDonutHoverIndex(idx)}
+                              onMouseLeave={() => setDonutHoverIndex(null)}
+                              className={`p-2.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between text-xs ${
+                                isHovered
+                                  ? 'bg-[#EEF6F0] border-[#15803D]/40 shadow-xs scale-[1.01]'
+                                  : 'bg-[#F7FAF7] border-[#E5ECE6] hover:bg-neutral-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <span
+                                  className="w-3 h-3 rounded-full shrink-0 shadow-2xs"
+                                  style={{ backgroundColor: item.color.stroke }}
+                                />
+                                <div>
+                                  <div className="font-bold text-[#0D3B22] leading-tight">
+                                    {item.label}
+                                  </div>
+                                  <div className="text-[10px] text-neutral-400">
+                                    {item.subtitle}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 font-mono text-right">
+                                <div>
+                                  <div className="font-bold text-neutral-800">
+                                    {item.unidades.toLocaleString('es-CL')} UND
+                                  </div>
+                                  <div className="text-[10px] text-neutral-400">
+                                    {item.lotes} lotes
+                                  </div>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border shrink-0 ${item.color.badge}`}>
+                                  {pct.toFixed(1)}%
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2">
-                Rendimiento por Máquina Activa:
-              </div>
-              <div className="space-y-2">
-                {data?.maquinas.map((m) => (
-                  <div
-                    key={m.numero}
-                    className="p-2.5 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] flex items-center justify-between text-xs"
-                  >
-                    <div className="font-bold text-[#0D3B22]">{m.maquina}</div>
-                    <div className="flex items-center gap-3 font-mono">
-                      <span>{m.unidades.toLocaleString('es-CL')} UND</span>
-                      <span className="text-neutral-400">·</span>
-                      <span className="font-bold text-[#15803D]">{m.lotes} lotes</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2">
-                Distribución por Turno:
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {data?.turnos.map((t) => (
-                  <div
-                    key={t.numero}
-                    className="p-2.5 rounded-xl bg-[#EEF6F0]/60 border border-[#15803D]/20 text-xs"
-                  >
-                    <div className="font-bold text-[#0D3B22]">{t.turno}</div>
-                    <div className="font-mono text-neutral-600 mt-0.5">
-                      {t.unidades.toLocaleString('es-CL')} UND
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-[#E5ECE6] text-xs text-neutral-400">
-            Control horario de operadores en planta
+          {/* Footer note */}
+          <div className="mt-5 pt-3 border-t border-[#E5ECE6] text-[11px] text-neutral-400 flex items-center justify-between">
+            <span>Control horario de operadores en planta</span>
+            <span className="font-mono text-[#15803D] font-bold">OEE Óptimo</span>
           </div>
         </div>
       </div>

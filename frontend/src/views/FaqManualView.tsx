@@ -1,0 +1,129 @@
+import React, { useState } from 'react';
+import { ManualDocument } from '../components/ManualDocument';
+import { 
+  BookOpen, Search, Printer, Layers, HelpCircle, 
+  ChevronRight, Bookmark, ArrowUpRight, Sparkles, Shield
+} from 'lucide-react';
+
+export const FaqManualView: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<string>('sec-dashboard');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const sections = [
+    { id: 'sec-dashboard', label: '1. Dashboard Ejecutivo', desc: 'KPIs, metas diarias y estado de planta' },
+    { id: 'sec-iniciar', label: '2. Iniciar Producción', desc: 'Tiradas, códigos internos y tickets Zebra' },
+    { id: 'sec-produccion', label: '3. Producción & Sábana', desc: 'Flujo de estados y trazabilidad de lotes' },
+    { id: 'sec-certificados', label: '4. Certificados R-CAL-07', desc: 'Emisión para lotes en despacho y liberados' },
+    { id: 'sec-qr', label: '5. Consulta Pública QR', desc: 'Verificación externa sin login' },
+    { id: 'sec-config', label: '6. Configuración Global', desc: 'Tiempos de inactividad de sesión y RDS' },
+    { id: 'sec-usuarios', label: '7. Usuarios & Permisos', desc: 'Matriz de roles RBAC' },
+    { id: 'sec-faq', label: '8. Preguntas Frecuentes (FAQ)', desc: 'Protocolos de contingencia en planta' },
+  ];
+
+  const scrollToSection = (id: string) => {
+    setActiveSection(id);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* View Header (Hidden in Print) */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#15803D]" />
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#15803D]">
+              Sistema de Gestión Integrado · Calidad & Operaciones
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
+            <span>Manual de Operaciones & FAQ</span>
+            <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
+              MAN-SGI-01 · v2.4
+            </span>
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+            Base de conocimiento oficial de Bioplast Chile SpA. Documento controlado con especificación módulo por módulo.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Imprimir Manual</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Layout: Confluence Side Index on Desktop, Document on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Side: Navigation Table of Contents (Confluence style) */}
+        <aside className="lg:col-span-4 bg-white p-5 rounded-2xl border border-[#E5ECE6] shadow-sm no-print sticky top-20">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-[#15803D]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#0D3B22]">
+                Índice del Manual
+              </h2>
+            </div>
+            <span className="text-[10px] font-mono text-neutral-400">8 Módulos</span>
+          </div>
+
+          <div className="space-y-1.5">
+            {sections.map((sec) => {
+              const isActive = activeSection === sec.id;
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => scrollToSection(sec.id)}
+                  className={`w-full text-left p-2.5 rounded-xl text-xs transition flex items-center justify-between group ${
+                    isActive
+                      ? 'bg-[#EEF6F0] text-[#0D3B22] font-bold border border-[#15803D]/20 shadow-2xs'
+                      : 'text-neutral-600 hover:bg-[#F7FAF7] hover:text-[#0D3B22]'
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold text-neutral-900 group-hover:text-[#15803D] transition">
+                      {sec.label}
+                    </div>
+                    <div className="text-[10.5px] text-neutral-400 font-normal mt-0.5">
+                      {sec.desc}
+                    </div>
+                  </div>
+                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition ${
+                    isActive ? 'text-[#15803D] translate-x-0.5' : 'text-neutral-300 group-hover:text-neutral-500'
+                  }`} />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-[#E5ECE6] text-[11px] text-neutral-500 space-y-2">
+            <div className="flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5 text-[#15803D]" />
+              <span className="font-semibold text-[#0D3B22]">Vigencia Documental</span>
+            </div>
+            <p className="text-[10px] text-neutral-500 leading-normal">
+              Copia electrónica no controlada salvo cuando cuente con timbre o validación del SGI. Última actualización: <strong>15 de Noviembre, 2026</strong>.
+            </p>
+          </div>
+        </aside>
+
+        {/* Right Side: Official Paper Document */}
+        <main className="lg:col-span-8 flex flex-col items-center">
+          <ManualDocument onPrint={handlePrint} activeSectionId={activeSection} />
+        </main>
+      </div>
+    </div>
+  );
+};
