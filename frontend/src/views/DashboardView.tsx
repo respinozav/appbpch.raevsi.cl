@@ -332,57 +332,92 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
 
             {/* Bars visual representation */}
             {data?.tendencia_diaria && data.tendencia_diaria.length > 0 ? (
-              <div className="space-y-4 pt-2">
-                <div className="h-44 flex items-end gap-2 sm:gap-3 px-2 pt-6 pb-2 border-b border-[#E5ECE6]">
-                  {data.tendencia_diaria.map((td, idx) => {
-                    const maxVal = Math.max(...data.tendencia_diaria!.map((x) => Math.max(x.unidades, x.meta)), 1);
-                    const heightPct = Math.round((td.unidades / maxVal) * 100);
-                    const metaPct = Math.round((td.meta / maxVal) * 100);
-                    const formattedDate = td.fecha.split('-').slice(1).join('/');
+              (() => {
+                const maxUnits = Math.max(...data.tendencia_diaria.map((x) => x.unidades), 0);
+                const metaVal = data.tendencia_diaria[0]?.meta || 30000;
+                const chartMax = Math.max(maxUnits, metaVal * 1.15, 1000);
+                const metaHeightPct = Math.min(Math.round((metaVal / chartMax) * 100), 92);
+                const totalPeriodUnits = data.tendencia_diaria.reduce((acc, curr) => acc + curr.unidades, 0);
+                const activeDays = data.tendencia_diaria.filter((x) => x.unidades > 0).length;
+                const dailyAvg = activeDays > 0 ? Math.round(totalPeriodUnits / activeDays) : 0;
 
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
-                        {/* Tooltip on hover */}
-                        <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono px-2 py-1 rounded shadow-lg z-20 whitespace-nowrap">
-                          <div>{td.fecha}</div>
-                          <div>Real: <strong>{td.unidades.toLocaleString('es-CL')}</strong> | Meta: {td.meta.toLocaleString('es-CL')}</div>
-                        </div>
-
-                        {/* Meta reference line mark */}
-                        <div
-                          className="w-full border-t-2 border-dashed border-neutral-300 absolute z-10 transition-all pointer-events-none"
-                          style={{ bottom: `${Math.min(metaPct, 95)}%` }}
-                        />
-
-                        {/* Bar */}
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: td.unidades > 0 ? `${Math.max(heightPct, 8)}%` : '4px' }}
-                          transition={{ duration: 0.5, delay: idx * 0.03 }}
-                          className={`w-full rounded-t-md transition-all ${
-                            td.unidades === 0
-                              ? 'bg-neutral-200/80'
-                              : td.unidades >= td.meta
-                              ? 'bg-gradient-to-t from-[#15803D] to-[#22C55E]'
-                              : 'bg-gradient-to-t from-[#0D3B22] to-[#15803D]'
-                          } hover:brightness-110 shadow-xs`}
-                        />
-
-                        {/* Date label */}
-                        <span className="text-[10px] font-mono text-neutral-400 mt-2 truncate w-full text-center">
-                          {formattedDate}
+                return (
+                  <div className="space-y-4 pt-2">
+                    <div className="relative h-48 border-b border-[#E5ECE6] pt-8 pb-1 px-1">
+                      {/* Línea horizontal continua unificada de Meta de Planta */}
+                      <div
+                        className="absolute left-0 right-0 border-t-2 border-dashed border-[#15803D]/50 pointer-events-none z-10 flex items-center justify-end pr-1"
+                        style={{ bottom: `${metaHeightPct}%` }}
+                      >
+                        <span className="text-[10px] font-mono font-bold text-[#15803D] bg-white/95 px-2 py-0.5 rounded-full border border-[#15803D]/30 shadow-2xs -translate-y-1/2">
+                          Meta: {metaVal.toLocaleString('es-CL')} UND/día
                         </span>
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between text-xs text-neutral-500 font-mono">
-                  <span>Métricas consolidadas en base a tiradas registradas</span>
-                  <span className="text-[#15803D] font-bold">
-                    Promedio diario: {Math.round((data.resumen.total_unidades / Math.max(data.tendencia_diaria.length, 1))).toLocaleString('es-CL')} UND/día
-                  </span>
-                </div>
-              </div>
+
+                      {/* Contenedor flexible de barras diarias */}
+                      <div className="flex items-end gap-1.5 sm:gap-2.5 h-full w-full">
+                        {data.tendencia_diaria.map((td, idx) => {
+                          const heightPct = Math.round((td.unidades / chartMax) * 100);
+                          const isOverMeta = td.unidades >= td.meta;
+                          const hasProduction = td.unidades > 0;
+                          const formattedDate = td.fecha.split('-').slice(1).join('/');
+
+                          return (
+                            <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative select-none">
+                              {/* Tooltip on hover */}
+                              <div className="absolute -top-16 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2.5 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10">
+                                <div className="font-bold border-b border-white/20 pb-1 mb-1">{td.fecha}</div>
+                                <div className="flex items-center gap-2">
+                                  <span>Real: <strong>{td.unidades.toLocaleString('es-CL')}</strong> UND</span>
+                                  <span className={isOverMeta ? 'text-emerald-300 font-bold' : 'text-neutral-300'}>
+                                    ({td.cumplimiento_pct}%)
+                                  </span>
+                                </div>
+                                <div className="text-[9px] text-neutral-300 mt-0.5">
+                                  Tiradas: {td.lotes} lotes · Meta: {td.meta.toLocaleString('es-CL')} UND
+                                </div>
+                              </div>
+
+                              {/* Indicador numérico sobre barras activas */}
+                              {hasProduction && (
+                                <span className="text-[9px] font-mono font-bold text-[#0D3B22] mb-1 truncate max-w-full">
+                                  {td.unidades >= 1000 ? `${Math.round(td.unidades / 1000)}k` : td.unidades}
+                                </span>
+                              )}
+
+                              {/* Barra con altura CSS fluida y confiable */}
+                              <div
+                                style={{ height: hasProduction ? `${Math.max(heightPct, 10)}%` : '6px' }}
+                                className={`w-full rounded-t-md transition-all duration-500 ease-out cursor-pointer ${
+                                  !hasProduction
+                                    ? 'bg-neutral-200/70 hover:bg-neutral-300'
+                                    : isOverMeta
+                                    ? 'bg-gradient-to-t from-[#15803D] to-[#22C55E] hover:brightness-110 shadow-xs'
+                                    : 'bg-gradient-to-t from-[#0D3B22] to-[#15803D] hover:brightness-110 shadow-xs'
+                                }`}
+                              />
+
+                              {/* Etiqueta de fecha */}
+                              <span className={`text-[10px] font-mono mt-2 truncate w-full text-center ${hasProduction ? 'font-bold text-[#0D3B22]' : 'text-neutral-400'}`}>
+                                {formattedDate}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between text-xs text-neutral-500 font-mono gap-2 pt-1">
+                      <span>
+                        Días activos: <strong className="text-[#0D3B22]">{activeDays}</strong> de {data.tendencia_diaria.length} días
+                      </span>
+                      <span className="text-[#15803D] font-bold">
+                        Promedio diario activo: {dailyAvg.toLocaleString('es-CL')} UND/día
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
               <div className="p-8 text-center text-xs text-neutral-400">
                 Selecciona un rango de fechas con tiradas activas para visualizar la curva de producción.

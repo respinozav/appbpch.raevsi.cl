@@ -212,6 +212,9 @@ def get_dashboard_metrics(
     if (end_dt - start_dt).days > 31:
         start_dt = end_dt - timedelta(days=30)
 
+    # Meta operativa diaria de planta (Estándar Bioplast Chile: 30.000 unidades / día)
+    META_PLANTA_DIARIA = 30000
+
     daily_timeline = []
     curr_dt = start_dt
     while curr_dt <= end_dt:
@@ -221,13 +224,13 @@ def get_dashboard_metrics(
         else:
             unidades, lotes = 0, 0
         
-        meta = max(int(unidades * 1.15), 10000)
+        cumplimiento = round((unidades / META_PLANTA_DIARIA) * 100, 1) if META_PLANTA_DIARIA > 0 else 0.0
         daily_timeline.append({
             "fecha": dia_key,
             "unidades": unidades,
             "lotes": lotes,
-            "meta": meta,
-            "cumplimiento_pct": min(round((unidades / meta) * 100, 1), 100.0) if meta > 0 else 0.0
+            "meta": META_PLANTA_DIARIA,
+            "cumplimiento_pct": cumplimiento
         })
         curr_dt += timedelta(days=1)
 
@@ -236,13 +239,13 @@ def get_dashboard_metrics(
         for i in range(6, -1, -1):
             past_d = (now.date() - timedelta(days=i)).strftime("%Y-%m-%d")
             unidades, lotes = db_days.get(past_d, (0, 0))
-            meta = max(int(unidades * 1.15), 10000)
+            cumplimiento = round((unidades / META_PLANTA_DIARIA) * 100, 1) if META_PLANTA_DIARIA > 0 else 0.0
             daily_timeline.append({
                 "fecha": past_d,
                 "unidades": unidades,
                 "lotes": lotes,
-                "meta": meta,
-                "cumplimiento_pct": min(round((unidades / meta) * 100, 1), 100.0) if meta > 0 else 0.0
+                "meta": META_PLANTA_DIARIA,
+                "cumplimiento_pct": cumplimiento
             })
 
     return {
