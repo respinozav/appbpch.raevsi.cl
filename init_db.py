@@ -146,6 +146,23 @@ for nombre, desc, col in estados:
         ON CONFLICT (nombre) DO UPDATE SET descripcion = EXCLUDED.descripcion, color = EXCLUDED.color;
     """, (nombre, desc, col))
 
+# 7. Configuracion table
+cur.execute("""
+CREATE TABLE IF NOT EXISTS configuracion_sistema (
+    uid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    clave VARCHAR(100) UNIQUE NOT NULL,
+    valor TEXT NOT NULL,
+    descripcion TEXT,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    usuario_actualizador_uid UUID REFERENCES usuarios(uid)
+);
+""")
+cur.execute("""
+INSERT INTO configuracion_sistema (clave, valor, descripcion)
+VALUES ('session_inactivity_timeout_minutes', '30', 'Tiempo de inactividad de sesión en minutos antes del cierre automático')
+ON CONFLICT (clave) DO NOTHING;
+""")
+
 # Also ensure table views exist in bioplastchile or alias if desired
 cur.execute("""
     SELECT table_name FROM information_schema.tables WHERE table_schema = 'bdbioplastchile';

@@ -500,57 +500,139 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
 
       {/* 3. Middle Bento Row: Dual Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Col 1: Embudo de Trazabilidad por Estado (7 cols) */}
+        {/* Col 1: Gráfico de Barras de Trazabilidad por Estado (7 cols) */}
         <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-5">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#15803D]" />
-              <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                Embudo Operativo por Estados de Trazabilidad
-              </h2>
-            </div>
-            <span className="text-xs text-neutral-400 font-mono">
-              Distribución actual de lotes
-            </span>
-          </div>
-
-          {/* Estado progress bars */}
-          <div className="space-y-4">
-            {data?.estados.map((est) => (
-              <div key={est.uid} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: est.color }}
-                    />
-                    <span className="font-bold text-neutral-800">{est.nombre}</span>
-                  </div>
-                  <div className="flex items-center gap-3 font-mono">
-                    <span className="font-bold text-neutral-900">{est.count} lotes</span>
-                    <span className="text-neutral-400 text-[11px]">({est.percentage}%)</span>
-                  </div>
-                </div>
-                {/* Visual Progress Bar */}
-                <div className="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${est.percentage}%` }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: est.color }}
-                  />
-                </div>
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#15803D]" />
+                <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
+                  Distribución por Estados de Trazabilidad
+                </h2>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
+                  {data?.resumen.total_lotes || 0} Lotes Totales
+                </span>
+              </div>
+            </div>
+
+            {/* Vertical Bar Chart */}
+            {data?.estados && data.estados.length > 0 ? (
+              (() => {
+                const maxStateCount = Math.max(...data.estados.map((e) => e.count), 1);
+                
+                // Color gradients map per state
+                const stateGradients: Record<string, { bar: string; badge: string; text: string }> = {
+                  'Producción': {
+                    bar: 'from-[#15803D] via-[#16A34A] to-[#22C55E]',
+                    badge: 'bg-emerald-50 text-[#15803D] border-[#15803D]/30',
+                    text: 'text-[#15803D]'
+                  },
+                  'Almacenaje': {
+                    bar: 'from-[#1D4ED8] via-[#2563EB] to-[#60A5FA]',
+                    badge: 'bg-blue-50 text-blue-700 border-blue-200',
+                    text: 'text-blue-700'
+                  },
+                  'Despacho': {
+                    bar: 'from-[#6D28D9] via-[#7C3AED] to-[#A78BFA]',
+                    badge: 'bg-purple-50 text-purple-700 border-purple-200',
+                    text: 'text-purple-700'
+                  },
+                  'Liberado': {
+                    bar: 'from-[#047857] via-[#059669] to-[#34D399]',
+                    badge: 'bg-teal-50 text-teal-700 border-teal-200',
+                    text: 'text-teal-700'
+                  },
+                  'Retenido': {
+                    bar: 'from-[#B91C1C] via-[#DC2626] to-[#F87171]',
+                    badge: 'bg-red-50 text-red-700 border-red-200',
+                    text: 'text-red-700'
+                  },
+                };
+
+                return (
+                  <div className="space-y-3 pt-2">
+                    {/* Bars Grid Container */}
+                    <div className="h-52 flex items-end justify-between gap-2 sm:gap-4 px-2 pt-8 pb-2 border-b border-[#E5ECE6]">
+                      {data.estados.map((est, idx) => {
+                        const heightPct = Math.round((est.count / maxStateCount) * 100);
+                        const hasLots = est.count > 0;
+                        const colors = stateGradients[est.nombre] || {
+                          bar: 'from-[#15803D] to-[#22C55E]',
+                          badge: 'bg-emerald-50 text-[#15803D] border-emerald-200',
+                          text: 'text-[#15803D]'
+                        };
+
+                        return (
+                          <div
+                            key={est.uid || idx}
+                            className="flex-1 flex flex-col items-center h-full justify-end group relative select-none"
+                          >
+                            {/* Floating Tooltip */}
+                            <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition pointer-events-none bg-[#0D3B22] text-white text-[10px] font-mono p-2 rounded-xl shadow-xl z-30 whitespace-nowrap border border-white/10 text-center">
+                              <div className="font-bold">{est.nombre}</div>
+                              <div className="text-emerald-300 font-bold">{est.count} lotes ({est.percentage}%)</div>
+                            </div>
+
+                            {/* Lot Count Pill Badge */}
+                            <span
+                              className={`text-[10px] font-mono font-black mb-1.5 px-2 py-0.5 rounded-full border shadow-2xs transition-transform group-hover:scale-105 ${
+                                hasLots ? colors.badge : 'bg-neutral-100 text-neutral-400 border-neutral-200'
+                              }`}
+                            >
+                              {est.count}
+                            </span>
+
+                            {/* Vertical Bar */}
+                            <div
+                              style={{ height: hasLots ? `${Math.max(heightPct, 12)}%` : '6px' }}
+                              className={`w-full max-w-[54px] rounded-t-xl transition-all duration-500 ease-out shadow-xs cursor-pointer ${
+                                hasLots
+                                  ? `bg-gradient-to-t ${colors.bar} hover:brightness-110 shadow-sm`
+                                  : 'bg-neutral-200/80 hover:bg-neutral-300'
+                              }`}
+                            />
+
+                            {/* Percentage Tag */}
+                            <span className="text-[10px] font-mono font-semibold text-neutral-500 mt-2">
+                              {est.percentage}%
+                            </span>
+
+                            {/* State Label Name */}
+                            <span
+                              className={`text-[11px] font-bold mt-0.5 truncate w-full text-center ${
+                                hasLots ? colors.text : 'text-neutral-400'
+                              }`}
+                            >
+                              {est.nombre}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Operational Flow Subtitle */}
+                    <div className="flex items-center justify-between text-[11px] text-neutral-500 font-mono px-1">
+                      <span>Flujo secuencial: Producción ➔ Almacén ➔ Despacho ➔ Liberado</span>
+                      <span className="text-[#15803D] font-bold">100% Trazable</span>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="p-8 text-center text-xs text-neutral-400">
+                No hay lotes registrados para los filtros actuales.
+              </div>
+            )}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-[#E5ECE6] flex items-center justify-between text-xs text-neutral-500">
+          <div className="mt-4 pt-3 border-t border-[#E5ECE6] flex items-center justify-between text-xs text-neutral-500">
             <span>Trazabilidad auditada con correlativo estricto</span>
             {onNavigate && (
               <button
                 onClick={() => onNavigate('produccion')}
-                className="text-[#15803D] hover:underline font-semibold flex items-center gap-1"
+                className="text-[#15803D] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <span>Ver Sábana Completa</span>
                 <ArrowRight className="w-3.5 h-3.5" />

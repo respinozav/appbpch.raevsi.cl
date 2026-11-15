@@ -57,15 +57,36 @@ def get_dashboard_metrics(
     if not fecha_desde and not fecha_hasta and date_cutoff:
         query = query.filter(Production.fecha >= date_cutoff)
 
-    if material_filter and material_filter != "all":
-        query = query.filter(Production.material.ilike(f"%{material_filter}%"))
+    if isinstance(material_filter, str) and material_filter.strip() and material_filter.strip().lower() != "all":
+        query = query.filter(Production.material.ilike(f"%{material_filter.strip()}%"))
 
     total_lots = query.count()
+
+    # Detección inteligente de contingencia:
+    # Si la consulta filtrada no encuentra lotes (por ejemplo, por desfase temporal de mes/año entre cliente y servidor),
+    # pero existen registros en la base de datos, auto-ajustar al rango activo más reciente:
+    auto_fallback_range = False
+    if total_lots == 0 and db.query(Production).count() > 0:
+        latest_p = db.query(Production).order_by(desc(Production.fecha)).first()
+        if latest_p and latest_p.fecha:
+            latest_dt = latest_p.fecha
+            d_desde_fallback = datetime(latest_dt.year, latest_dt.month, 1, tzinfo=timezone.utc)
+            d_hasta_fallback = datetime(latest_dt.year, latest_dt.month, latest_dt.day, 23, 59, 59, 999999, tzinfo=timezone.utc)
+            query = db.query(Production).filter(Production.fecha >= d_desde_fallback, Production.fecha <= d_hasta_fallback)
+            if isinstance(material_filter, str) and material_filter.strip() and material_filter.strip().lower() != "all":
+                query = query.filter(Production.material.ilike(f"%{material_filter.strip()}%"))
+            total_lots = query.count()
+            auto_fallback_range = True
+            fallback_start_dt = d_desde_fallback.date()
+            fallback_end_dt = d_hasta_fallback.date()
+
     total_units = query.with_entities(func.coalesce(func.sum(Production.cantidad), 0)).scalar() or 0
     distinct_batches = query.with_entities(func.count(func.distinct(Production.codigo_interno))).scalar() or 0
 
-    # Estados breakdown
+    # Estados breakdown ordenados por flujo operativo
     estados = db.query(Estado).all()
+    flow_order = {"Producción": 1, "Almacenaje": 2, "Despacho": 3, "Liberado": 4, "Retenido": 5}
+    estados = sorted(estados, key=lambda e: flow_order.get(e.nombre, 99))
     estados_breakdown = []
     liberados_count = 0
     retenidos_count = 0
@@ -189,21 +210,25 @@ def get_dashboard_metrics(
     db_days = {str(d.dia): (int(d.unidades), int(d.lotes)) for d in daily_results if d.dia}
 
     # Rango continuo de días para garantizar que la gráfica siempre muestre la evolución del mes
-    try:
-        if fecha_desde:
-            start_dt = datetime.strptime(fecha_desde.strip(), "%Y-%m-%d").date()
-        else:
+    if auto_fallback_range:
+        start_dt = fallback_start_dt
+        end_dt = fallback_end_dt
+    else:
+        try:
+            if fecha_desde:
+                start_dt = datetime.strptime(fecha_desde.strip(), "%Y-%m-%d").date()
+            else:
+                start_dt = now.date().replace(day=1)
+        except Exception:
             start_dt = now.date().replace(day=1)
-    except Exception:
-        start_dt = now.date().replace(day=1)
 
-    try:
-        if fecha_hasta:
-            end_dt = datetime.strptime(fecha_hasta.strip(), "%Y-%m-%d").date()
-        else:
+        try:
+            if fecha_hasta:
+                end_dt = datetime.strptime(fecha_hasta.strip(), "%Y-%m-%d").date()
+            else:
+                end_dt = now.date()
+        except Exception:
             end_dt = now.date()
-    except Exception:
-        end_dt = now.date()
 
     if start_dt > end_dt:
         start_dt = end_dt - timedelta(days=14)

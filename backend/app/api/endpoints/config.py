@@ -21,22 +21,26 @@ def get_session_config(
     """
     Retorna la configuración actual del tiempo de inactividad de sesión (en minutos).
     """
-    conf = db.query(ConfiguracionSistema).filter(
-        ConfiguracionSistema.clave == CONFIG_KEY_SESSION_TIMEOUT
-    ).first()
-
     timeout_val = DEFAULT_SESSION_TIMEOUT
     updated_at = None
     user_name = None
 
-    if conf:
-        try:
-            timeout_val = int(conf.valor)
-        except (ValueError, TypeError):
-            timeout_val = DEFAULT_SESSION_TIMEOUT
-        updated_at = conf.updated_at
-        if conf.usuario_actualizador:
-            user_name = conf.usuario_actualizador.nombre_completo
+    try:
+        conf = db.query(ConfiguracionSistema).filter(
+            ConfiguracionSistema.clave == CONFIG_KEY_SESSION_TIMEOUT
+        ).first()
+
+        if conf:
+            try:
+                timeout_val = int(conf.valor)
+            except (ValueError, TypeError):
+                timeout_val = DEFAULT_SESSION_TIMEOUT
+            updated_at = conf.updated_at
+            if conf.usuario_actualizador:
+                user_name = conf.usuario_actualizador.nombre_completo
+    except Exception as e:
+        print(f"Aviso al consultar ConfiguracionSistema: {e}")
+        timeout_val = DEFAULT_SESSION_TIMEOUT
 
     return SessionConfigOut(
         timeout_minutes=timeout_val,
