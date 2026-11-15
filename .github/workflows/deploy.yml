@@ -6,7 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: AWS_HOST
+    environment: production
     steps:
       - name: Ejecutar comandos de despliegue vía SSH
         uses: appleboy/ssh-action@v1.0.3
