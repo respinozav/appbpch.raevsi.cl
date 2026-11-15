@@ -112,3 +112,17 @@ class Certificado(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     production = relationship("Production", back_populates="certificados")
+
+
+class ConfiguracionSistema(Base):
+    __tablename__ = "configuracion_sistema"
+    __table_args__ = {"schema": "bdbioplastchile"}
+
+    uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
+    clave = Column(String(100), unique=True, nullable=False, index=True)
+    valor = Column(Text, nullable=False)
+    descripcion = Column(Text, nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    usuario_actualizador_uid = Column(UUID(as_uuid=True), ForeignKey("bdbioplastchile.usuarios.uid"), nullable=True)
+
+    usuario_actualizador = relationship("User")

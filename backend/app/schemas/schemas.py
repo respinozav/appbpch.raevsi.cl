@@ -183,3 +183,13 @@ class PublicTrazabilidadOut(BaseModel):
     certificado_numero: Optional[str] = None
     aprobado_calidad: bool = False
     historial: List[HistorialEstadoOut] = []
+
+# --- CONFIGURACION DEL SISTEMA ---
+class SessionConfigIn(BaseModel):
+    timeout_minutes: int = Field(..., ge=5, le=480, description="Tiempo de inactividad de sesión en minutos (5 a 480)")
+
+class SessionConfigOut(BaseModel):
+    timeout_minutes: int
+    clave: str = "session_inactivity_timeout_minutes"
+    updated_at: Optional[datetime] = None
+    usuario_actualizador: Optional[str] = None

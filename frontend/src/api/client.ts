@@ -18,6 +18,13 @@ export interface User {
   created_at?: string;
 }
 
+export interface SessionConfig {
+  timeout_minutes: number;
+  clave: string;
+  updated_at?: string;
+  usuario_actualizador?: string;
+}
+
 export interface Estado {
   uid: string;
   nombre: 'Producción' | 'Almacenaje' | 'Despacho' | 'Liberado' | 'Retenido';
@@ -378,4 +385,12 @@ export const api = {
   // Public Consultation (QR Code Scan)
   getPublicTrazabilidad: (uid: string) =>
     request<PublicTrazabilidadData>(`/public/trazabilidad/${uid}`),
+
+  // System Configuration (Session timeout, etc.)
+  getSessionConfig: () => request<SessionConfig>('/config/session'),
+  updateSessionConfig: (timeout_minutes: number) =>
+    request<SessionConfig>('/config/session', {
+      method: 'PUT',
+      body: JSON.stringify({ timeout_minutes }),
+    }),
 };

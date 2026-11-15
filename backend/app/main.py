@@ -9,11 +9,14 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.db.session import SessionLocal, engine, Base
-from app.models.models import Role, User, Estado
+from app.models.models import Role, User, Estado, ConfiguracionSistema
 from app.core.security import get_password_hash
-from app.api.endpoints import auth, users, production, certificates, public, dashboard
+from app.api.endpoints import auth, users, production, certificates, public, dashboard, config
 
 def seed_initial_data():
+    # Asegurar que todas las tablas existan en la base de datos
+    Base.metadata.create_all(bind=engine)
+
     db: Session = SessionLocal()
     try:
         roles_data = [
@@ -56,6 +59,19 @@ def seed_initial_data():
             )
             db.add(admin)
 
+        # Configuración inicial del sistema: Tiempo de inactividad de sesión (30 minutos por defecto)
+        conf_session = db.query(ConfiguracionSistema).filter(
+            ConfiguracionSistema.clave == "session_inactivity_timeout_minutes"
+        ).first()
+        if not conf_session:
+            conf_session = ConfiguracionSistema(
+                uid=uuid.uuid4(),
+                clave="session_inactivity_timeout_minutes",
+                valor="30",
+                descripcion="Tiempo máximo de inactividad de sesión de usuarios en minutos antes del cierre automático"
+            )
+            db.add(conf_session)
+
         db.commit()
     except Exception as e:
         print(f"Error in seed_initial_data: {e}")
@@ -97,6 +113,7 @@ app.include_router(production.router, prefix=settings.API_V1_STR)
 app.include_router(certificates.router, prefix=settings.API_V1_STR)
 app.include_router(public.router, prefix=settings.API_V1_STR)
 app.include_router(dashboard.router, prefix=settings.API_V1_STR)
+app.include_router(config.router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 def health_check():

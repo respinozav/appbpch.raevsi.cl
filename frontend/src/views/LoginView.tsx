@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, ArrowRight, Loader2, Lock, Mail, Award } from 'lucide-react';
+import { Shield, ArrowRight, Loader2, Lock, Mail, Award, Clock } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
   const { login } = useAuth();
@@ -9,6 +9,15 @@ export const LoginView: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inactivityMsg, setInactivityMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const reason = sessionStorage.getItem('inactivity_logout');
+    if (reason) {
+      setInactivityMsg(reason);
+      sessionStorage.removeItem('inactivity_logout');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +57,17 @@ export const LoginView: React.FC = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {inactivityMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 text-xs rounded-xl bg-amber-50 border border-amber-200 text-amber-800 font-medium flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{inactivityMsg}. Por favor, vuelve a ingresar tus credenciales.</span>
+              </motion.div>
+            )}
+
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}

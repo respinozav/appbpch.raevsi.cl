@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { 
-  PlusCircle, Layers, FileCheck, Users, User, LogOut, 
+import {
+  PlusCircle, Layers, FileCheck, Users, User, LogOut,
   Search, Menu, X, Shield, ChevronRight, Sparkles, Factory,
-  LayoutDashboard
+  LayoutDashboard, Settings
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -18,41 +18,49 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
-    { 
-      id: 'dashboard', 
-      label: 'Dashboard', 
-      desc: 'Métricas & Ley REP', 
-      icon: LayoutDashboard 
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      desc: 'Métricas & Ley REP',
+      icon: LayoutDashboard
     },
-    { 
-      id: 'iniciar', 
-      label: 'Iniciar Producción', 
-      desc: 'Emisión de tickets Zebra', 
-      icon: PlusCircle 
+    {
+      id: 'iniciar',
+      label: 'Iniciar Producción',
+      desc: 'Emisión de tickets Zebra',
+      icon: PlusCircle
     },
-    { 
-      id: 'produccion', 
-      label: 'Producción & Sábana', 
-      desc: 'Trazabilidad y lotes', 
-      icon: Layers 
+    {
+      id: 'produccion',
+      label: 'Producción & Sábana',
+      desc: 'Trazabilidad y lotes',
+      icon: Layers
     },
-    { 
-      id: 'certificados', 
-      label: 'Certificados', 
-      desc: 'Documento R-CAL-07 PDF', 
-      icon: FileCheck 
+    {
+      id: 'certificados',
+      label: 'Certificados',
+      desc: 'Documento R-CAL-07 PDF',
+      icon: FileCheck
     },
-    ...(isAdmin ? [{ 
-      id: 'usuarios', 
-      label: 'Usuarios & Permisos', 
-      desc: 'Usuarios y permisos', 
-      icon: Users 
-    }] : []),
-    { 
-      id: 'perfil', 
-      label: 'Mi Perfil', 
-      desc: 'Nombre y credenciales', 
-      icon: User 
+    ...(isAdmin ? [
+      {
+        id: 'usuarios',
+        label: 'Usuarios & Permisos',
+        desc: 'Usuarios y permisos',
+        icon: Users
+      },
+      {
+        id: 'configuracion',
+        label: 'Configuración',
+        desc: 'Ajustes del sistema',
+        icon: Settings
+      }
+    ] : []),
+    {
+      id: 'perfil',
+      label: 'Mi Perfil',
+      desc: 'Nombre y credenciales',
+      icon: User
     },
   ];
 
@@ -66,8 +74,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
     roleName === 'Administrador'
       ? 'bg-purple-100 text-purple-800 border-purple-200'
       : roleName === 'Jefatura'
-      ? 'bg-blue-100 text-blue-800 border-blue-200'
-      : 'bg-emerald-100 text-emerald-800 border-emerald-200';
+        ? 'bg-blue-100 text-blue-800 border-blue-200'
+        : 'bg-emerald-100 text-emerald-800 border-emerald-200';
 
   // Navigation Links List Content (Shared between Desktop Sidebar and Mobile Drawer)
   const navContent = (
@@ -76,9 +84,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
         {/* Brand Header */}
         <div className="p-5 border-b border-[#E5ECE6]">
           <div className="flex items-center">
-            <img 
-              src="/logo-bioplast.png" 
-              alt="Bioplast Ecological Innovation" 
+            <img
+              src="/logo-bioplast.png"
+              alt="Bioplast Ecological Innovation"
               className="h-10 w-auto object-contain"
             />
           </div>
@@ -121,19 +129,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition group ${
-                  isActive
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition group ${isActive
                     ? 'bg-[#EEF6F0] text-[#0D3B22] font-bold shadow-xs'
                     : 'text-neutral-700 hover:bg-neutral-100/70 hover:text-[#0F1F16] font-medium'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
-                      isActive
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${isActive
                         ? 'bg-[#0D3B22] text-white shadow-xs'
                         : 'bg-neutral-100 text-neutral-600 group-hover:bg-[#15803D]/10 group-hover:text-[#15803D]'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
@@ -175,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
           </div>
 
           <button
-            onClick={logout}
+            onClick={() => logout()}
             title="Cerrar sesión"
             className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition shrink-0 cursor-pointer"
           >
@@ -206,9 +212,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
 
         {/* Mobile Brand Title */}
         <div className="flex items-center gap-2">
-          <img 
-            src="/logo-bioplast.png" 
-            alt="Bioplast Ecological Innovation" 
+          <img
+            src="/logo-bioplast.png"
+            alt="Bioplast Ecological Innovation"
             className="h-7 w-auto object-contain"
           />
         </div>

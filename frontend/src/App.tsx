@@ -9,11 +9,13 @@ import { ProduccionView } from './views/ProduccionView';
 import { CertificadosView } from './views/CertificadosView';
 import { UsuariosView } from './views/UsuariosView';
 import { PerfilView } from './views/PerfilView';
+import { ConfiguracionView } from './views/ConfiguracionView';
 import { PublicTrazabilidadView } from './views/PublicTrazabilidadView';
+import { InactivityModal } from './components/InactivityModal';
 import { RefreshCw, Search } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, showWarning, secondsRemaining, extendSession, logout } = useAuth();
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [commandOpen, setCommandOpen] = useState(false);
   const [jumpToBatchCodigo, setJumpToBatchCodigo] = useState<number | undefined>(undefined);
@@ -56,6 +58,7 @@ const MainAppContent: React.FC = () => {
     produccion: { title: 'Sábana de Producción', subtitle: 'Trazabilidad y gestión de lotes' },
     certificados: { title: 'Certificados de Calidad', subtitle: 'Emisión oficial R-CAL-07' },
     usuarios: { title: 'Administración de Usuarios', subtitle: 'Control de accesos y roles' },
+    configuracion: { title: 'Configuración del Sistema', subtitle: 'Ajustes de sesión y políticas de seguridad' },
     perfil: { title: 'Mi Perfil de Usuario', subtitle: 'Configuración personal y contraseña' },
   };
 
@@ -114,6 +117,7 @@ const MainAppContent: React.FC = () => {
           )}
           {currentView === 'certificados' && <CertificadosView />}
           {currentView === 'usuarios' && <UsuariosView />}
+          {currentView === 'configuracion' && <ConfiguracionView />}
           {currentView === 'perfil' && <PerfilView />}
         </main>
       </div>
@@ -125,6 +129,13 @@ const MainAppContent: React.FC = () => {
           setJumpToBatchCodigo(undefined);
           setCurrentView(v);
         }}
+      />
+
+      <InactivityModal
+        show={showWarning}
+        secondsRemaining={secondsRemaining}
+        onExtend={extendSession}
+        onLogout={() => logout('Sesión cerrada por el usuario')}
       />
     </div>
   );

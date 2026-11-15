@@ -102,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, onOpenC
               </div>
 
               <button
-                onClick={logout}
+                onClick={() => logout()}
                 title="Cerrar sesión"
                 className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
               >

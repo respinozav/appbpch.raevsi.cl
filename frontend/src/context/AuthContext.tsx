@@ -1,15 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, api, getToken, clearToken, setToken } from '../api/client';
+import { useSessionTimeout } from '../hooks/useSessionTimeout';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (correo: string, pass: string) => Promise<void>;
-  logout: () => void;
+  logout: (reason?: string) => void;
   refreshUser: () => Promise<void>;
   isAdmin: boolean;
   isJefatura: boolean;
   isColaborador: boolean;
+  timeoutMinutes: number;
+  setTimeoutMinutes: (m: number) => void;
+  refreshTimeoutConfig: () => Promise<void>;
+  showWarning: boolean;
+  secondsRemaining: number;
+  extendSession: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,12 +49,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await api.login(correo, pass);
     setToken(res.access_token);
     setUser(res.user);
+    sessionStorage.removeItem('inactivity_logout');
   };
 
-  const logout = () => {
+  const logout = (reason?: string) => {
     clearToken();
     setUser(null);
+    if (reason) {
+      sessionStorage.setItem('inactivity_logout', reason);
+    }
   };
+
+  const {
+    timeoutMinutes,
+    setTimeoutMinutes,
+    refreshTimeoutConfig,
+    showWarning,
+    secondsRemaining,
+    extendSession,
+  } = useSessionTimeout(Boolean(user), logout);
 
   const roleName = user?.rol?.nombre;
   const isAdmin = roleName === 'Administrador';
@@ -65,6 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
         isJefatura,
         isColaborador,
+        timeoutMinutes,
+        setTimeoutMinutes,
+        refreshTimeoutConfig,
+        showWarning,
+        secondsRemaining,
+        extendSession,
       }}
     >
       {children}
