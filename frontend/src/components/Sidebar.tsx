@@ -85,27 +85,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
 
   // Navigation Links List Content (Shared between Desktop Sidebar and Mobile Drawer)
   const navContent = (
-    <div className="flex flex-col h-full justify-between select-none">
-      <div>
-        {/* Brand Header */}
-        <div className="p-5 border-b border-[#E5ECE6]">
-          <div className="flex items-center">
-            <img
-              src="/logo-bioplast.png"
-              alt="Bioplast Ecological Innovation"
-              className="h-10 w-auto object-contain"
-            />
-          </div>
-
-          {/* Plant status pill */}
-          <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF6F0] border border-[#15803D]/20 text-[11px] font-medium text-[#0D3B22]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Planta Quilicura · En Línea</span>
-          </div>
+    <div className="flex flex-col h-full justify-between select-none overflow-hidden">
+      {/* Brand Header (Pinned at Top) */}
+      <div className="p-4 sm:p-5 border-b border-[#E5ECE6] shrink-0 bg-white">
+        <div className="flex items-center">
+          <img
+            src="/logo-bioplast.png"
+            alt="Bioplast Ecological Innovation"
+            className="h-10 w-auto object-contain"
+          />
         </div>
 
+        {/* Plant status pill */}
+        <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF6F0] border border-[#15803D]/20 text-[11px] font-medium text-[#0D3B22]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#15803D] animate-pulse" />
+          <span>Planta Quilicura · En Línea</span>
+        </div>
+      </div>
+
+      {/* Middle Scrollable Navigation Area (Takes remaining vertical space) */}
+      <div className="flex-1 overflow-y-auto min-h-0 py-2 overscroll-contain">
         {/* Command Palette Button */}
-        <div className="px-3 pt-4 pb-2">
+        <div className="px-3 pt-1 pb-2">
           <button
             onClick={() => {
               onOpenCommand();
@@ -124,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
         </div>
 
         {/* Navigation Items List */}
-        <nav className="p-3 space-y-1.5">
+        <nav className="p-3 pt-1 space-y-1">
           <div className="px-3 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
             Módulos del Sistema
           </div>
@@ -135,30 +136,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition group ${isActive
+                className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-left transition group ${
+                  isActive
                     ? 'bg-[#EEF6F0] text-[#0D3B22] font-bold shadow-xs'
                     : 'text-neutral-700 hover:bg-neutral-100/70 hover:text-[#0F1F16] font-medium'
-                  }`}
+                }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${isActive
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition shrink-0 ${
+                      isActive
                         ? 'bg-[#0D3B22] text-white shadow-xs'
                         : 'bg-neutral-100 text-neutral-600 group-hover:bg-[#15803D]/10 group-hover:text-[#15803D]'
-                      }`}
+                    }`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
-                  <div>
-                    <div className="text-xs">{item.label}</div>
-                    <div className="text-[10px] text-neutral-400 font-normal">{item.desc}</div>
+                  <div className="min-w-0">
+                    <div className="text-xs truncate">{item.label}</div>
+                    <div className="text-[10px] text-neutral-400 font-normal truncate">{item.desc}</div>
                   </div>
                 </div>
 
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="w-1.5 h-4 bg-[#15803D] rounded-full"
+                    className="w-1.5 h-4 bg-[#15803D] rounded-full shrink-0"
                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
@@ -168,10 +171,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
         </nav>
       </div>
 
-      {/* Footer: User Profile Info & Logout */}
-      <div className="p-3 border-t border-[#E5ECE6]">
+      {/* Footer: User Profile Info & Logout (Permanently Pinned at Bottom) */}
+      <div className="p-3 border-t border-[#E5ECE6] shrink-0 bg-white">
         {/* User Card */}
-        <div className="p-2.5 rounded-xl bg-white border border-[#E5ECE6] flex items-center justify-between shadow-xs">
+        <div className="p-2.5 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full bg-[#0D3B22] text-white font-bold text-xs flex items-center justify-center shrink-0">
               {user?.nombre_completo?.charAt(0) || 'U'}
