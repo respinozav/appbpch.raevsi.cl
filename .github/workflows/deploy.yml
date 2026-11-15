@@ -1,0 +1,28 @@
+name: Deploy Bash Script to AWS
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecutar comandos de despliegue vía SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_PRIVATE_KEY }}
+          script: |
+            if [ ! -d "/var/www/appbpch.raevsi.cl/.git" ]; then
+              echo "Repositorio no encontrado en /var/www. Clonando..."
+              sudo mkdir -p /var/www/appbpch.raevsi.cl
+              sudo chown -R $USER:www-data /var/www/appbpch.raevsi.cl
+              sudo chmod -R 775 /var/www/appbpch.raevsi.cl
+              git clone https://github.com/respinozav/appbpch.raevsi.cl.git /var/www/appbpch.raevsi.cl
+            fi
+            cd /var/www/appbpch.raevsi.cl
+            git fetch origin main
+            git reset --hard origin/main || git pull origin main
+            cd /var/www/appbpch.raevsi.cl/deploy
+            bash deploy.sh
