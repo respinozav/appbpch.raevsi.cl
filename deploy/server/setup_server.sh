@@ -12,7 +12,7 @@ PROJECT_DIR="/var/www/$DOMAIN"
 LOG_DIR="$PROJECT_DIR/logs"
 NGINX_AVAILABLE="/etc/nginx/sites-available/$DOMAIN"
 NGINX_ENABLED="/etc/nginx/sites-enabled/$DOMAIN"
-SYSTEMD_SERVICE="/etc/systemd/system/appbpch-api.service"
+SYSTEMD_SERVICE="/etc/systemd/system/appbpch.service"
 CURRENT_USER="${USER:-ubuntu}"
 
 log() {
@@ -50,14 +50,14 @@ if [ ! -d "$PROJECT_DIR/backend/venv" ]; then
 fi
 
 # 4. Instalar y Habilitar Servicio Systemd
-log "Instalando servicio systemd appbpch-api..."
-if [ -f "$PROJECT_DIR/deploy/server/appbpch-api.service" ]; then
-    sudo cp "$PROJECT_DIR/deploy/server/appbpch-api.service" "$SYSTEMD_SERVICE"
+log "Instalando servicio systemd appbpch..."
+if [ -f "$PROJECT_DIR/deploy/server/appbpch.service" ]; then
+    sudo cp "$PROJECT_DIR/deploy/server/appbpch.service" "$SYSTEMD_SERVICE"
     sudo systemctl daemon-reload
-    sudo systemctl enable appbpch-api.service
-    log "Servicio appbpch-api.service habilitado."
+    sudo systemctl enable appbpch.service
+    log "Servicio appbpch.service habilitado."
 else
-    log "ADVERTENCIA: No se encontró $PROJECT_DIR/deploy/server/appbpch-api.service"
+    log "ADVERTENCIA: No se encontró $PROJECT_DIR/deploy/server/appbpch.service"
 fi
 
 # 5. Configuración de Nginx y Certificados SSL Let's Encrypt

@@ -108,8 +108,12 @@ if [ -d "$BACKEND_DIR" ]; then
         python "$PROJECT_DIR/init_db.py" || log "Aviso: init_db.py finalizó con advertencia, continuando..."
     fi
 
-    # Reiniciar servicio systemd appbpch-api si existe
-    SERVICE_NAME="appbpch-api"
+    # Reiniciar servicio systemd appbpch si existe
+    SERVICE_NAME="appbpch"
+    if ! systemctl list-unit-files --full --all | grep -q "^${SERVICE_NAME}.service" && systemctl list-unit-files --full --all | grep -q "^appbpch-api.service"; then
+        SERVICE_NAME="appbpch-api"
+    fi
+
     if systemctl list-unit-files --full --all | grep -q "^${SERVICE_NAME}.service"; then
         log "Reiniciando servicio systemd $SERVICE_NAME..."
         sudo systemctl daemon-reload
