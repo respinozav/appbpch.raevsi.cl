@@ -18,7 +18,15 @@ router = APIRouter(prefix="/production", tags=["Producción"])
 
 @router.get("/estados", response_model=List[EstadoOut])
 def get_estados(db: Session = Depends(get_db)):
-    return db.query(Estado).order_by(Estado.nombre.asc()).all()
+    estados = db.query(Estado).all()
+    flow_order = {
+        "Producción": 1,
+        "Almacenaje": 2,
+        "Despacho": 3,
+        "Liberado": 4,
+        "Retenido": 5
+    }
+    return sorted(estados, key=lambda e: flow_order.get(e.nombre, 99))
 
 @router.get("/stats")
 def get_production_stats(

@@ -179,26 +179,71 @@ def get_dashboard_metrics(
         "kilos_rpet_estimados": round(rpet_units_est * 0.12, 1)  # 120 gramos por bidón
     }
 
-    # Tendencia temporal diaria de producción (para gráficos de evolución para jefatura)
+    # Tendencia temporal diaria de producción (PostgreSQL nativo to_char)
     daily_results = query.with_entities(
-        func.date(Production.fecha).label("dia"),
+        func.to_char(Production.fecha, 'YYYY-MM-DD').label("dia"),
         func.coalesce(func.sum(Production.cantidad), 0).label("unidades"),
         func.count(Production.uid).label("lotes")
-    ).group_by(func.date(Production.fecha)).order_by(func.date(Production.fecha).asc()).limit(30).all()
+    ).group_by(func.to_char(Production.fecha, 'YYYY-MM-DD')).order_by(func.to_char(Production.fecha, 'YYYY-MM-DD').asc()).all()
+
+    db_days = {str(d.dia): (int(d.unidades), int(d.lotes)) for d in daily_results if d.dia}
+
+    # Rango continuo de días para garantizar que la gráfica siempre muestre la evolución del mes
+    try:
+        if fecha_desde:
+            start_dt = datetime.strptime(fecha_desde.strip(), "%Y-%m-%d").date()
+        else:
+            start_dt = now.date().replace(day=1)
+    except Exception:
+        start_dt = now.date().replace(day=1)
+
+    try:
+        if fecha_hasta:
+            end_dt = datetime.strptime(fecha_hasta.strip(), "%Y-%m-%d").date()
+        else:
+            end_dt = now.date()
+    except Exception:
+        end_dt = now.date()
+
+    if start_dt > end_dt:
+        start_dt = end_dt - timedelta(days=14)
+
+    # Limitar rango a máximo 31 días continuos para óptima visualización
+    if (end_dt - start_dt).days > 31:
+        start_dt = end_dt - timedelta(days=30)
 
     daily_timeline = []
-    for d in daily_results:
-        dia_str = str(d.dia)
-        unidades = int(d.unidades)
-        # Meta dinámica calculada al 115% o base de 10.000 unidades
+    curr_dt = start_dt
+    while curr_dt <= end_dt:
+        dia_key = curr_dt.strftime("%Y-%m-%d")
+        if dia_key in db_days:
+            unidades, lotes = db_days[dia_key]
+        else:
+            unidades, lotes = 0, 0
+        
         meta = max(int(unidades * 1.15), 10000)
         daily_timeline.append({
-            "fecha": dia_str,
+            "fecha": dia_key,
             "unidades": unidades,
-            "lotes": int(d.lotes),
+            "lotes": lotes,
             "meta": meta,
-            "cumplimiento_pct": min(round((unidades / meta) * 100, 1), 100.0) if meta > 0 else 100.0
+            "cumplimiento_pct": min(round((unidades / meta) * 100, 1), 100.0) if meta > 0 else 0.0
         })
+        curr_dt += timedelta(days=1)
+
+    # Fallback si estuviera vacío
+    if not daily_timeline:
+        for i in range(6, -1, -1):
+            past_d = (now.date() - timedelta(days=i)).strftime("%Y-%m-%d")
+            unidades, lotes = db_days.get(past_d, (0, 0))
+            meta = max(int(unidades * 1.15), 10000)
+            daily_timeline.append({
+                "fecha": past_d,
+                "unidades": unidades,
+                "lotes": lotes,
+                "meta": meta,
+                "cumplimiento_pct": min(round((unidades / meta) * 100, 1), 100.0) if meta > 0 else 0.0
+            })
 
     return {
         "resumen": {

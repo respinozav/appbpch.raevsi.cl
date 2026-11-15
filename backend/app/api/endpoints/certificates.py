@@ -81,11 +81,12 @@ def emit_certificate(
     if not prod:
         raise HTTPException(status_code=404, detail="Lote de producción no encontrado")
 
-    estado_liberado = db.query(Estado).filter(Estado.nombre == "Liberado").first()
-    if not estado_liberado or prod.uid_estado != estado_liberado.uid:
+    estados_validos = db.query(Estado).filter(Estado.nombre.in_(["Despacho", "Liberado"])).all()
+    estados_uids = [e.uid for e in estados_validos]
+    if prod.uid_estado not in estados_uids:
         raise HTTPException(
             status_code=400,
-            detail="Solo se pueden emitir certificados para lotes en estado 'Liberado'."
+            detail="Solo se pueden emitir certificados para lotes en estado 'Despacho' o 'Liberado'."
         )
 
     existing = db.query(Certificado).filter(Certificado.production_uid == prod.uid).first()

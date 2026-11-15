@@ -145,7 +145,7 @@ export const CertificadosView: React.FC = () => {
               </div>
               <div>
                 <div className="text-sm font-bold text-[#0D3B22]">
-                  Certificado N° {certData.header.numero_certificado} · {certData.item.articulo}
+                  Certificado de Análisis R-CAL-07 · {certData.item.articulo}
                 </div>
                 <div className="text-xs text-neutral-500 font-mono">
                   Código Interno: #{certData.item.codigo_interno} · Lote: {certData.item.lote} · Cliente: {certData.metadatos_despacho.cliente}
@@ -207,7 +207,7 @@ export const CertificadosView: React.FC = () => {
               </div>
 
               <span className="font-mono text-neutral-700">
-                Liberados: <strong>{totalCount}</strong> lotes
+                Lotes Habilitados: <strong>{totalCount}</strong>
               </span>
             </div>
           </div>
@@ -216,13 +216,13 @@ export const CertificadosView: React.FC = () => {
             {loading ? (
               <div className="p-12 text-center text-sm text-neutral-500 flex flex-col items-center justify-center gap-2">
                 <RefreshCw className="w-6 h-6 animate-spin text-[#15803D]" />
-                <span>Cargando lotes liberados...</span>
+                <span>Cargando lotes para certificación...</span>
               </div>
             ) : liberados.length === 0 ? (
               <div className="p-12 text-center text-sm text-neutral-400">
-                No hay lotes en estado <strong>Liberado</strong> para los filtros seleccionados.
+                No hay lotes en estado <strong>Despacho</strong> o <strong>Liberado</strong> para los filtros seleccionados.
                 <div className="text-xs text-neutral-400 mt-1">
-                  (Para certificar un lote, primero cámbialo a "Liberado" en el Módulo de Producción).
+                  (Solo los lotes en estado Despacho o Liberado pueden emitir certificados de calidad R-CAL-07).
                 </div>
               </div>
             ) : (
@@ -235,8 +235,7 @@ export const CertificadosView: React.FC = () => {
                       <th className="p-3.5">Artículo / Envase</th>
                       <th className="p-3.5">Material & Colores</th>
                       <th className="p-3.5">Cantidad</th>
-                      <th className="p-3.5">Estado</th>
-                      <th className="p-3.5">Certificado</th>
+                      <th className="p-3.5">Estado Operativo</th>
                       <th className="p-3.5 text-right">Acción</th>
                     </tr>
                   </thead>
@@ -269,18 +268,6 @@ export const CertificadosView: React.FC = () => {
                           >
                             {item.estado_nombre || 'Liberado'}
                           </span>
-                        </td>
-                        <td className="p-3.5">
-                          {item.certificado_emitido ? (
-                            <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 text-[#15803D] border border-[#15803D]/20 flex items-center gap-1 w-max">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>N° {item.numero_certificado}</span>
-                            </span>
-                          ) : (
-                            <span className="text-[11px] text-neutral-400 font-medium">
-                              Pendiente Emisión
-                            </span>
-                          )}
                         </td>
                         <td className="p-3.5 text-right">
                           <button

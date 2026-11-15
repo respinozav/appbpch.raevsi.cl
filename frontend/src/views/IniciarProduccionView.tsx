@@ -58,17 +58,17 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
     uid: '00000000-0000-0000-0000-000000000000',
     codigo_interno: 110000000,
     fecha: new Date().toISOString(),
-    numero_maquina: Number(numeroMaquina) || 1,
-    turno: Number(turno) || 1,
-    operador: Number(operador) || 1,
-    cantidad: Number(cantidad) || 0,
+    numero_maquina: numeroMaquina !== '' ? Number(numeroMaquina) : 7,
+    turno: turno !== '' ? Number(turno) : 1,
+    operador: operador !== '' ? Number(operador) : 104,
+    cantidad: cantidad !== '' ? Number(cantidad) : 2600,
     lote: 10001,
     unidad_embalaje: '0001',
-    peso: peso || 'N/A',
-    articulo: articulo.toUpperCase() || 'ENVASE TRAVERSO 1000-24',
-    material: material.toUpperCase() || 'PET',
-    color_bidon: colorBidon.toUpperCase() || 'TRANSPARENTE',
-    color_asa: colorAsa.toUpperCase() || 'VERDE',
+    peso: peso.trim() || 'N/A',
+    articulo: (articulo.trim() || 'ENVASE TRAVERSO 1000-24').toUpperCase(),
+    material: (material.trim() || 'PET').toUpperCase(),
+    color_bidon: (colorBidon.trim() || 'TRANSPARENTE').toUpperCase(),
+    color_asa: (colorAsa.trim() || 'VERDE').toUpperCase(),
     uid_estado: '00000000-0000-0000-0000-000000000000',
     qr_url: 'https://appbpch.raevsi.cl/trazabilidad/preview',
   };
@@ -399,7 +399,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                 )}
               </div>
             ) : (
-              <ZebraLabel ticket={previewTicket} showPrintButton={false} />
+              <ZebraLabel ticket={previewTicket} showPrintButton={true} />
             )}
           </div>
         </div>

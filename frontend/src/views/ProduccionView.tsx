@@ -47,12 +47,21 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
   // Print ticket modal
   const [printTicket, setPrintTicket] = useState<ProductionTicket | null>(null);
 
-  // 1. Load Estados
+  // 1. Load Estados ordenados según flujo operativo
+  const FLOW_ORDER: Record<string, number> = {
+    'Producción': 1,
+    'Almacenaje': 2,
+    'Despacho': 3,
+    'Liberado': 4,
+    'Retenido': 5,
+  };
+
   useEffect(() => {
     const loadEstados = async () => {
       try {
         const data = await api.getEstados();
-        setEstados(data);
+        const sorted = [...data].sort((a, b) => (FLOW_ORDER[a.nombre] || 99) - (FLOW_ORDER[b.nombre] || 99));
+        setEstados(sorted);
         // Por defecto arranca en 'Todos los Estados' (selectedEstadoUid = null)
       } catch (err) {
         console.error('Error fetching estados:', err);

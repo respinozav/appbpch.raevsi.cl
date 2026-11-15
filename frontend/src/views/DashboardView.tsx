@@ -368,12 +368,14 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                         {/* Bar */}
                         <motion.div
                           initial={{ height: 0 }}
-                          animate={{ height: `${Math.max(heightPct, 6)}%` }}
-                          transition={{ duration: 0.5, delay: idx * 0.04 }}
+                          animate={{ height: td.unidades > 0 ? `${Math.max(heightPct, 8)}%` : '4px' }}
+                          transition={{ duration: 0.5, delay: idx * 0.03 }}
                           className={`w-full rounded-t-md transition-all ${
-                            td.unidades >= td.meta
+                            td.unidades === 0
+                              ? 'bg-neutral-200/80'
+                              : td.unidades >= td.meta
                               ? 'bg-gradient-to-t from-[#15803D] to-[#22C55E]'
-                              : 'bg-gradient-to-t from-[#0D3B22] to-[#15803D]/80'
+                              : 'bg-gradient-to-t from-[#0D3B22] to-[#15803D]'
                           } hover:brightness-110 shadow-xs`}
                         />
 

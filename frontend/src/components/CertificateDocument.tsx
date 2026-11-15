@@ -75,10 +75,7 @@ export const CertificateDocument: React.FC<CertificateDocumentProps> = ({ data, 
           </div>
         </div>
 
-        {/* Certificate Number */}
-        <div className="mb-4 text-xs font-bold text-neutral-900">
-          N° certificado: <span className="font-mono text-sm">{data.header.numero_certificado}</span>
-        </div>
+
 
         {/* Legal & Technical Declarations */}
         <div className="space-y-2 mb-5 text-[11px] text-justify text-neutral-800 leading-normal">

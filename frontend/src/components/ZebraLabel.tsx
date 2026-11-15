@@ -27,7 +27,7 @@ export const ZebraLabel: React.FC<ZebraLabelProps> = ({ ticket, showPrintButton 
     <div className="flex flex-col items-center">
       {/* Physical Zebra Ticket Container */}
       <div 
-        className="printable-ticket bg-white text-black border-2 border-black p-4 w-[380px] sm:w-[420px] shadow-md select-none font-sans"
+        className="printable-area printable-ticket bg-white text-black border-2 border-black p-4 w-[380px] sm:w-[420px] shadow-md select-none font-sans"
         style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
       >
         {/* Top Header: BIOPLAST SPA in black box */}
