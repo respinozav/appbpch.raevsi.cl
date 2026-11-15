@@ -496,56 +496,54 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
                       </span>
                     </div>
 
-                    {/* SVG Poligonal interactivo que traza la trayectoria continua (sube y baja) siguiendo las barras */}
+                    {/* SVG Poligonal fino y elegante que traza la trayectoria continua (sube y baja) siguiendo las barras */}
                     {tendencia.length > 1 && (
-                      <svg
-                        className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible"
-                        viewBox="0 0 1000 100"
-                        preserveAspectRatio="none"
-                      >
-                        <defs>
-                          <linearGradient id="trendGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#15803D" />
-                            <stop offset="50%" stopColor="#22C55E" />
-                            <stop offset="100%" stopColor="#0D3B22" />
-                          </linearGradient>
-                        </defs>
-                        <polyline
-                          fill="none"
-                          stroke="url(#trendGradient)"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          points={tendencia
-                            .map((td, idx) => {
-                              const total = tendencia.length;
-                              // Centro horizontal porcentual de cada barra
-                              const x = ((idx + 0.5) / total) * 1000;
-                              // Invertido para SVG (0 arriba, 100 abajo)
-                              const heightPct = Math.round((td.unidades / chartMax) * 100);
-                              const y = 100 - Math.max(heightPct, td.unidades > 0 ? 10 : 2);
-                              return `${x},${y}`;
-                            })
-                            .join(' ')}
-                        />
-                        {tendencia.map((td, idx) => {
-                          const total = tendencia.length;
-                          const x = ((idx + 0.5) / total) * 1000;
-                          const heightPct = Math.round((td.unidades / chartMax) * 100);
-                          const y = 100 - Math.max(heightPct, td.unidades > 0 ? 10 : 2);
-                          return (
-                            <circle
-                              key={`pt-${idx}`}
-                              cx={x}
-                              cy={y}
-                              r="3.5"
-                              fill="#FFFFFF"
-                              stroke="#15803D"
-                              strokeWidth="2"
-                            />
-                          );
-                        })}
-                      </svg>
+                      <div className="absolute inset-x-0 top-8 bottom-7 pointer-events-none z-10 overflow-hidden">
+                        <svg
+                          className="w-full h-full"
+                          viewBox="0 0 1000 100"
+                          preserveAspectRatio="none"
+                        >
+                          <polyline
+                            fill="none"
+                            stroke="#0D3B22"
+                            strokeWidth="1.2"
+                            strokeOpacity="0.75"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            vectorEffect="non-scaling-stroke"
+                            points={tendencia
+                              .map((td, idx) => {
+                                const total = tendencia.length;
+                                // Centro horizontal porcentual exacto de cada columna
+                                const x = ((idx + 0.5) / total) * 1000;
+                                const heightPct = Math.round((td.unidades / chartMax) * 100);
+                                const y = 100 - Math.max(heightPct, td.unidades > 0 ? 10 : 2);
+                                return `${x.toFixed(1)},${y.toFixed(1)}`;
+                              })
+                              .join(' ')}
+                          />
+                          {tendencia.map((td, idx) => {
+                            if (td.unidades === 0) return null;
+                            const total = tendencia.length;
+                            const x = ((idx + 0.5) / total) * 1000;
+                            const heightPct = Math.round((td.unidades / chartMax) * 100);
+                            const y = 100 - Math.max(heightPct, 10);
+                            return (
+                              <circle
+                                key={`pt-${idx}`}
+                                cx={x}
+                                cy={y}
+                                r="1.5"
+                                fill="#FFFFFF"
+                                stroke="#0D3B22"
+                                strokeWidth="1"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            );
+                          })}
+                        </svg>
+                      </div>
                     )}
 
                     {/* Contenedor flexible de barras diarias */}
