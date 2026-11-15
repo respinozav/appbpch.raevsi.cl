@@ -86,33 +86,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
   // Navigation Links List Content (Shared between Desktop Sidebar and Mobile Drawer)
   const navContent = (
     <div className="flex flex-col h-full justify-between select-none overflow-hidden">
-      {/* Brand Header (Pinned at Top) */}
-      <div className="p-4 sm:p-5 border-b border-[#E5ECE6] shrink-0 bg-white">
-        <div className="flex items-center">
-          <img
-            src="/logo-bioplast.png"
-            alt="Bioplast Ecological Innovation"
-            className="h-10 w-auto object-contain"
-          />
+      {/* Brand Header & Quick Command Bar (Permanently Static at Top) */}
+      <div className="shrink-0 bg-white border-b border-[#E5ECE6]">
+        {/* Brand Header */}
+        <div className="p-4 sm:p-5 pb-3">
+          <div className="flex items-center">
+            <img
+              src="/logo-bioplast.png"
+              alt="Bioplast Ecological Innovation"
+              className="h-10 w-auto object-contain"
+            />
+          </div>
+
+          {/* Plant status pill */}
+          <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF6F0] border border-[#15803D]/20 text-[11px] font-medium text-[#0D3B22]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#15803D] animate-pulse" />
+            <span>Planta Quilicura · En Línea</span>
+          </div>
         </div>
 
-        {/* Plant status pill */}
-        <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF6F0] border border-[#15803D]/20 text-[11px] font-medium text-[#0D3B22]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#15803D] animate-pulse" />
-          <span>Planta Quilicura · En Línea</span>
-        </div>
-      </div>
-
-      {/* Middle Scrollable Navigation Area (Takes remaining vertical space) */}
-      <div className="flex-1 overflow-y-auto min-h-0 py-2 overscroll-contain">
-        {/* Command Palette Button */}
-        <div className="px-3 pt-1 pb-2">
+        {/* Static Command Palette Button */}
+        <div className="px-3 pb-3">
           <button
             onClick={() => {
               onOpenCommand();
               setMobileOpen(false);
             }}
-            className="w-full flex items-center justify-between px-3.5 py-2 text-xs rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-neutral-600 hover:bg-[#EEF6F0] hover:text-[#0D3B22] transition group"
+            className="w-full flex items-center justify-between px-3.5 py-2 text-xs rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-neutral-600 hover:bg-[#EEF6F0] hover:text-[#0D3B22] transition group cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <Search className="w-4 h-4 text-neutral-400 group-hover:text-[#15803D] transition" />
@@ -123,7 +123,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
             </kbd>
           </button>
         </div>
+      </div>
 
+      {/* Middle Scrollable Navigation Area: ONLY system modules scroll */}
+      <div className="flex-1 overflow-y-auto min-h-0 py-2 overscroll-contain">
         {/* Navigation Items List */}
         <nav className="p-3 pt-1 space-y-1">
           <div className="px-3 pb-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
