@@ -1,0 +1,185 @@
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List, Any
+from datetime import datetime, date
+from uuid import UUID
+
+# --- ROLES ---
+class RoleBase(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+
+class RoleOut(RoleBase):
+    uid: UUID
+
+    class Config:
+        from_attributes = True
+
+# --- USUARIOS ---
+class UserBase(BaseModel):
+    nombre_completo: str
+    correo: EmailStr
+    activo: bool = True
+
+class UserCreate(UserBase):
+    password: str
+    rol_uid: UUID
+
+class UserUpdate(BaseModel):
+    nombre_completo: Optional[str] = None
+    password: Optional[str] = None
+    rol_uid: Optional[UUID] = None
+    activo: Optional[bool] = None
+
+class UserProfileUpdate(BaseModel):
+    nombre_completo: str
+    password: Optional[str] = None
+    current_password: Optional[str] = None
+
+class UserOut(UserBase):
+    uid: UUID
+    rol_uid: UUID
+    rol: Optional[RoleOut] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+# --- AUTH ---
+class LoginRequest(BaseModel):
+    correo: EmailStr
+    password: str
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+# --- ESTADOS ---
+class EstadoOut(BaseModel):
+    uid: UUID
+    nombre: str
+    descripcion: Optional[str] = None
+    color: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# --- PRODUCCION ---
+class ProductionBatchCreate(BaseModel):
+    numero_maquina: int = Field(..., ge=1, description="Número de máquina (int)")
+    turno: int = Field(..., ge=1, le=4, description="Turno de trabajo (1-4)")
+    operador: int = Field(..., ge=1, description="Código del operador (int)")
+    cantidad: int = Field(..., ge=1, description="Cantidad en unidades (int)")
+    cantidad_lotes: int = Field(..., ge=1, le=500, description="Cantidad de lotes / tickets a emitir")
+    peso: str = Field(default="N/A", description="Unidad de peso en kilos o N/A")
+    articulo: str = Field(..., description="Nombre del artículo / envase")
+    material: str = Field(..., description="Material (PET, rPET, HDPE, etc.)")
+    color_bidon: str = Field(..., description="Color del bidón / cuerpo")
+    color_asa: str = Field(..., description="Color del asa")
+
+class ProductionOut(BaseModel):
+    uid: UUID
+    codigo_interno: int
+    fecha: datetime
+    numero_maquina: int
+    turno: int
+    operador: int
+    cantidad: int
+    lote: int
+    unidad_embalaje: str
+    peso: str
+    articulo: str
+    material: str
+    color_bidon: str
+    color_asa: str
+    uid_estado: UUID
+    estado: Optional[EstadoOut] = None
+    created_at: Optional[datetime] = None
+    qr_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class ProductionBatchSummary(BaseModel):
+    codigo_interno: int
+    fecha: datetime
+    articulo: str
+    material: str
+    color_bidon: str
+    color_asa: str
+    numero_maquina: int
+    turno: int
+    operador: int
+    cantidad_unitaria: int
+    total_lotes: int
+    lote_inicio: int
+    lote_fin: int
+    peso: str
+    uid_estado: UUID
+    estado: Optional[EstadoOut] = None
+    lotes: List[ProductionOut] = []
+
+class ProductionBatchStateUpdate(BaseModel):
+    nuevo_estado_uid: UUID
+    observaciones: Optional[str] = None
+    aplicar_a_todo_el_lote: bool = True
+
+class HistorialEstadoOut(BaseModel):
+    uid: UUID
+    production_uid: UUID
+    estado_anterior: Optional[EstadoOut] = None
+    estado_nuevo: Optional[EstadoOut] = None
+    usuario_nombre: Optional[str] = None
+    fecha_hora: datetime
+    observaciones: Optional[str] = None
+
+# --- CERTIFICADOS ---
+class CertificadoCreate(BaseModel):
+    production_uid: UUID
+    cliente: str = "ALIASE"
+    despacho: str = "336"
+    factura: Optional[str] = ""
+    fecha: Optional[date] = None
+    aprobado_por: str = "Susana Avila C."
+    cargo: str = "DEPTO. CONTROL DE CALIDAD"
+
+class CertificadoOut(BaseModel):
+    uid: UUID
+    numero_certificado: str
+    production_uid: UUID
+    codigo_interno: int
+    lote: int
+    cliente: str
+    despacho: str
+    factura: Optional[str] = None
+    fecha: Optional[date] = None
+    aprobado_por: str
+    cargo: str
+    created_at: Optional[datetime] = None
+    production: Optional[ProductionOut] = None
+
+    class Config:
+        from_attributes = True
+
+# --- PUBLIC CONSULTATION (QR SCAN) ---
+class PublicTrazabilidadOut(BaseModel):
+    uid: UUID
+    verificado: bool = True
+    codigo_interno: int
+    lote: int
+    unidad_embalaje: str
+    articulo: str
+    material: str
+    color_bidon: str
+    color_asa: str
+    cantidad: int
+    peso: str
+    numero_maquina: int
+    turno: int
+    operador: int
+    fecha_fabricacion: datetime
+    estado_actual: str
+    estado_color: str
+    certificado_numero: Optional[str] = None
+    aprobado_calidad: bool = False
+    historial: List[HistorialEstadoOut] = []
