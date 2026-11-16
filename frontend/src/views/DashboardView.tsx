@@ -34,89 +34,39 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
   const handleExportData = async () => {
     setExporting(true);
     try {
-      const res = await api.listBatches({
+      await api.downloadProductionCsv({
         fecha_desde: fechaDesde || undefined,
         fecha_hasta: fechaHasta || undefined,
-        limit: 1000,
+        material_filter: materialFilter !== 'all' ? materialFilter : undefined,
       });
-
-      const batches = res.items || [];
-      const rows: string[][] = [
-        [
-          "Código Tirada",
-          "Fecha",
-          "Lote Inicio",
-          "Lote Fin",
-          "Total Lotes",
-          "Artículo",
-          "Material",
-          "Color Bidón",
-          "Color Asa",
-          "Máquina",
-          "Turno",
-          "Operador",
-          "Cantidad Unitaria",
-          "Total Unidades",
-          "Estado Trazabilidad",
-        ],
-      ];
-
-      if (batches.length > 0) {
-        batches.forEach((b: any) => {
-          if (
-            materialFilter !== 'all' &&
-            b.material &&
-            !b.material.toLowerCase().includes(materialFilter.toLowerCase())
-          ) {
-            return;
-          }
-
-          const fechaStr = b.fecha ? new Date(b.fecha).toLocaleDateString('es-CL') : 'N/A';
-          rows.push([
-            String(b.codigo_interno || ''),
-            fechaStr,
-            String(b.lote_inicio || ''),
-            String(b.lote_fin || ''),
-            String(b.total_lotes || ''),
-            `"${(b.articulo || '').replace(/"/g, '""')}"`,
-            `"${(b.material || '').replace(/"/g, '""')}"`,
-            `"${(b.color_bidon || '').replace(/"/g, '""')}"`,
-            `"${(b.color_asa || '').replace(/"/g, '""')}"`,
-            String(b.numero_maquina || ''),
-            String(b.turno || ''),
-            String(b.operador || ''),
-            String(b.cantidad_unitaria || ''),
-            String((b.cantidad_unitaria || 0) * (b.total_lotes || 0)),
-            `"${(b.estado?.nombre || 'Producción').replace(/"/g, '""')}"`,
-          ]);
-        });
-      } else if (data?.tendencia_diaria) {
-        rows.length = 0;
-        rows.push(["Fecha", "Unidades Producidas", "Lotes", "Meta Operativa", "Cumplimiento %"]);
-        data.tendencia_diaria.forEach((td) => {
-          rows.push([
+    } catch (err: any) {
+      console.error("Error al exportar datos:", err);
+      // Fallback seguro en memoria con datos de tendencia si el endpoint fallara
+      if (data?.tendencia_diaria && data.tendencia_diaria.length > 0) {
+        const rows = [
+          ["Fecha", "Unidades Producidas", "Lotes", "Meta Operativa", "Cumplimiento %"],
+          ...data.tendencia_diaria.map((td) => [
             td.fecha,
             String(td.unidades),
             String(td.lotes),
             String(td.meta),
             `${td.cumplimiento_pct}%`,
-          ]);
-        });
+          ]),
+        ];
+        const csvContent = "\uFEFF" + rows.map((r) => r.join(";")).join("\r\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const dateTag = new Date().toISOString().split("T")[0];
+        link.setAttribute("href", url);
+        link.setAttribute("download", `reporte_produccion_bioplast_${dateTag}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        alert(err.message || "No fue posible exportar los datos. Por favor reintente.");
       }
-
-      const csvContent = "\uFEFF" + rows.map((r) => r.join(";")).join("\r\n");
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      const dateTag = new Date().toISOString().split("T")[0];
-      link.setAttribute("href", url);
-      link.setAttribute("download", `reporte_produccion_bioplast_${dateTag}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err) {
-      console.error("Error al exportar datos:", err);
-      alert("No fue posible exportar los datos. Por favor reintente.");
     } finally {
       setExporting(false);
     }

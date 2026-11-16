@@ -378,6 +378,58 @@ export const api = {
   getLotHistorial: (production_uid: string) =>
     request<HistorialEstado[]>(`/production/${production_uid}/historial`),
 
+  downloadProductionCsv: async (params: {
+    fecha_desde?: string;
+    fecha_hasta?: string;
+    material_filter?: string;
+  }): Promise<void> => {
+    const q = new URLSearchParams();
+    if (params.fecha_desde) q.append('fecha_desde', params.fecha_desde);
+    if (params.fecha_hasta) q.append('fecha_hasta', params.fecha_hasta);
+    if (params.material_filter) q.append('material_filter', params.material_filter);
+
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/production/export/csv?${q.toString()}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      let errorMsg = 'Error al descargar archivo CSV';
+      try {
+        const errJson = await response.json();
+        errorMsg = errJson.detail || errorMsg;
+      } catch {
+        errorMsg = response.statusText;
+      }
+      throw new Error(errorMsg);
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get('content-disposition');
+    let filename = `reporte_produccion_bioplast_${new Date().toISOString().split('T')[0]}.csv`;
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  },
+
   // Certificates
   listLiberados: (params: { search?: string; page?: number; limit?: number }) => {
     const q = new URLSearchParams();

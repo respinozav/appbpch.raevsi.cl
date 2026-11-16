@@ -455,6 +455,74 @@ def update_single_lot_state(
 
     return {"message": f"Lote #{prod.lote} actualizado a '{nuevo_estado.nombre}'."}
 
+@router.get("/export/csv")
+def export_production_csv(
+    fecha_desde: Optional[str] = Query(None),
+    fecha_hasta: Optional[str] = Query(None),
+    material_filter: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from fastapi.responses import Response
+
+    query = db.query(Production).order_by(desc(Production.fecha), desc(Production.codigo_interno), desc(Production.lote))
+
+    if fecha_desde and fecha_desde.strip():
+        try:
+            parts = [int(p) for p in fecha_desde.strip().split("-")]
+            if len(parts) == 3:
+                d_desde = datetime(parts[0], parts[1], parts[2], 0, 0, 0, tzinfo=timezone.utc)
+                query = query.filter(Production.fecha >= d_desde)
+        except Exception:
+            pass
+
+    if fecha_hasta and fecha_hasta.strip():
+        try:
+            parts = [int(p) for p in fecha_hasta.strip().split("-")]
+            if len(parts) == 3:
+                d_hasta = datetime(parts[0], parts[1], parts[2], 23, 59, 59, 999999, tzinfo=timezone.utc)
+                query = query.filter(Production.fecha <= d_hasta)
+        except Exception:
+            pass
+
+    if material_filter and material_filter.lower() not in ("all", "null", "undefined", ""):
+        query = query.filter(Production.material.ilike(f"%{material_filter.strip()}%"))
+
+    prods = query.all()
+
+    # Pre-cargar mapa de nombres de estado
+    estados = {e.uid: e.nombre for e in db.query(Estado).all()}
+
+    lines = [
+        "Código Tirada;Fecha;Lote;Artículo;Material;Color Bidón;Color Asa;Máquina;Turno;Operador;Cantidad Unitaria;Unidad Embalaje;Peso;Estado Trazabilidad"
+    ]
+
+    for p in prods:
+        f_str = p.fecha.strftime("%d/%m/%Y %H:%M") if p.fecha else "N/A"
+        nom_estado = estados.get(p.uid_estado, "Producción")
+        art = (p.articulo or "").replace(";", " ")
+        mat = (p.material or "").replace(";", " ")
+        cb = (p.color_bidon or "").replace(";", " ")
+        ca = (p.color_asa or "").replace(";", " ")
+        emb = (p.unidad_embalaje or "").replace(";", " ")
+        peso = (p.peso or "").replace(";", " ")
+
+        lines.append(
+            f"{p.codigo_interno};{f_str};{p.lote};\"{art}\";\"{mat}\";\"{cb}\";\"{ca}\";{p.numero_maquina};{p.turno};{p.operador};{p.cantidad};\"{emb}\";\"{peso}\";\"{nom_estado}\""
+        )
+
+    csv_data = "\ufeff" + "\r\n".join(lines)
+    filename = f"reporte_produccion_bioplast_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+
+    return Response(
+        content=csv_data.encode("utf-8-sig"),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
 @router.get("/{production_uid}/historial", response_model=List[HistorialEstadoOut])
 def get_lot_historial(
     production_uid: uuid.UUID,
