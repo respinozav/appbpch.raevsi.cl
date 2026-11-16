@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusCircle, Layers, FileCheck, Users, User, LogOut,
   Search, Menu, X, Shield, ChevronRight, Sparkles, Factory,
-  LayoutDashboard, Settings, BookOpen, Barcode
+  LayoutDashboard, Settings, BookOpen, Barcode, Users2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,6 +47,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
       label: 'Certificados',
       desc: 'Documento R-CAL-07 PDF',
       icon: FileCheck
+    },
+    {
+      id: 'operadores',
+      label: 'Operadores',
+      desc: 'Operadores de planta',
+      icon: Users2
     },
     {
       id: 'usuarios',

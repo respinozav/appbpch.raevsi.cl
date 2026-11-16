@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api, SapCodigoInternoItem } from '../api/client';
 import { 
-  Barcode, Search, Plus, Edit2, Trash2, X, Check, RefreshCw, 
+  Barcode, Search, Plus, Edit2, Trash2, X, RefreshCw, 
   Layers, Package, AlertTriangle, ChevronRight, Hash
 } from 'lucide-react';
 
@@ -20,7 +20,6 @@ export const CodigosInternosView: React.FC = () => {
   const [editingItem, setEditingItem] = useState<SapCodigoInternoItem | null>(null);
   const [form, setForm] = useState({
     codigosap: '',
-    codigointerno: '',
     articulo: '',
     materia: '',
     color: '',
@@ -66,7 +65,6 @@ export const CodigosInternosView: React.FC = () => {
     setEditingItem(null);
     setForm({
       codigosap: '',
-      codigointerno: '',
       articulo: '',
       materia: 'HDPE Polietileno',
       color: 'Blanco',
@@ -81,7 +79,6 @@ export const CodigosInternosView: React.FC = () => {
     setEditingItem(item);
     setForm({
       codigosap: item.codigosap,
-      codigointerno: item.codigointerno,
       articulo: item.articulo,
       materia: item.materia || '',
       color: item.color || '',
@@ -94,8 +91,8 @@ export const CodigosInternosView: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.codigosap.trim() || !form.codigointerno.trim() || !form.articulo.trim()) {
-      setFormError('Código SAP, Código Interno y Artículo son obligatorios.');
+    if (!form.codigosap.trim() || !form.articulo.trim()) {
+      setFormError('El Código SAP (Código Interno) y el Artículo son obligatorios.');
       return;
     }
 
@@ -105,7 +102,7 @@ export const CodigosInternosView: React.FC = () => {
       if (editingItem) {
         await api.updateCodigoInterno(editingItem.uid, {
           codigosap: form.codigosap.trim(),
-          codigointerno: form.codigointerno.trim(),
+          codigointerno: form.codigosap.trim(),
           articulo: form.articulo.trim(),
           materia: form.materia.trim() || undefined,
           color: form.color.trim() || undefined,
@@ -115,7 +112,7 @@ export const CodigosInternosView: React.FC = () => {
       } else {
         await api.createCodigoInterno({
           codigosap: form.codigosap.trim(),
-          codigointerno: form.codigointerno.trim(),
+          codigointerno: form.codigosap.trim(),
           articulo: form.articulo.trim(),
           materia: form.materia.trim() || undefined,
           color: form.color.trim() || undefined,
@@ -123,10 +120,11 @@ export const CodigosInternosView: React.FC = () => {
           cantidad: Number(form.cantidad) || 0,
         });
       }
+
       setShowModal(false);
       fetchItems();
     } catch (err: any) {
-      setFormError(err.message || 'Error al guardar el código interno.');
+      setFormError(err.message || 'Error al guardar código interno');
     } finally {
       setSaving(false);
     }
@@ -140,7 +138,7 @@ export const CodigosInternosView: React.FC = () => {
       setDeletingItem(null);
       fetchItems();
     } catch (err: any) {
-      alert(err.message || 'Error al eliminar el código interno.');
+      alert(err.message || 'Error al eliminar código interno');
     } finally {
       setDeleting(false);
     }
@@ -149,120 +147,127 @@ export const CodigosInternosView: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#15803D]" />
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#15803D]">
-              Catálogo Maestro SAP & Códigos Internos
+              Maestros de Planta · Catálogo SAP
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1">
-            Códigos Internos
+          <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
+            <span>Códigos Internos & SAP</span>
+            <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
+              {totalCount} registrados
+            </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
-            Maestro de asociación entre Código SAP, Código Interno, Artículo, Materia Prima y Empaque estándar.
+            Catálogo maestro de artículos: el <strong>Código SAP</strong> es el código interno oficial del sistema con sus materias primas y colores estandarizados.
           </p>
         </div>
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95 cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0D3B22] hover:bg-[#15803D] text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-95 cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>Nuevo Código Interno</span>
+          <span>+ Nuevo Código SAP</span>
         </button>
       </div>
 
-      {/* Search & Actions Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-[#E5ECE6] shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Filter toolbar */}
+      <div className="bg-white rounded-2xl border border-[#E5ECE6] p-4 mb-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         <form onSubmit={handleSearch} className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
+            placeholder="Buscar por Código SAP o Artículo..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por Código SAP, Código Interno o Artículo..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-[#F7FAF7] border border-[#E5ECE6] rounded-xl focus:outline-none focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] transition"
+            className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] focus:ring-4 focus:ring-[#15803D]/10 bg-[#F7FAF7]/50"
           />
         </form>
 
-        <div className="flex items-center gap-3 text-xs text-neutral-500">
-          <span>Total: <strong className="text-[#0D3B22] font-mono">{totalCount}</strong> registros</span>
-          <button
-            onClick={() => { setPage(1); fetchItems(); }}
-            title="Refrescar catálogo"
-            className="p-2 text-neutral-500 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-xl transition"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#15803D]' : ''}`} />
-          </button>
+        <div className="flex items-center gap-3 text-xs text-neutral-500 w-full md:w-auto justify-between md:justify-end">
+          <div className="flex items-center gap-1.5">
+            <span>Registros por página:</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="px-2 py-1.5 rounded-lg border border-[#E5ECE6] bg-white font-mono font-semibold"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="bg-white rounded-2xl border border-[#E5ECE6] shadow-sm overflow-hidden">
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-[#E5ECE6] shadow-sm overflow-hidden mb-6">
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-[#15803D]" />
-            <p className="text-xs text-neutral-500 font-mono mt-3">Cargando códigos internos...</p>
+          <div className="p-12 text-center text-sm text-neutral-500 flex flex-col items-center justify-center gap-2">
+            <RefreshCw className="w-6 h-6 animate-spin text-[#15803D]" />
+            <span>Cargando catálogo de códigos internos...</span>
           </div>
         ) : items.length === 0 ? (
-          <div className="py-16 text-center text-neutral-400">
-            <Barcode className="w-10 h-10 mx-auto mb-2 text-neutral-300" />
-            <p className="text-sm font-semibold text-neutral-600">No se encontraron códigos internos</p>
-            <p className="text-xs mt-1">Crea el primer registro con el botón "Nuevo Código Interno".</p>
+          <div className="p-12 text-center text-sm text-neutral-400">
+            No se encontraron registros en el catálogo. Presiona <strong>"+ Nuevo Código SAP"</strong> para registrar el primero.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-[#F7FAF7] text-neutral-600 font-bold uppercase tracking-wider border-b border-[#E5ECE6] text-[11px]">
-                  <th className="py-3 px-4">Código SAP</th>
-                  <th className="py-3 px-4">Código Interno</th>
-                  <th className="py-3 px-4">Artículo</th>
-                  <th className="py-3 px-4">Materia Prima</th>
-                  <th className="py-3 px-4">Color Bidón / Asa</th>
-                  <th className="py-3 px-4 text-right">Cantidad Empaque</th>
-                  <th className="py-3 px-4 text-center">Acciones</th>
+                <tr className="bg-[#EEF6F0]/60 border-b border-[#E5ECE6] text-neutral-700 font-bold uppercase text-[10px]">
+                  <th className="p-3.5 pl-6">Código SAP / Interno</th>
+                  <th className="p-3.5">Artículo / Envase</th>
+                  <th className="p-3.5">Materia Prima</th>
+                  <th className="p-3.5">Color Bidón / Asa</th>
+                  <th className="p-3.5 text-right">Cant. Estándar</th>
+                  <th className="p-3.5 text-right pr-6">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E5ECE6]">
-                {items.map((item) => (
-                  <tr key={item.uid} className="hover:bg-[#F7FAF7]/80 transition">
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#0D3B22]">
-                      <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        {item.codigosap}
+                {items.map((it) => (
+                  <tr key={it.uid} className="hover:bg-[#EEF6F0]/30 transition select-none">
+                    <td className="p-3.5 pl-6 font-mono font-bold text-[#0D3B22]">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
+                        <Barcode className="w-3.5 h-3.5" />
+                        <span>{it.codigosap}</span>
+                      </div>
+                    </td>
+                    <td className="p-3.5 font-semibold text-neutral-900">
+                      {it.articulo}
+                    </td>
+                    <td className="p-3.5 text-neutral-600">
+                      <span className="px-2 py-0.5 rounded bg-neutral-100 text-neutral-800 font-medium">
+                        {it.materia || 'HDPE Polietileno'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono font-semibold text-neutral-800">
-                      {item.codigointerno}
+                    <td className="p-3.5 text-neutral-600 font-medium">
+                      {it.color || 'Blanco'} / {it.colorasa || 'Sin Asa'}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-neutral-900">
-                      {item.articulo}
+                    <td className="p-3.5 text-right font-mono font-bold text-neutral-800">
+                      {(it.cantidad || 0).toLocaleString('es-CL')} UND.
                     </td>
-                    <td className="py-3.5 px-4 text-neutral-600">
-                      {item.materia || 'N/A'}
-                    </td>
-                    <td className="py-3.5 px-4 text-neutral-700">
-                      <span className="font-medium">{item.color || 'N/A'}</span>
-                      {item.colorasa && <span className="text-neutral-400"> / {item.colorasa}</span>}
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-mono font-bold text-[#0D3B22]">
-                      {item.cantidad ? item.cantidad.toLocaleString('es-CL') : '0'} un.
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="inline-flex items-center gap-1.5">
+                    <td className="p-3.5 text-right pr-6">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => handleOpenEdit(item)}
-                          title="Editar"
-                          className="p-1.5 text-neutral-500 hover:text-[#0D3B22] hover:bg-[#EEF6F0] rounded-lg transition"
+                          onClick={() => handleOpenEdit(it)}
+                          title="Editar registro"
+                          className="p-1.5 rounded-lg border border-[#E5ECE6] text-neutral-600 hover:bg-[#EEF6F0] hover:text-[#0D3B22] transition cursor-pointer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => setDeletingItem(item)}
-                          title="Eliminar"
-                          className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          onClick={() => setDeletingItem(it)}
+                          title="Eliminar registro"
+                          className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -275,22 +280,23 @@ export const CodigosInternosView: React.FC = () => {
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-[#E5ECE6] flex items-center justify-between text-xs text-neutral-500">
-            <span>Página {page} de {totalPages}</span>
-            <div className="flex gap-1.5">
+          <div className="bg-[#F7FAF7] px-6 py-3.5 border-t border-[#E5ECE6] flex items-center justify-between text-xs text-neutral-600">
+            <div>
+              Página <strong>{page}</strong> de <strong>{totalPages}</strong>
+            </div>
+            <div className="flex items-center gap-2">
               <button
                 disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-3 py-1.5 rounded-lg border border-[#E5ECE6] bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7FAF7]"
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                className="px-3 py-1.5 rounded-lg border border-[#E5ECE6] bg-white font-medium hover:bg-[#EEF6F0] disabled:opacity-40 transition"
               >
                 Anterior
               </button>
               <button
                 disabled={page >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="px-3 py-1.5 rounded-lg border border-[#E5ECE6] bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F7FAF7]"
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                className="px-3 py-1.5 rounded-lg border border-[#E5ECE6] bg-white font-medium hover:bg-[#EEF6F0] disabled:opacity-40 transition"
               >
                 Siguiente
               </button>
@@ -299,135 +305,146 @@ export const CodigosInternosView: React.FC = () => {
         )}
       </div>
 
-      {/* Modal Crear / Editar */}
+      {/* CREATE / EDIT MODAL */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-[#E5ECE6] space-y-5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-[#E5ECE6] p-6 z-10"
             >
-              <div className="flex justify-between items-center pb-3 border-b border-[#E5ECE6]">
-                <div className="flex items-center gap-2.5">
+              <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#E5ECE6]">
+                <h3 className="font-bold text-base text-[#0D3B22] flex items-center gap-2">
                   <Barcode className="w-5 h-5 text-[#15803D]" />
-                  <h3 className="text-base font-extrabold text-[#0D3B22]">
-                    {editingItem ? 'Editar Código Interno' : 'Nuevo Código Interno'}
-                  </h3>
-                </div>
+                  <span>{editingItem ? 'Editar Código SAP' : 'Nuevo Código SAP / Interno'}</span>
+                </h3>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700"
+                  className="p-1 hover:bg-neutral-100 rounded-lg text-neutral-400"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {formError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                <div className="mb-4 p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
                   {formError}
                 </div>
               )}
 
               <form onSubmit={handleSave} className="space-y-4 text-xs">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-bold text-neutral-700 block mb-1">Código SAP *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej: SAP-1005"
-                      value={form.codigosap}
-                      onChange={(e) => setForm({ ...form, codigosap: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#E5ECE6] rounded-xl focus:border-[#15803D] outline-none font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-neutral-700 block mb-1">Código Interno *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej: INT-005"
-                      value={form.codigointerno}
-                      onChange={(e) => setForm({ ...form, codigointerno: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#E5ECE6] rounded-xl focus:border-[#15803D] outline-none font-mono"
-                    />
-                  </div>
-                </div>
-
                 <div>
-                  <label className="font-bold text-neutral-700 block mb-1">Artículo *</label>
+                  <label className="block font-semibold text-neutral-700 mb-1">
+                    Código SAP (Código Interno Oficial) <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ej: Bidón 20L Industrial con Asa"
-                    value={form.articulo}
-                    onChange={(e) => setForm({ ...form, articulo: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#E5ECE6] rounded-xl focus:border-[#15803D] outline-none"
+                    value={form.codigosap}
+                    onChange={(e) => setForm({ ...form, codigosap: e.target.value })}
+                    placeholder="Ej. SAP-10024"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono font-bold uppercase"
                   />
+                  <span className="block text-[10px] text-neutral-400 mt-1">
+                    Este código reemplaza el código interno anterior y se imprimirá en los tickets Zebra.
+                  </span>
                 </div>
 
                 <div>
-                  <label className="font-bold text-neutral-700 block mb-1">Materia Prima</label>
+                  <label className="block font-semibold text-neutral-700 mb-1">
+                    Artículo / Nombre del Envase <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    placeholder="Ej: HDPE Polietileno de Alta Densidad"
-                    value={form.materia}
-                    onChange={(e) => setForm({ ...form, materia: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#E5ECE6] rounded-xl focus:border-[#15803D] outline-none"
+                    required
+                    value={form.articulo}
+                    onChange={(e) => setForm({ ...form, articulo: e.target.value })}
+                    placeholder="Ej. Bidón 20 Litros Natural Asa Azul"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-medium"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="font-bold text-neutral-700 block mb-1">Color Bidón / Cuerpo</label>
+                    <label className="block font-semibold text-neutral-700 mb-1">
+                      Materia Prima
+                    </label>
                     <input
                       type="text"
-                      placeholder="Ej: Blanco"
+                      value={form.materia}
+                      onChange={(e) => setForm({ ...form, materia: e.target.value })}
+                      placeholder="Ej. HDPE Virgen / PCR Reciclado"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-neutral-700 mb-1">
+                      Cantidad Estándar por Embalaje
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={form.cantidad}
+                      onChange={(e) => setForm({ ...form, cantidad: Number(e.target.value) })}
+                      placeholder="Ej. 1000"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-neutral-700 mb-1">
+                      Color Bidón
+                    </label>
+                    <input
+                      type="text"
                       value={form.color}
                       onChange={(e) => setForm({ ...form, color: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#E5ECE6] rounded-xl focus:border-[#15803D] outline-none"
+                      placeholder="Ej. Blanco / Natural"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D]"
                     />
                   </div>
+
                   <div>
-                    <label className="font-bold text-neutral-700 block mb-1">Color Asa</label>
+                    <label className="block font-semibold text-neutral-700 mb-1">
+                      Color Asa
+                    </label>
                     <input
                       type="text"
-                      placeholder="Ej: Azul"
                       value={form.colorasa}
                       onChange={(e) => setForm({ ...form, colorasa: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#E5ECE6] rounded-xl focus:border-[#15803D] outline-none"
+                      placeholder="Ej. Azul / Rojo"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D]"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="font-bold text-neutral-700 block mb-1">Cantidad Estándar Embalaje</label>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Ej: 1000"
-                    value={form.cantidad}
-                    onChange={(e) => setForm({ ...form, cantidad: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-[#E5ECE6] rounded-xl focus:border-[#15803D] outline-none font-mono"
-                  />
-                </div>
-
-                <div className="pt-3 flex justify-end gap-2.5">
+                <div className="pt-3 flex justify-end gap-2 border-t border-[#E5ECE6]">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2 rounded-xl border border-neutral-300 text-neutral-600 hover:bg-neutral-50 font-bold"
+                    className="px-4 py-2 rounded-xl border border-[#E5ECE6] text-neutral-600 hover:bg-neutral-100 font-semibold"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-5 py-2 rounded-xl bg-[#0D3B22] hover:bg-[#15803D] text-white font-bold transition shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] font-semibold transition flex items-center gap-1.5"
                   >
-                    {saving ? 'Guardando...' : editingItem ? 'Actualizar' : 'Crear Código'}
+                    {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                    <span>{editingItem ? 'Guardar Cambios' : 'Registrar Código SAP'}</span>
                   </button>
                 </div>
               </form>
@@ -436,36 +453,48 @@ export const CodigosInternosView: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal Eliminar */}
+      {/* DELETE MODAL */}
       <AnimatePresence>
         {deletingItem && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-[#E5ECE6] space-y-4 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeletingItem(null)}
+              className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-[#E5ECE6] p-6 z-10"
             >
-              <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
-                <Trash2 className="w-6 h-6" />
+              <div className="flex items-center gap-3 text-red-600 mb-3">
+                <AlertTriangle className="w-6 h-6 shrink-0" />
+                <h3 className="font-bold text-base text-neutral-900">
+                  ¿Eliminar Código SAP?
+                </h3>
               </div>
-              <h3 className="text-base font-extrabold text-neutral-900">¿Eliminar Código Interno?</h3>
-              <p className="text-xs text-neutral-500">
-                Esta acción eliminará el código SAP <strong className="text-neutral-800 font-mono">{deletingItem.codigosap}</strong> ({deletingItem.articulo}).
+              <p className="text-xs text-neutral-600 mb-5 leading-relaxed">
+                Estás a punto de eliminar el artículo <strong>{deletingItem.codigosap} - {deletingItem.articulo}</strong> del catálogo maestro.
               </p>
-              <div className="pt-2 flex justify-center gap-2">
+              <div className="flex justify-end gap-2">
                 <button
+                  type="button"
                   onClick={() => setDeletingItem(null)}
-                  className="px-4 py-2 rounded-xl border border-neutral-300 text-neutral-600 font-bold text-xs"
+                  className="px-4 py-2 rounded-xl border border-[#E5ECE6] text-neutral-600 hover:bg-neutral-100 text-xs font-semibold"
                 >
                   Cancelar
                 </button>
                 <button
+                  type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
+                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5"
                 >
-                  {deleting ? 'Eliminando...' : 'Sí, Eliminar'}
+                  {deleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                  <span>Sí, Eliminar</span>
                 </button>
               </div>
             </motion.div>

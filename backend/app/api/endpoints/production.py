@@ -97,10 +97,12 @@ def create_production_batch(
         prod = Production(
             uid=uuid.uuid4(),
             codigo_interno=next_codigo_interno,
+            codigosap=batch_in.codigosap.strip() if batch_in.codigosap else None,
             fecha=now,
             numero_maquina=batch_in.numero_maquina,
             turno=batch_in.turno,
             operador=batch_in.operador,
+            operador_nombre=batch_in.operador_nombre.strip() if batch_in.operador_nombre else None,
             cantidad=batch_in.cantidad,
             lote=lote_num,
             unidad_embalaje=unidad_emb,
@@ -136,10 +138,12 @@ def create_production_batch(
         p_out = ProductionOut(
             uid=p.uid,
             codigo_interno=p.codigo_interno,
+            codigosap=p.codigosap,
             fecha=p.fecha,
             numero_maquina=p.numero_maquina,
             turno=p.turno,
             operador=p.operador,
+            operador_nombre=p.operador_nombre,
             cantidad=p.cantidad,
             lote=p.lote,
             unidad_embalaje=p.unidad_embalaje,
@@ -160,6 +164,7 @@ def create_production_batch(
 
     return ProductionBatchSummary(
         codigo_interno=next_codigo_interno,
+        codigosap=first_item.codigosap,
         fecha=now,
         articulo=first_item.articulo,
         material=first_item.material,
@@ -168,6 +173,7 @@ def create_production_batch(
         numero_maquina=first_item.numero_maquina,
         turno=first_item.turno,
         operador=first_item.operador,
+        operador_nombre=first_item.operador_nombre,
         cantidad_unitaria=first_item.cantidad,
         total_lotes=len(created_productions),
         lote_inicio=first_item.lote,

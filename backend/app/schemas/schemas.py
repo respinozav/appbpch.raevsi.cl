@@ -107,23 +107,27 @@ class EstadoOut(BaseModel):
 # --- PRODUCCION ---
 class ProductionBatchCreate(BaseModel):
     numero_maquina: int = Field(..., ge=1, description="Número de máquina (int)")
-    turno: int = Field(..., ge=1, le=4, description="Turno de trabajo (1-4)")
+    turno: int = Field(..., ge=1, le=3, description="Turno de trabajo (1-3)")
     operador: int = Field(..., ge=1, description="Código del operador (int)")
+    operador_nombre: Optional[str] = Field(None, description="Nombre del operador seleccionado")
     cantidad: int = Field(..., ge=1, description="Cantidad en unidades (int)")
-    cantidad_lotes: int = Field(..., ge=1, le=500, description="Cantidad de lotes / tickets a emitir")
+    cantidad_lotes: int = Field(..., ge=1, le=500, description="Cantidad de unidades de embalaje / tickets a emitir")
     peso: str = Field(default="N/A", description="Unidad de peso en kilos o N/A")
     articulo: str = Field(..., description="Nombre del artículo / envase")
     material: str = Field(..., description="Material (PET, rPET, HDPE, etc.)")
     color_bidon: str = Field(..., description="Color del bidón / cuerpo")
     color_asa: str = Field(..., description="Color del asa")
+    codigosap: Optional[str] = Field(None, description="Código SAP / Código Interno unificado")
 
 class ProductionOut(BaseModel):
     uid: UUID
     codigo_interno: int
+    codigosap: Optional[str] = None
     fecha: datetime
     numero_maquina: int
     turno: int
     operador: int
+    operador_nombre: Optional[str] = None
     cantidad: int
     lote: int
     unidad_embalaje: str
@@ -142,6 +146,7 @@ class ProductionOut(BaseModel):
 
 class ProductionBatchSummary(BaseModel):
     codigo_interno: int
+    codigosap: Optional[str] = None
     fecha: datetime
     articulo: str
     material: str
@@ -150,6 +155,7 @@ class ProductionBatchSummary(BaseModel):
     numero_maquina: int
     turno: int
     operador: int
+    operador_nombre: Optional[str] = None
     cantidad_unitaria: int
     total_lotes: int
     lote_inicio: int
@@ -237,7 +243,7 @@ class SessionConfigOut(BaseModel):
 # --- CODIGOS INTERNOS SAP ---
 class SapCodigoInternoBase(BaseModel):
     codigosap: str
-    codigointerno: str
+    codigointerno: Optional[str] = None
     articulo: str
     materia: Optional[str] = None
     color: Optional[str] = None
@@ -257,6 +263,29 @@ class SapCodigoInternoUpdate(BaseModel):
     cantidad: Optional[int] = None
 
 class SapCodigoInternoOut(SapCodigoInternoBase):
+    uid: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# --- OPERADORES ---
+class OperadorBase(BaseModel):
+    nombre: str
+    rut: Optional[str] = None
+    activo: bool = True
+
+class OperadorCreate(OperadorBase):
+    pass
+
+class OperadorUpdate(BaseModel):
+    nombre: Optional[str] = None
+    rut: Optional[str] = None
+    activo: Optional[bool] = None
+
+class OperadorOut(OperadorBase):
     uid: UUID
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

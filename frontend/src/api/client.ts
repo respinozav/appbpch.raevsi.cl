@@ -58,13 +58,24 @@ export interface SapCodigoInternoItem {
   updated_at?: string;
 }
 
+export interface OperadorItem {
+  uid: string;
+  nombre: string;
+  rut?: string;
+  activo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ProductionTicket {
   uid: string;
   codigo_interno: number;
+  codigosap?: string;
   fecha: string;
   numero_maquina: number;
   turno: number;
   operador: number;
+  operador_nombre?: string;
   cantidad: number;
   lote: number;
   unidad_embalaje: string;
@@ -81,6 +92,7 @@ export interface ProductionTicket {
 
 export interface ProductionBatchSummary {
   codigo_interno: number;
+  codigosap?: string;
   fecha: string;
   articulo: string;
   material: string;
@@ -89,6 +101,7 @@ export interface ProductionBatchSummary {
   numero_maquina: number;
   turno: number;
   operador: number;
+  operador_nombre?: string;
   cantidad_unitaria: number;
   total_lotes: number;
   lote_inicio: number;
@@ -342,6 +355,7 @@ export const api = {
     numero_maquina: number;
     turno: number;
     operador: number;
+    operador_nombre?: string;
     cantidad: number;
     cantidad_lotes: number;
     peso: string;
@@ -349,6 +363,7 @@ export const api = {
     material: string;
     color_bidon: string;
     color_asa: string;
+    codigosap?: string;
   }) =>
     request<ProductionBatchSummary>('/production/batch', {
       method: 'POST',
@@ -526,6 +541,38 @@ export const api = {
     }),
   deleteCodigoInterno: (uid: string) =>
     request<{ success: boolean; message: string }>(`/codigos-internos/${uid}`, {
+      method: 'DELETE',
+    }),
+
+  // Operadores
+  listOperadores: (params?: { search?: string; solo_activos?: boolean; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.search) q.append('search', params.search);
+    if (params?.solo_activos !== undefined) q.append('solo_activos', String(params.solo_activos));
+    if (params?.page) q.append('page', String(params.page));
+    if (params?.limit) q.append('limit', String(params.limit));
+    return request<{ items: OperadorItem[]; total: number; page: number; limit: number; pages: number }>(`/operadores?${q.toString()}`);
+  },
+  getOperadoresActivos: () =>
+    request<OperadorItem[]>('/operadores/activos'),
+  getOperador: (uid: string) =>
+    request<OperadorItem>(`/operadores/${uid}`),
+  createOperador: (data: { nombre: string; rut?: string; activo?: boolean }) =>
+    request<OperadorItem>('/operadores', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateOperador: (uid: string, data: { nombre?: string; rut?: string; activo?: boolean }) =>
+    request<OperadorItem>(`/operadores/${uid}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  toggleActiveOperador: (uid: string) =>
+    request<OperadorItem>(`/operadores/${uid}/toggle-active`, {
+      method: 'PATCH',
+    }),
+  deleteOperador: (uid: string) =>
+    request<void>(`/operadores/${uid}`, {
       method: 'DELETE',
     }),
 };

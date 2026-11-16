@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, PlusCircle, Layers, FileCheck, Users, User, LogOut, X, LayoutDashboard, Settings, BookOpen, Barcode } from 'lucide-react';
+import { Search, PlusCircle, Layers, FileCheck, Users, User, LogOut, X, LayoutDashboard, Settings, BookOpen, Barcode, Users2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CommandPaletteProps {
@@ -35,6 +35,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     { id: 'iniciar', label: 'Iniciar Producción', icon: PlusCircle, category: 'Operaciones', view: 'iniciar' },
     { id: 'produccion', label: 'Ver Sábana de Producción', icon: Layers, category: 'Operaciones', view: 'produccion' },
     { id: 'codigos-internos', label: 'Códigos Internos SAP & Artículos', icon: Barcode, category: 'Maestros', view: 'codigos-internos' },
+    { id: 'operadores', label: 'Operadores de Planta', icon: Users2, category: 'Maestros', view: 'operadores' },
     { id: 'certificados', label: 'Certificados de Calidad (Liberados)', icon: FileCheck, category: 'Calidad', view: 'certificados' },
     ...(isAdmin ? [
       { id: 'usuarios', label: 'Gestión de Usuarios & Roles', icon: Users, category: 'Administración', view: 'usuarios' },

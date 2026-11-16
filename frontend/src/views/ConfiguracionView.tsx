@@ -10,9 +10,11 @@ import {
 
 const ALL_SYSTEM_MODULES = [
   { id: 'dashboard', label: 'Dashboard', desc: 'Métricas & OEE de planta' },
+  { id: 'codigos-internos', label: 'Códigos Internos SAP', desc: 'Catálogo maestro de artículos y materias' },
   { id: 'iniciar', label: 'Iniciar Producción', desc: 'Emisión de tickets Zebra ZPL' },
   { id: 'produccion', label: 'Producción & Sábana', desc: 'Trazabilidad y estados' },
   { id: 'certificados', label: 'Certificados', desc: 'Documento R-CAL-07 Oficial' },
+  { id: 'operadores', label: 'Operadores', desc: 'Operadores autorizados de planta' },
   { id: 'usuarios', label: 'Usuarios & Permisos', desc: 'Gestión de colaboradores' },
   { id: 'configuracion', label: 'Configuración', desc: 'Ajustes del sistema y RBAC' },
   { id: 'faq', label: 'Manual & FAQ', desc: 'Documento controlado MAN-SGI-01' },

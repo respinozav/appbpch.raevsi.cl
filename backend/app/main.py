@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.db.session import SessionLocal, engine, Base
 from app.models.models import Role, User, Estado, ConfiguracionSistema
 from app.core.security import get_password_hash
-from app.api.endpoints import auth, users, production, certificates, public, dashboard, config, codigos_internos
+from app.api.endpoints import auth, users, production, certificates, public, dashboard, config, codigos_internos, operadores
 
 def seed_initial_data():
     # Asegurar que todas las tablas existan en la base de datos
@@ -115,6 +115,7 @@ app.include_router(public.router, prefix=settings.API_V1_STR)
 app.include_router(dashboard.router, prefix=settings.API_V1_STR)
 app.include_router(config.router, prefix=settings.API_V1_STR)
 app.include_router(codigos_internos.router, prefix=settings.API_V1_STR)
+app.include_router(operadores.router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 def health_check():

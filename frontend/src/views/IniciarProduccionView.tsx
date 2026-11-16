@@ -1,33 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { api, ProductionBatchSummary, ProductionTicket, SapCodigoInternoItem } from '../api/client';
+import { api, ProductionBatchSummary, ProductionTicket, SapCodigoInternoItem, OperadorItem } from '../api/client';
 import { ZebraLabel } from '../components/ZebraLabel';
 import { 
   PlusCircle, Printer, CheckCircle2, AlertCircle, RefreshCw, 
-  Package, Sliders, Hash, ArrowRight, Barcode
+  Package, Sliders, Hash, ArrowRight, Barcode, UserCheck, Layers
 } from 'lucide-react';
 
 export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: number) => void }> = ({ onNavigateToBatch }) => {
-  // Maestro Códigos Internos
+  // Maestro Códigos Internos (SAP)
   const [codigosInternos, setCodigosInternos] = useState<SapCodigoInternoItem[]>([]);
   const [selectedCodigoSap, setSelectedCodigoSap] = useState<string>('');
 
+  // Maestro Operadores
+  const [operadores, setOperadores] = useState<OperadorItem[]>([]);
+  const [selectedOperadorUid, setSelectedOperadorUid] = useState<string>('');
+
   // Form state
-  const [numeroMaquina, setNumeroMaquina] = useState<number | ''>('');
-  const [turno, setTurno] = useState<number | ''>('');
-  const [operador, setOperador] = useState<number | ''>('');
+  const [numeroMaquina, setNumeroMaquina] = useState<number | ''>(7);
+  const [turno, setTurno] = useState<number>(1);
   const [cantidad, setCantidad] = useState<number | ''>('');
-  const [cantidadLotes, setCantidadLotes] = useState<number | ''>(10);
+  const [cantidadLotes, setCantidadLotes] = useState<number>(10);
   const [peso, setPeso] = useState<string>('');
   const [articulo, setArticulo] = useState<string>('ENVASE TRAVERSO 1000-24');
-  const [material, setMaterial] = useState<string>('PET');
+  const [material, setMaterial] = useState<string>('HDPE');
   const [colorBidon, setColorBidon] = useState<string>('');
   const [colorAsa, setColorAsa] = useState<string>('');
 
-  // Cargar lista de códigos internos para autocompletar
+  // Cargar listas iniciales
   useEffect(() => {
     api.getAllCodigosInternos()
       .then(items => setCodigosInternos(items))
       .catch(err => console.error('Error cargando códigos internos:', err));
+
+    api.getOperadoresActivos()
+      .then(items => {
+        setOperadores(items);
+        if (items.length > 0) {
+          setSelectedOperadorUid(items[0].uid);
+        }
+      })
+      .catch(err => console.error('Error cargando operadores:', err));
   }, []);
 
   const handleSelectCodigoSap = (codigoSapVal: string) => {
@@ -35,7 +47,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
     const found = codigosInternos.find(c => c.codigosap === codigoSapVal);
     if (found) {
       setArticulo(found.articulo);
-      if (found.materia) setMaterial(found.materia);
+      // Materia automática desde el catálogo
+      setMaterial(found.materia ? found.materia.toUpperCase() : 'HDPE');
       if (found.color) setColorBidon(found.color);
       if (found.colorasa) setColorAsa(found.colorasa);
       if (found.cantidad) setCantidad(found.cantidad);
@@ -48,16 +61,24 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
   const [createdBatch, setCreatedBatch] = useState<ProductionBatchSummary | null>(null);
   const [selectedTicketIndex, setSelectedTicketIndex] = useState<number>(0);
 
+  const selectedOpObj = operadores.find(o => o.uid === selectedOperadorUid);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
 
     try {
+      // Obtenemos índice/código numérico y nombre del operador
+      const opIndex = operadores.findIndex(o => o.uid === selectedOperadorUid);
+      const opCodigoNum = opIndex >= 0 ? opIndex + 1 : 1;
+      const opNombre = selectedOpObj ? selectedOpObj.nombre : undefined;
+
       const res = await api.createBatch({
         numero_maquina: Number(numeroMaquina) || 1,
         turno: Number(turno) || 1,
-        operador: Number(operador) || 1,
+        operador: opCodigoNum,
+        operador_nombre: opNombre,
         cantidad: Number(cantidad) || 1,
         cantidad_lotes: Number(cantidadLotes) || 1,
         peso: peso.trim() || 'N/A',
@@ -65,6 +86,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
         material: material.trim().toUpperCase(),
         color_bidon: (colorBidon.trim() || 'TRANSPARENTE').toUpperCase(),
         color_asa: (colorAsa.trim() || 'VERDE').toUpperCase(),
+        codigosap: selectedCodigoSap ? selectedCodigoSap.trim() : undefined,
       });
 
       setCreatedBatch(res);
@@ -80,16 +102,18 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
   const previewTicket: ProductionTicket = {
     uid: '00000000-0000-0000-0000-000000000000',
     codigo_interno: 110000000,
+    codigosap: selectedCodigoSap || 'SAP-10024',
     fecha: new Date().toISOString(),
     numero_maquina: numeroMaquina !== '' ? Number(numeroMaquina) : 7,
-    turno: turno !== '' ? Number(turno) : 1,
-    operador: operador !== '' ? Number(operador) : 104,
+    turno: Number(turno) || 1,
+    operador: selectedOpObj ? 1 : 104,
+    operador_nombre: selectedOpObj ? selectedOpObj.nombre : 'Operador 1',
     cantidad: cantidad !== '' ? Number(cantidad) : 2600,
     lote: 10001,
     unidad_embalaje: '0001',
     peso: peso.trim() || 'N/A',
     articulo: (articulo.trim() || 'ENVASE TRAVERSO 1000-24').toUpperCase(),
-    material: (material.trim() || 'PET').toUpperCase(),
+    material: (material.trim() || 'HDPE').toUpperCase(),
     color_bidon: (colorBidon.trim() || 'TRANSPARENTE').toUpperCase(),
     color_asa: (colorAsa.trim() || 'VERDE').toUpperCase(),
     uid_estado: '00000000-0000-0000-0000-000000000000',
@@ -102,20 +126,20 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Page Title: "Iniciar Producción" (without "e impresión zebra") */}
+      {/* Page Title */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#15803D]" />
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#15803D]">
-              Módulo 2 · Línea de Planta
+              Módulo 3 · Línea de Planta
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0F1F16] tracking-tight mt-1">
             Iniciar Producción
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
-            Formulario 100% adaptable para operadores en planta. Emite tiradas con correlativo estricto y código QR.
+            Formulario 100% adaptable para operadores en planta. Emite 1 solo lote por tirada con unidades correlativas de embalaje.
           </p>
         </div>
 
@@ -142,7 +166,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
 
       {/* Main Grid: Form on Left, Live Zebra Preview on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* LEFT COLUMN: Form Container (Clean without Plantillas) */}
+        {/* LEFT COLUMN: Form Container */}
         <div className="lg:col-span-7 bg-white rounded-2xl border border-[#E5ECE6] p-6 sm:p-8 shadow-sm">
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
@@ -156,7 +180,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
             <div>
               <h2 className="text-xs font-bold text-[#0D3B22] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-[#E5ECE6] pb-1.5">
                 <Package className="w-4 h-4 text-[#15803D]" />
-                <span>1. Atributos del Envase</span>
+                <span>1. Atributos del Envase & Catálogo SAP</span>
               </h2>
 
               <div className="space-y-3">
@@ -164,17 +188,17 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                   <div className="p-3 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6]">
                     <label className="block text-xs font-bold text-[#0D3B22] mb-1 flex items-center gap-1.5">
                       <Barcode className="w-3.5 h-3.5 text-[#15803D]" />
-                      <span>Cargar desde Código Interno SAP (Opcional)</span>
+                      <span>Seleccionar Artículo por Código SAP / Interno</span>
                     </label>
                     <select
                       value={selectedCodigoSap}
                       onChange={(e) => handleSelectCodigoSap(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:border-[#15803D] bg-white font-medium"
                     >
-                      <option value="">-- Seleccionar Código SAP / Interno --</option>
+                      <option value="">-- Seleccionar Código SAP --</option>
                       {codigosInternos.map(c => (
                         <option key={c.uid} value={c.codigosap}>
-                          {c.codigosap} | {c.codigointerno} - {c.articulo} ({c.materia || 'HDPE'})
+                          {c.codigosap} · {c.articulo} ({c.materia || 'HDPE'})
                         </option>
                       ))}
                     </select>
@@ -183,7 +207,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Artículo / Envase
+                    Artículo / Denominación de Envase
                   </label>
                   <input
                     type="text"
@@ -196,20 +220,16 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Materia: Auto-completado y Solo Lectura */}
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                      Material
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
+                      <span>Materia Prima</span>
+                      <span className="text-[10px] text-neutral-400 font-mono">Auto</span>
                     </label>
-                    <select
-                      value={material}
-                      onChange={(e) => setMaterial(e.target.value)}
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] bg-white font-medium"
-                    >
-                      <option value="PET">PET Virgen</option>
-                      <option value="rPET">rPET Reciclado</option>
-                      <option value="HDPE">HDPE (Polietileno)</option>
-                      <option value="PP">PP (Polipropileno)</option>
-                    </select>
+                    <div className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
+                      <span>{material || 'HDPE VIRGEN'}</span>
+                      <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                    </div>
                   </div>
 
                   <div>
@@ -247,13 +267,13 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
             <div>
               <h2 className="text-xs font-bold text-[#0D3B22] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-[#E5ECE6] pb-1.5">
                 <Sliders className="w-4 h-4 text-[#15803D]" />
-                <span>2. Datos Operativos (Máquina & Turno)</span>
+                <span>2. Datos Operativos (Máquina, Turno & Operador)</span>
               </h2>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    N° Máquina (int)
+                    N° Máquina (Línea)
                   </label>
                   <input
                     type="number"
@@ -262,44 +282,64 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     value={numeroMaquina}
                     onChange={(e) => setNumeroMaquina(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="Ej. 7"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center"
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center font-bold"
                   />
                 </div>
 
+                {/* Turno Restringido: Turno 1, 2, 3 */}
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Turno (1-4)
+                    Turno (1 a 3)
                   </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={4}
-                    required
+                  <select
                     value={turno}
-                    onChange={(e) => setTurno(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="1-4"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center"
-                  />
+                    onChange={(e) => setTurno(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] bg-white font-semibold text-center"
+                  >
+                    <option value={1}>Turno 1</option>
+                    <option value={2}>Turno 2</option>
+                    <option value={3}>Turno 3</option>
+                  </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Operador (int)
+                {/* Operador: Select dinámico desde tabla operadores */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
+                    <span>Operador Responsable</span>
+                    <UserCheck className="w-3.5 h-3.5 text-[#15803D]" />
                   </label>
-                  <input
-                    type="number"
-                    min={1}
-                    required
-                    value={operador}
-                    onChange={(e) => setOperador(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Ej. 104"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center"
-                  />
+                  {operadores.length > 0 ? (
+                    <select
+                      value={selectedOperadorUid}
+                      onChange={(e) => setSelectedOperadorUid(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] bg-white font-medium"
+                    >
+                      {operadores.map((op) => (
+                        <option key={op.uid} value={op.uid}>
+                          {op.nombre} {op.rut ? `(${op.rut})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="px-3 py-2 text-xs text-neutral-400 bg-neutral-50 rounded-xl border border-dashed border-[#E5ECE6]">
+                      Sin operadores cargados
+                    </div>
+                  )}
                 </div>
+              </div>
+            </div>
 
+            {/* Section 3: Lotes & Peso */}
+            <div>
+              <h2 className="text-xs font-bold text-[#0D3B22] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-[#E5ECE6] pb-1.5">
+                <Hash className="w-4 h-4 text-[#15803D]" />
+                <span>3. Unidades de Embalaje & Cantidad</span>
+              </h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Cantidad (UND)
+                    Cantidad por Embalaje
                   </label>
                   <input
                     type="number"
@@ -310,21 +350,12 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     placeholder="Ej. 2600"
                     className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center font-bold"
                   />
+                  <span className="block text-[10px] text-neutral-400 mt-1">Unidades por pallet/paquete</span>
                 </div>
-              </div>
-            </div>
 
-            {/* Section 3: Lotes & Peso */}
-            <div>
-              <h2 className="text-xs font-bold text-[#0D3B22] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-[#E5ECE6] pb-1.5">
-                <Hash className="w-4 h-4 text-[#15803D]" />
-                <span>3. Correlativo de Lotes & Embalaje</span>
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-3.5 rounded-xl bg-[#EEF6F0]/60 border border-[#15803D]/20">
+                <div className="p-3 rounded-xl bg-[#EEF6F0]/60 border border-[#15803D]/20 sm:col-span-2">
                   <label className="block text-xs font-bold text-[#0D3B22] mb-1">
-                    Cantidad de Tickets / Embalajes a Generar
+                    Total Embalajes a Generar (Tickets)
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -334,31 +365,12 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       required
                       value={cantidadLotes}
                       onChange={(e) => setCantidadLotes(Number(e.target.value))}
-                      className="w-24 px-3 py-2 text-base font-bold font-mono rounded-lg border border-[#15803D]/30 bg-white text-center"
+                      className="w-20 px-3 py-1.5 text-base font-bold font-mono rounded-lg border border-[#15803D]/30 bg-white text-center"
                     />
-                    <span className="text-xs text-neutral-600">
-                      Un solo lote con <strong className="text-[#0D3B22] font-mono">{cantidadLotes}</strong> unidades de embalaje (0001 - {String(cantidadLotes).padStart(4, '0')})
+                    <span className="text-xs text-neutral-700">
+                      Rango de unidades: <strong className="text-[#0D3B22] font-mono">0001 al {String(cantidadLotes).padStart(4, '0')}</strong> (1 solo lote)
                     </span>
                   </div>
-                  <div className="text-[11px] text-neutral-500 mt-2 font-mono">
-                    Lote único por emisión · Correlativo 0001 a 00NN automático
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Peso por Unidad / Pallet
-                  </label>
-                  <input
-                    type="text"
-                    value={peso}
-                    onChange={(e) => setPeso(e.target.value)}
-                    placeholder="Ej. N/A o 18.5 kg"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono"
-                  />
-                  <span className="block text-[11px] text-neutral-400 mt-1">
-                    Texto abierto para unidad de peso en kilos (ej: "N/A" o valor numérico).
-                  </span>
                 </div>
               </div>
             </div>
@@ -378,7 +390,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                 ) : (
                   <>
                     <PlusCircle className="w-5 h-5" />
-                    <span>Emitir Tirada ({cantidadLotes} Tickets)</span>
+                    <span>Emitir Tirada ({cantidadLotes} Unidades de Embalaje)</span>
                   </>
                 )}
               </button>
@@ -403,13 +415,22 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
 
             {createdBatch ? (
               <div>
-                <div className="mb-4 p-3 rounded-xl bg-[#EEF6F0] border border-[#15803D]/20 text-xs text-[#0D3B22]">
-                  <div className="font-bold flex items-center gap-1.5 mb-1">
-                    <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
-                    <span>Código Interno #{createdBatch.codigo_interno}</span>
+                <div className="mb-4 p-3.5 rounded-xl bg-[#EEF6F0] border border-[#15803D]/20 text-xs text-[#0D3B22] space-y-1">
+                  <div className="font-bold flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
+                      <span>CÓDIGO SAP / INTERNO:</span>
+                    </span>
+                    <span className="font-mono px-2 py-0.5 rounded bg-white border border-[#15803D]/30 font-black">
+                      {createdBatch.codigosap || createdBatch.codigo_interno}
+                    </span>
                   </div>
-                  <div>
-                    Rango de Lotes: <strong className="font-mono">{createdBatch.lote_inicio}</strong> a <strong className="font-mono">{createdBatch.lote_fin}</strong> ({createdBatch.total_lotes} tickets).
+                  <div className="text-neutral-700 pt-1 border-t border-[#15803D]/10 flex justify-between">
+                    <span>Lote Único: <strong className="font-mono text-[#0D3B22]">LOTE {createdBatch.lote_inicio}</strong></span>
+                    <span>Total Embalajes: <strong className="font-mono">{createdBatch.total_lotes}</strong></span>
+                  </div>
+                  <div className="text-[11px] text-[#15803D] font-bold">
+                    Rango de unidad de embalaje: 0001 al {String(createdBatch.total_lotes).padStart(4, '0')}
                   </div>
                 </div>
 
@@ -425,7 +446,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                           : 'bg-[#F7FAF7] text-neutral-600 border-[#E5ECE6] hover:bg-[#EEF6F0]'
                       }`}
                     >
-                      Lote {t.lote}
+                      Emb. {t.unidad_embalaje}
                     </button>
                   ))}
                 </div>

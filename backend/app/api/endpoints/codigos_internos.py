@@ -72,20 +72,20 @@ def create_codigo_interno(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Validar unicidad
-    exist_sap = db.query(SapCodigoInterno).filter(SapCodigoInterno.codigosap == payload.codigosap.strip()).first()
+    # Validar unicidad del codigo SAP
+    codigosap = payload.codigosap.strip()
+    exist_sap = db.query(SapCodigoInterno).filter(SapCodigoInterno.codigosap == codigosap).first()
     if exist_sap:
-        raise HTTPException(status_code=400, detail=f"El código SAP '{payload.codigosap}' ya existe.")
+        raise HTTPException(status_code=400, detail=f"El código SAP '{codigosap}' ya existe.")
 
-    exist_int = db.query(SapCodigoInterno).filter(SapCodigoInterno.codigointerno == payload.codigointerno.strip()).first()
-    if exist_int:
-        raise HTTPException(status_code=400, detail=f"El código interno '{payload.codigointerno}' ya existe.")
+    # El código SAP es el único código interno oficial
+    codigointerno = payload.codigointerno.strip() if payload.codigointerno else codigosap
 
     now = datetime.now(timezone.utc)
     new_item = SapCodigoInterno(
         uid=uuid.uuid4(),
-        codigosap=payload.codigosap.strip(),
-        codigointerno=payload.codigointerno.strip(),
+        codigosap=codigosap,
+        codigointerno=codigointerno,
         articulo=payload.articulo.strip(),
         materia=payload.materia.strip() if payload.materia else None,
         color=payload.color.strip() if payload.color else None,
@@ -115,12 +115,10 @@ def update_codigo_interno(
         if exist:
             raise HTTPException(status_code=400, detail=f"El código SAP '{payload.codigosap}' ya está en uso.")
         item.codigosap = payload.codigosap.strip()
+        item.codigointerno = item.codigosap
 
-    if payload.codigointerno and payload.codigointerno.strip() != item.codigointerno:
-        exist = db.query(SapCodigoInterno).filter(SapCodigoInterno.codigointerno == payload.codigointerno.strip()).first()
-        if exist:
-            raise HTTPException(status_code=400, detail=f"El código interno '{payload.codigointerno}' ya está en uso.")
-        item.codigointerno = payload.codigointerno.strip()
+    if payload.codigointerno is not None:
+        item.codigointerno = payload.codigointerno.strip() if payload.codigointerno else item.codigosap
 
     if payload.articulo is not None:
         item.articulo = payload.articulo.strip()

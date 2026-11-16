@@ -67,10 +67,12 @@ class Production(Base):
 
     uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
     codigo_interno = Column(BigInteger, nullable=False, index=True)
+    codigosap = Column(String(100), nullable=True, index=True)
     fecha = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     numero_maquina = Column(Integer, nullable=False) if "Integer" in globals() else Column(BigInteger, nullable=False)
     turno = Column(BigInteger, nullable=False)
     operador = Column(BigInteger, nullable=False)
+    operador_nombre = Column(String(150), nullable=True)
     cantidad = Column(BigInteger, nullable=False)
     lote = Column(BigInteger, nullable=False, index=True)
     unidad_embalaje = Column(String(50), nullable=False)
@@ -164,12 +166,24 @@ class SapCodigoInterno(Base):
 
     uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
     codigosap = Column(String(100), unique=True, nullable=False, index=True)
-    codigointerno = Column(String(100), unique=True, nullable=False, index=True)
+    codigointerno = Column(String(100), nullable=True, index=True)
     articulo = Column(String(255), nullable=False, index=True)
     materia = Column(String(100), nullable=True)
     color = Column(String(100), nullable=True)
     colorasa = Column(String(100), nullable=True)
     cantidad = Column(BigInteger, default=0, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class Operador(Base):
+    __tablename__ = "operador"
+    __table_args__ = {"schema": "bdbioplastchile"}
+
+    uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
+    nombre = Column(String(150), nullable=False, index=True)
+    rut = Column(String(50), nullable=True)
+    activo = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

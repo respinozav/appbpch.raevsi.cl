@@ -40,11 +40,11 @@ export const ZebraLabel: React.FC<ZebraLabelProps> = ({ ticket, showPrintButton 
           {ticket.articulo || 'ENVASE TRAVERSO 1000-24'}
         </div>
 
-        {/* Internal Code Bar */}
-        <div className="text-center font-bold tracking-widest text-sm py-1 border-x-2 border-b-2 border-black flex items-center justify-center gap-2">
-          <span>CODIGO INTERNO</span>
-          <span className="font-mono text-base font-black px-1 border border-black/40">
-            [ {ticket.codigo_interno} ]
+        {/* Internal Code Bar / Codigo SAP */}
+        <div className="text-center font-bold tracking-widest text-xs py-1 border-x-2 border-b-2 border-black flex items-center justify-center gap-2">
+          <span>CÓDIGO SAP:</span>
+          <span className="font-mono text-sm font-black px-1.5 py-0.5 bg-neutral-100 border border-black/40">
+            {ticket.codigosap || ticket.codigo_interno}
           </span>
         </div>
 
