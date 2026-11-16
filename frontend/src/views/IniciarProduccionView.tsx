@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { api, ProductionBatchSummary, ProductionTicket } from '../api/client';
+import React, { useState, useEffect } from 'react';
+import { api, ProductionBatchSummary, ProductionTicket, SapCodigoInternoItem } from '../api/client';
 import { ZebraLabel } from '../components/ZebraLabel';
 import { 
   PlusCircle, Printer, CheckCircle2, AlertCircle, RefreshCw, 
-  Package, Sliders, Hash, ArrowRight
+  Package, Sliders, Hash, ArrowRight, Barcode
 } from 'lucide-react';
 
 export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: number) => void }> = ({ onNavigateToBatch }) => {
+  // Maestro Códigos Internos
+  const [codigosInternos, setCodigosInternos] = useState<SapCodigoInternoItem[]>([]);
+  const [selectedCodigoSap, setSelectedCodigoSap] = useState<string>('');
+
   // Form state
   const [numeroMaquina, setNumeroMaquina] = useState<number | ''>('');
   const [turno, setTurno] = useState<number | ''>('');
@@ -18,6 +22,25 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
   const [material, setMaterial] = useState<string>('PET');
   const [colorBidon, setColorBidon] = useState<string>('');
   const [colorAsa, setColorAsa] = useState<string>('');
+
+  // Cargar lista de códigos internos para autocompletar
+  useEffect(() => {
+    api.getAllCodigosInternos()
+      .then(items => setCodigosInternos(items))
+      .catch(err => console.error('Error cargando códigos internos:', err));
+  }, []);
+
+  const handleSelectCodigoSap = (codigoSapVal: string) => {
+    setSelectedCodigoSap(codigoSapVal);
+    const found = codigosInternos.find(c => c.codigosap === codigoSapVal);
+    if (found) {
+      setArticulo(found.articulo);
+      if (found.materia) setMaterial(found.materia);
+      if (found.color) setColorBidon(found.color);
+      if (found.colorasa) setColorAsa(found.colorasa);
+      if (found.cantidad) setCantidad(found.cantidad);
+    }
+  };
 
   // Request & Feedback states
   const [submitting, setSubmitting] = useState(false);
@@ -137,6 +160,27 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
               </h2>
 
               <div className="space-y-3">
+                {codigosInternos.length > 0 && (
+                  <div className="p-3 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6]">
+                    <label className="block text-xs font-bold text-[#0D3B22] mb-1 flex items-center gap-1.5">
+                      <Barcode className="w-3.5 h-3.5 text-[#15803D]" />
+                      <span>Cargar desde Código Interno SAP (Opcional)</span>
+                    </label>
+                    <select
+                      value={selectedCodigoSap}
+                      onChange={(e) => handleSelectCodigoSap(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:border-[#15803D] bg-white font-medium"
+                    >
+                      <option value="">-- Seleccionar Código SAP / Interno --</option>
+                      {codigosInternos.map(c => (
+                        <option key={c.uid} value={c.codigosap}>
+                          {c.codigosap} | {c.codigointerno} - {c.articulo} ({c.materia || 'HDPE'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1">
                     Artículo / Envase
@@ -280,24 +324,24 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-3.5 rounded-xl bg-[#EEF6F0]/60 border border-[#15803D]/20">
                   <label className="block text-xs font-bold text-[#0D3B22] mb-1">
-                    Cantidad de Lotes a Generar (Tickets)
+                    Cantidad de Tickets / Embalajes a Generar
                   </label>
                   <div className="flex items-center gap-3">
                     <input
                       type="number"
                       min={1}
-                      max={100}
+                      max={500}
                       required
                       value={cantidadLotes}
                       onChange={(e) => setCantidadLotes(Number(e.target.value))}
                       className="w-24 px-3 py-2 text-base font-bold font-mono rounded-lg border border-[#15803D]/30 bg-white text-center"
                     />
                     <span className="text-xs text-neutral-600">
-                      Tirada calculada: <strong className="text-[#0D3B22] font-mono">{cantidadLotes}</strong> lotes consecutivos
+                      Un solo lote con <strong className="text-[#0D3B22] font-mono">{cantidadLotes}</strong> unidades de embalaje (0001 - {String(cantidadLotes).padStart(4, '0')})
                     </span>
                   </div>
                   <div className="text-[11px] text-neutral-500 mt-2 font-mono">
-                    Base: 10.000 · Correlativo automático por base de datos
+                    Lote único por emisión · Correlativo 0001 a 00NN automático
                   </div>
                 </div>
 

@@ -11,6 +11,7 @@ import { UsuariosView } from './views/UsuariosView';
 import { PerfilView } from './views/PerfilView';
 import { ConfiguracionView } from './views/ConfiguracionView';
 import { FaqManualView } from './views/FaqManualView';
+import { CodigosInternosView } from './views/CodigosInternosView';
 import { PublicTrazabilidadView } from './views/PublicTrazabilidadView';
 import { InactivityModal } from './components/InactivityModal';
 import { RefreshCw, Search } from 'lucide-react';
@@ -57,6 +58,7 @@ const MainAppContent: React.FC = () => {
     dashboard: { title: 'Dashboard Ejecutivo', subtitle: 'Inteligencia operativa y economía circular' },
     iniciar: { title: 'Iniciar Producción', subtitle: 'Emisión de tickets térmicos' },
     produccion: { title: 'Sábana de Producción', subtitle: 'Trazabilidad y gestión de lotes' },
+    'codigos-internos': { title: 'Códigos Internos SAP', subtitle: 'Catálogo de artículos y embalaje estándar' },
     certificados: { title: 'Certificados de Calidad', subtitle: 'Emisión oficial R-CAL-07' },
     usuarios: { title: 'Administración de Usuarios', subtitle: 'Control de accesos y roles' },
     configuracion: { title: 'Configuración del Sistema', subtitle: 'Ajustes de sesión y políticas de seguridad' },
@@ -117,6 +119,7 @@ const MainAppContent: React.FC = () => {
           {currentView === 'produccion' && (
             <ProduccionView initialCodigoInterno={jumpToBatchCodigo} />
           )}
+          {currentView === 'codigos-internos' && <CodigosInternosView />}
           {currentView === 'certificados' && <CertificadosView />}
           {currentView === 'usuarios' && <UsuariosView />}
           {currentView === 'configuracion' && <ConfiguracionView />}

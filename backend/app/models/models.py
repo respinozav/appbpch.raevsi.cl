@@ -156,3 +156,20 @@ class AuditoriaLogin(Base):
     fecha_hora = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     usuario = relationship("User")
+
+
+class SapCodigoInterno(Base):
+    __tablename__ = "sapcodigointerno"
+    __table_args__ = {"schema": "bdbioplastchile"}
+
+    uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid(), index=True)
+    codigosap = Column(String(100), unique=True, nullable=False, index=True)
+    codigointerno = Column(String(100), unique=True, nullable=False, index=True)
+    articulo = Column(String(255), nullable=False, index=True)
+    materia = Column(String(100), nullable=True)
+    color = Column(String(100), nullable=True)
+    colorasa = Column(String(100), nullable=True)
+    cantidad = Column(BigInteger, default=0, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+

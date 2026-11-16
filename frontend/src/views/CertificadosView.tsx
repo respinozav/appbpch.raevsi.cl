@@ -3,12 +3,38 @@ import { motion, AnimatePresence } from 'motion/react';
 import { api, CertificateData } from '../api/client';
 import { CertificateDocument } from '../components/CertificateDocument';
 import { 
-  FileCheck, Search, Printer, RefreshCw, ChevronRight, CheckCircle2, 
-  ArrowLeft, Edit3, X, Save, AlertTriangle
+  FileCheck, Search, Printer, RefreshCw, ChevronRight, ChevronDown, CheckCircle2, 
+  ArrowLeft, Edit3, X, Save, AlertTriangle, Layers, PackageCheck, Eye
 } from 'lucide-react';
 
+interface LoteLiberadoItem {
+  lote: number;
+  fecha?: string;
+  articulo: string;
+  material: string;
+  color_bidon: string;
+  color_asa: string;
+  total_unidades: number;
+  unidades: Array<{
+    uid: string;
+    lote: number;
+    unidad_embalaje: string;
+    fecha: string;
+    cantidad: number;
+    articulo: string;
+    material: string;
+    color_bidon: string;
+    color_asa: string;
+    estado_nombre: string;
+    estado_color: string;
+    certificado_emitido: boolean;
+    numero_certificado?: string;
+    certificado_uid?: string;
+  }>;
+}
+
 export const CertificadosView: React.FC = () => {
-  const [liberados, setLiberados] = useState<any[]>([]);
+  const [liberados, setLiberados] = useState<LoteLiberadoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -16,7 +42,10 @@ export const CertificadosView: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Selected Lot for Certificate Preview & Emission
+  // Expanded lots in accordion
+  const [expandedLotes, setExpandedLotes] = useState<Record<number, boolean>>({});
+
+  // Selected Production Unit for Certificate Preview & Emission
   const [selectedProductionUid, setSelectedProductionUid] = useState<string | null>(null);
   const [certData, setCertData] = useState<CertificateData | null>(null);
   const [loadingCert, setLoadingCert] = useState(false);
@@ -58,7 +87,14 @@ export const CertificadosView: React.FC = () => {
     fetchLiberados();
   };
 
-  const handleSelectLot = async (productionUid: string) => {
+  const toggleLote = (loteNum: number) => {
+    setExpandedLotes((prev) => ({
+      ...prev,
+      [loteNum]: !prev[loteNum],
+    }));
+  };
+
+  const handleSelectUnit = async (productionUid: string) => {
     setSelectedProductionUid(productionUid);
     setLoadingCert(true);
     try {
@@ -146,7 +182,7 @@ export const CertificadosView: React.FC = () => {
             Certificados de Análisis y Emisión Oficial
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
-            Lotes en estado <strong>Despacho</strong> o <strong>Liberado</strong> listos para emisión del documento oficial R-CAL-07.
+            Lotes en estado <strong>Despacho</strong> o <strong>Liberado</strong>. Selecciona un lote para ver sus unidades de embalaje y emitir el documento R-CAL-07.
           </p>
         </div>
 
@@ -159,7 +195,7 @@ export const CertificadosView: React.FC = () => {
             className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-[#E5ECE6] text-[#0F1F16] bg-white hover:bg-[#EEF6F0] transition flex items-center gap-1.5 self-start sm:self-auto"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Volver a la Lista</span>
+            <span>Volver a la Lista de Lotes</span>
           </button>
         )}
       </div>
@@ -201,7 +237,7 @@ export const CertificadosView: React.FC = () => {
                   Certificado de Análisis R-CAL-07 · {certData.item.articulo}
                 </div>
                 <div className="text-xs text-neutral-500 font-mono">
-                  Código Interno: #{certData.item.codigo_interno} · Lote: {certData.item.lote} · Cliente: {certData.metadatos_despacho.cliente || '(Sin Asignar)'}
+                  Lote: <strong>{certData.item.lote}</strong> · Unidad Embalaje: <strong>{certData.item.unidad_embalaje}</strong> · Cliente: {certData.metadatos_despacho.cliente || '(Sin Asignar)'}
                 </div>
               </div>
             </div>
@@ -242,14 +278,14 @@ export const CertificadosView: React.FC = () => {
           />
         </div>
       ) : (
-        /* VIEW B: TABLE OF LIBERADOS */
+        /* VIEW B: TABLE OF LOTES LIBERADOS & UNIDADES DE EMBALAJE */
         <div>
           <div className="bg-white rounded-2xl border border-[#E5ECE6] p-4 mb-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
             <form onSubmit={handleSearch} className="relative w-full md:w-96">
               <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Buscar lote liberado por código interno o envase..."
+                placeholder="Buscar lote liberado o envase..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] focus:ring-4 focus:ring-[#15803D]/10 bg-[#F7FAF7]/50"
@@ -290,7 +326,7 @@ export const CertificadosView: React.FC = () => {
               <div className="p-12 text-center text-sm text-neutral-400">
                 No hay lotes en estado <strong>Despacho</strong> o <strong>Liberado</strong> para los filtros seleccionados.
                 <div className="text-xs text-neutral-400 mt-1">
-                  (Solo los lotes en estado Despacho o Liberado pueden emitir certificados de calidad R-CAL-07).
+                  (Solo los lotes con unidades en estado Despacho o Liberado pueden emitir certificados de calidad R-CAL-07).
                 </div>
               </div>
             ) : (
@@ -298,59 +334,132 @@ export const CertificadosView: React.FC = () => {
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-[#EEF6F0]/60 border-b border-[#E5ECE6] text-neutral-700 font-bold uppercase text-[10px]">
-                      <th className="p-3.5">Código Interno</th>
+                      <th className="p-3.5 w-10"></th>
                       <th className="p-3.5">Lote</th>
+                      <th className="p-3.5">Fecha</th>
                       <th className="p-3.5">Artículo / Envase</th>
                       <th className="p-3.5">Material & Colores</th>
-                      <th className="p-3.5">Cantidad</th>
-                      <th className="p-3.5">Estado Operativo</th>
+                      <th className="p-3.5 text-center">Unidades Habilitadas</th>
                       <th className="p-3.5 text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E5ECE6]">
-                    {liberados.map((item) => (
-                      <tr
-                        key={item.uid}
-                        onClick={() => handleSelectLot(item.uid)}
-                        className="hover:bg-[#EEF6F0]/30 cursor-pointer transition select-none"
-                      >
-                        <td className="p-3.5 font-mono font-bold text-[#0D3B22]">
-                          #{item.codigo_interno}
-                        </td>
-                        <td className="p-3.5 font-mono font-extrabold text-sm text-[#0D3B22]">
-                          {item.lote}
-                        </td>
-                        <td className="p-3.5 font-semibold text-neutral-800">
-                          {item.articulo}
-                        </td>
-                        <td className="p-3.5 text-neutral-600">
-                          {item.material} · {item.color_bidon} / {item.color_asa}
-                        </td>
-                        <td className="p-3.5 font-mono font-bold">
-                          {item.cantidad.toLocaleString('es-CL')} UND.
-                        </td>
-                        <td className="p-3.5">
-                          <span
-                            className="px-2.5 py-0.5 text-[11px] font-bold rounded text-white"
-                            style={{ backgroundColor: item.estado_color || (item.estado_nombre === 'Despacho' ? '#8B5CF6' : '#10B981') }}
+                    {liberados.map((item) => {
+                      const isExpanded = !!expandedLotes[item.lote];
+                      return (
+                        <React.Fragment key={item.lote}>
+                          <tr
+                            onClick={() => toggleLote(item.lote)}
+                            className="hover:bg-[#EEF6F0]/30 cursor-pointer transition select-none bg-white"
                           >
-                            {item.estado_nombre || 'Liberado'}
-                          </span>
-                        </td>
-                        <td className="p-3.5 text-right">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectLot(item.uid);
-                            }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0D3B22] text-white hover:bg-[#15803D] text-xs font-semibold shadow-sm transition"
-                          >
-                            <span>Previsualizar</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                            <td className="p-3.5 text-center text-neutral-400">
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-[#15803D]" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-neutral-400" />
+                              )}
+                            </td>
+                            <td className="p-3.5 font-mono font-extrabold text-sm text-[#0D3B22]">
+                              LOTE {item.lote}
+                            </td>
+                            <td className="p-3.5 font-mono text-neutral-600">
+                              {item.fecha ? new Date(item.fecha).toLocaleDateString('es-CL') : '-'}
+                            </td>
+                            <td className="p-3.5 font-semibold text-neutral-800">
+                              {item.articulo}
+                            </td>
+                            <td className="p-3.5 text-neutral-600">
+                              {item.material} · {item.color_bidon} / {item.color_asa}
+                            </td>
+                            <td className="p-3.5 text-center font-mono">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#EEF6F0] text-[#15803D] font-bold text-xs">
+                                <PackageCheck className="w-3.5 h-3.5" />
+                                {item.total_unidades} {item.total_unidades === 1 ? 'unidad' : 'unidades'}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleLote(item.lote);
+                                }}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#E5ECE6] text-[#0D3B22] hover:bg-[#EEF6F0] text-xs font-semibold shadow-xs transition"
+                              >
+                                <span>{isExpanded ? 'Ocultar Unidades' : 'Ver Unidades'}</span>
+                                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                              </button>
+                            </td>
+                          </tr>
+
+                          {/* SUB-TABLE: UNIDADES DE EMBALAJE (EXPANDABLE) */}
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={7} className="p-0 bg-[#F7FAF7]/80 border-b border-[#E5ECE6]">
+                                <div className="p-4 pl-12 pr-6">
+                                  <div className="flex items-center gap-2 mb-2 text-xs font-bold text-[#0D3B22]">
+                                    <Layers className="w-4 h-4 text-[#15803D]" />
+                                    <span>Unidades de Embalaje del Lote {item.lote} con estado Despacho o Liberado:</span>
+                                  </div>
+                                  <div className="bg-white rounded-xl border border-[#E5ECE6] overflow-hidden shadow-xs">
+                                    <table className="w-full text-left text-xs">
+                                      <thead>
+                                        <tr className="bg-[#EEF6F0]/40 border-b border-[#E5ECE6] text-[10px] text-neutral-600 font-bold uppercase">
+                                          <th className="p-2.5 pl-4">Unid. Embalaje</th>
+                                          <th className="p-2.5">Cantidad</th>
+                                          <th className="p-2.5">Estado Operativo</th>
+                                          <th className="p-2.5">N° Certificado</th>
+                                          <th className="p-2.5 text-right pr-4">Certificación</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-[#E5ECE6]">
+                                        {item.unidades.map((u) => (
+                                          <tr key={u.uid} className="hover:bg-[#EEF6F0]/20 transition">
+                                            <td className="p-2.5 pl-4 font-mono font-extrabold text-[#0D3B22]">
+                                              {u.unidad_embalaje}
+                                            </td>
+                                            <td className="p-2.5 font-mono font-bold">
+                                              {u.cantidad.toLocaleString('es-CL')} UND.
+                                            </td>
+                                            <td className="p-2.5">
+                                              <span
+                                                className="px-2 py-0.5 text-[10px] font-bold rounded text-white"
+                                                style={{ backgroundColor: u.estado_color || (u.estado_nombre === 'Despacho' ? '#8B5CF6' : '#10B981') }}
+                                              >
+                                                {u.estado_nombre}
+                                              </span>
+                                            </td>
+                                            <td className="p-2.5 font-mono text-xs">
+                                              {u.certificado_emitido ? (
+                                                <span className="text-[#15803D] font-bold">
+                                                  CERT #{u.numero_certificado}
+                                                </span>
+                                              ) : (
+                                                <span className="text-neutral-400 italic">
+                                                  Sin emitir
+                                                </span>
+                                              )}
+                                            </td>
+                                            <td className="p-2.5 text-right pr-4">
+                                              <button
+                                                onClick={() => handleSelectUnit(u.uid)}
+                                                className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#0D3B22] text-white hover:bg-[#15803D] text-[11px] font-semibold shadow-xs transition"
+                                              >
+                                                <Eye className="w-3.5 h-3.5" />
+                                                <span>{u.certificado_emitido ? 'Ver / Reemitir' : 'Emitir Certificado'}</span>
+                                              </button>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

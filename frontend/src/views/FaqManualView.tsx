@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ManualDocument } from '../components/ManualDocument';
 import { 
   BookOpen, Search, Printer, Layers, HelpCircle, 
-  ChevronRight, Bookmark, ArrowUpRight, Sparkles, Shield
+  ChevronRight, Bookmark, ArrowUpRight, Sparkles, Shield, Database
 } from 'lucide-react';
 
 export const FaqManualView: React.FC = () => {
@@ -11,13 +11,14 @@ export const FaqManualView: React.FC = () => {
 
   const sections = [
     { id: 'sec-dashboard', label: '1. Dashboard Ejecutivo', desc: 'KPIs, metas diarias y estado de planta' },
-    { id: 'sec-iniciar', label: '2. Iniciar Producción', desc: 'Tiradas, códigos internos y tickets Zebra' },
-    { id: 'sec-produccion', label: '3. Producción & Sábana', desc: 'Flujo de estados y trazabilidad de lotes' },
-    { id: 'sec-certificados', label: '4. Certificados R-CAL-07', desc: 'Emisión para lotes en despacho y liberados' },
-    { id: 'sec-qr', label: '5. Consulta Pública QR', desc: 'Verificación externa sin login' },
-    { id: 'sec-config', label: '6. Configuración Global', desc: 'Tiempos de inactividad de sesión y RDS' },
-    { id: 'sec-usuarios', label: '7. Usuarios & Permisos', desc: 'Matriz de roles RBAC' },
-    { id: 'sec-faq', label: '8. Preguntas Frecuentes (FAQ)', desc: 'Protocolos de contingencia en planta' },
+    { id: 'sec-codigos-sap', label: '2. Códigos Internos & SAP', desc: 'Catálogo de SKU, códigos SAP y materias' },
+    { id: 'sec-iniciar', label: '3. Iniciar Producción', desc: 'Tiradas, un solo lote y embalajes 0001-NNNN' },
+    { id: 'sec-produccion', label: '4. Producción & Sábana', desc: 'Jerarquía por Lote y unidades de embalaje' },
+    { id: 'sec-certificados', label: '5. Certificados R-CAL-07', desc: 'Emisión para lotes en despacho y liberados' },
+    { id: 'sec-qr', label: '6. Consulta Pública QR', desc: 'Verificación externa sin login' },
+    { id: 'sec-config', label: '7. Configuración Global', desc: 'Tiempos de inactividad de sesión y RDS' },
+    { id: 'sec-usuarios', label: '8. Usuarios & Permisos', desc: 'Matriz de roles RBAC' },
+    { id: 'sec-faq', label: '9. Preguntas Frecuentes (FAQ)', desc: 'Protocolos de contingencia en planta' },
   ];
 
   const scrollToSection = (id: string) => {
@@ -46,7 +47,7 @@ export const FaqManualView: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
             <span>Manual de Operaciones & FAQ</span>
             <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
-              MAN-SGI-01 · v2.4
+              MAN-SGI-01 · v3.0
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
@@ -57,7 +58,7 @@ export const FaqManualView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95"
+            className="flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir Manual</span>
@@ -76,7 +77,7 @@ export const FaqManualView: React.FC = () => {
                 Índice del Manual
               </h2>
             </div>
-            <span className="text-[10px] font-mono text-neutral-400">8 Módulos</span>
+            <span className="text-[10px] font-mono text-neutral-400">9 Módulos</span>
           </div>
 
           <div className="space-y-1.5">
@@ -100,28 +101,31 @@ export const FaqManualView: React.FC = () => {
                       {sec.desc}
                     </div>
                   </div>
-                  <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition ${
-                    isActive ? 'text-[#15803D] translate-x-0.5' : 'text-neutral-300 group-hover:text-neutral-500'
-                  }`} />
+                  <ChevronRight
+                    className={`w-4 h-4 transition ${
+                      isActive ? 'text-[#15803D] translate-x-0.5' : 'text-neutral-300 group-hover:text-neutral-500'
+                    }`}
+                  />
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-5 pt-4 border-t border-[#E5ECE6] text-[11px] text-neutral-500 space-y-2">
-            <div className="flex items-center gap-2">
-              <Shield className="w-3.5 h-3.5 text-[#15803D]" />
-              <span className="font-semibold text-[#0D3B22]">Vigencia Documental</span>
+          {/* Quick Help Box */}
+          <div className="mt-6 p-4 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] text-xs">
+            <div className="flex items-center gap-2 font-bold text-[#0D3B22] mb-1">
+              <HelpCircle className="w-4 h-4 text-[#15803D]" />
+              <span>Soporte In-Situ</span>
             </div>
-            <p className="text-[10px] text-neutral-500 leading-normal">
-              Copia electrónica no controlada salvo cuando cuente con timbre o validación del SGI. Última actualización: <strong>15 de Noviembre, 2026</strong>.
+            <p className="text-neutral-500 text-[11px] leading-relaxed">
+              Para reportar bloqueos de tickets Zebra o anomalías en bases de datos AWS RDS, contacte inmediatamente a la Jefatura de Planta o Departamento de TI.
             </p>
           </div>
         </aside>
 
-        {/* Right Side: Official Paper Document */}
-        <main className="lg:col-span-8 flex flex-col items-center">
-          <ManualDocument onPrint={handlePrint} activeSectionId={activeSection} />
+        {/* Right Side: Printable Manual Container */}
+        <main className="lg:col-span-8 flex justify-center">
+          <ManualDocument activeSectionId={activeSection} onPrint={handlePrint} />
         </main>
       </div>
     </div>

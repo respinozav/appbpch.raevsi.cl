@@ -72,12 +72,13 @@ def create_production_batch(
     else:
         next_codigo_interno = max_ci + 1
 
-    # Correlativo lotes starts at 10000
+    # Regla: Se genera UN SOLO lote para la emisión completa
+    # Tomamos el último lote creado y creamos uno solo
     max_lote = db.query(func.max(Production.lote)).scalar()
     if max_lote is None or max_lote < 10000:
-        base_lote = 10000
+        lote_num = 10001
     else:
-        base_lote = max_lote
+        lote_num = max_lote + 1
 
     # Default state is 'Producción'
     estado_prod = db.query(Estado).filter(Estado.nombre == "Producción").first()
@@ -89,9 +90,8 @@ def create_production_batch(
     created_productions: List[Production] = []
     now = datetime.now(timezone.utc)
 
-    # Generate N lots
+    # Generate N unidades de embalaje dentro del mismo lote (desde 0001 hasta 000N)
     for i in range(1, batch_in.cantidad_lotes + 1):
-        lote_num = base_lote + i
         unidad_emb = f"{i:04d}"
 
         prod = Production(
@@ -122,7 +122,7 @@ def create_production_batch(
             estado_nuevo_uid=estado_uid,
             usuario_uid=current_user.uid,
             fecha_hora=now,
-            observaciones=f"Tirada inicial de producción #{next_codigo_interno} (Lote {lote_num})"
+            observaciones=f"Tirada inicial #{next_codigo_interno} (Lote {lote_num} - Emb. {unidad_emb})"
         )
         db.add(audit)
         created_productions.append(prod)
@@ -181,7 +181,7 @@ def create_production_batch(
 @router.get("/batches")
 def list_production_batches(
     estado_uid: Optional[str] = Query(None, description="Filtro por UUID de estado"),
-    search: Optional[str] = Query(None, description="Buscar por código interno, artículo o lote"),
+    search: Optional[str] = Query(None, description="Buscar por lote, código interno o artículo"),
     fecha_desde: Optional[str] = Query(None, description="Fecha desde (YYYY-MM-DD)"),
     fecha_hasta: Optional[str] = Query(None, description="Fecha hasta (YYYY-MM-DD)"),
     page: int = Query(1, ge=1),
@@ -189,7 +189,7 @@ def list_production_batches(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Si estado_uid es None o 'all', no se aplica filtro (se muestran todos los estados)
+    # Si estado_uid es None o 'all', no se aplica filtro
     estado_filter_uuid = None
     if estado_uid and estado_uid.lower() not in ("all", "null", "undefined", ""):
         try:
@@ -197,8 +197,10 @@ def list_production_batches(
         except ValueError:
             pass
 
+    # Agrupado por LOTE (un lote por tirada con unidades de embalaje)
     query = db.query(
-        Production.codigo_interno,
+        Production.lote,
+        func.max(Production.codigo_interno).label("codigo_interno"),
         func.max(Production.fecha).label("fecha"),
         func.max(Production.articulo).label("articulo"),
         func.max(Production.material).label("material"),
@@ -208,9 +210,9 @@ def list_production_batches(
         func.max(Production.turno).label("turno"),
         func.max(Production.operador).label("operador"),
         func.max(Production.cantidad).label("cantidad_unitaria"),
-        func.count(Production.uid).label("total_lotes"),
-        func.min(Production.lote).label("lote_inicio"),
-        func.max(Production.lote).label("lote_fin"),
+        func.count(Production.uid).label("total_unidades"),
+        func.min(Production.unidad_embalaje).label("embalaje_inicio"),
+        func.max(Production.unidad_embalaje).label("embalaje_fin"),
         func.max(Production.peso).label("peso"),
         func.max(cast(Production.uid_estado, String)).label("uid_estado")
     )
@@ -241,22 +243,23 @@ def list_production_batches(
         if search.strip().isdigit():
             val = int(search.strip())
             query = query.filter(
-                (Production.codigo_interno == val) | (Production.lote == val)
+                (Production.lote == val) | (Production.codigo_interno == val)
             )
         else:
             query = query.filter(Production.articulo.ilike(search_term))
 
-    query = query.group_by(Production.codigo_interno)
+    query = query.group_by(Production.lote)
     total_count = query.count()
 
-    # Ordenar estrictamente descendente: el último código interno creado aparece primero
-    results = query.order_by(desc(Production.codigo_interno)).offset((page - 1) * limit).limit(limit).all()
+    # Ordenar estrictamente descendente: el último lote creado aparece primero
+    results = query.order_by(desc(Production.lote)).offset((page - 1) * limit).limit(limit).all()
 
     batches_data = []
     for r in results:
         est_uid = uuid.UUID(r.uid_estado) if r.uid_estado else None
         est = db.query(Estado).filter(Estado.uid == est_uid).first() if est_uid else None
         batches_data.append({
+            "lote": r.lote,
             "codigo_interno": r.codigo_interno,
             "fecha": r.fecha.isoformat() if r.fecha else None,
             "articulo": r.articulo,
@@ -267,9 +270,12 @@ def list_production_batches(
             "turno": r.turno,
             "operador": r.operador,
             "cantidad_unitaria": r.cantidad_unitaria,
-            "total_lotes": r.total_lotes,
-            "lote_inicio": r.lote_inicio,
-            "lote_fin": r.lote_fin,
+            "total_unidades": r.total_unidades,
+            "total_lotes": r.total_unidades,
+            "lote_inicio": r.lote,
+            "lote_fin": r.lote,
+            "embalaje_inicio": r.embalaje_inicio,
+            "embalaje_fin": r.embalaje_fin,
             "peso": r.peso,
             "uid_estado": str(r.uid_estado),
             "estado": {
@@ -288,14 +294,22 @@ def list_production_batches(
         "pages": (total_count + limit - 1) // limit if limit > 0 else 1
     }
 
+@router.get("/lotes/{lote_id}")
 @router.get("/batches/{codigo_interno}")
-def get_batch_details_and_lots(
-    codigo_interno: int,
+def get_lote_details_and_units(
+    codigo_interno: Optional[int] = None,
+    lote_id: Optional[int] = None,
     estado_uid: Optional[str] = Query(None, description="Filtro opcional por estado en sábana"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    query_lots = db.query(Production).filter(Production.codigo_interno == codigo_interno)
+    target_lote = lote_id or codigo_interno
+    query_lots = db.query(Production)
+    if lote_id:
+        query_lots = query_lots.filter(Production.lote == lote_id)
+    else:
+        query_lots = query_lots.filter((Production.lote == target_lote) | (Production.codigo_interno == target_lote))
+
     if estado_uid and estado_uid.lower() not in ("all", "null", "undefined", ""):
         try:
             e_uuid = uuid.UUID(estado_uid)
@@ -303,10 +317,9 @@ def get_batch_details_and_lots(
         except ValueError:
             pass
 
-    productions = query_lots.order_by(Production.lote.asc()).all()
+    productions = query_lots.order_by(Production.unidad_embalaje.asc(), Production.lote.asc()).all()
     if not productions:
-        # Si no hay lotes con ese estado para este codigo interno, retornar lista vacía o lotes generales
-        all_prods = db.query(Production).filter(Production.codigo_interno == codigo_interno).all()
+        all_prods = db.query(Production).filter((Production.lote == target_lote) | (Production.codigo_interno == target_lote)).all()
         if not all_prods:
             raise HTTPException(status_code=404, detail="Lote de producción no encontrado")
         productions = []
@@ -338,47 +351,56 @@ def get_batch_details_and_lots(
             "qr_url": f"{settings.PUBLIC_DOMAIN}/trazabilidad/{p.uid}"
         })
 
-    first = productions[0]
-    last = productions[-1]
+    first = productions[0] if productions else None
 
     return {
-        "codigo_interno": codigo_interno,
-        "fecha": first.fecha.isoformat(),
-        "articulo": first.articulo,
-        "material": first.material,
-        "color_bidon": first.color_bidon,
-        "color_asa": first.color_asa,
-        "numero_maquina": first.numero_maquina,
-        "turno": first.turno,
-        "operador": first.operador,
-        "cantidad_unitaria": first.cantidad,
+        "lote": first.lote if first else target_lote,
+        "codigo_interno": first.codigo_interno if first else target_lote,
+        "fecha": first.fecha.isoformat() if first else None,
+        "articulo": first.articulo if first else "",
+        "material": first.material if first else "",
+        "color_bidon": first.color_bidon if first else "",
+        "color_asa": first.color_asa if first else "",
+        "numero_maquina": first.numero_maquina if first else 0,
+        "turno": first.turno if first else 0,
+        "operador": first.operador if first else 0,
+        "cantidad_unitaria": first.cantidad if first else 0,
+        "total_unidades": len(productions),
         "total_lotes": len(productions),
-        "lote_inicio": first.lote,
-        "lote_fin": last.lote,
-        "peso": first.peso,
-        "uid_estado": str(first.uid_estado),
+        "lote_inicio": first.lote if first else target_lote,
+        "lote_fin": first.lote if first else target_lote,
+        "peso": first.peso if first else "N/A",
+        "uid_estado": str(first.uid_estado) if first else None,
         "estado": {
             "uid": str(first.estado.uid),
             "nombre": first.estado.nombre,
             "color": first.estado.color
-        } if first.estado else None,
-        "lotes": lotes_out
+        } if first and first.estado else None,
+        "lotes": lotes_out,
+        "unidades": lotes_out
     }
 
+@router.patch("/lote/{lote_id}/state")
 @router.patch("/batch/{codigo_interno}/state")
-def update_batch_state(
-    codigo_interno: int,
-    state_in: ProductionBatchStateUpdate,
+def update_lote_state(
+    codigo_interno: Optional[int] = None,
+    lote_id: Optional[int] = None,
+    state_in: ProductionBatchStateUpdate = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    target = lote_id or codigo_interno
     nuevo_estado = db.query(Estado).filter(Estado.uid == state_in.nuevo_estado_uid).first()
     if not nuevo_estado:
         raise HTTPException(status_code=400, detail="Estado seleccionado no es válido")
 
-    prods = db.query(Production).filter(Production.codigo_interno == codigo_interno).all()
+    if lote_id:
+        prods = db.query(Production).filter(Production.lote == lote_id).all()
+    else:
+        prods = db.query(Production).filter((Production.lote == target) | (Production.codigo_interno == target)).all()
+
     if not prods:
-        raise HTTPException(status_code=404, detail="Tirada de producción no encontrada")
+        raise HTTPException(status_code=404, detail="Lote de producción no encontrado")
 
     now = datetime.now(timezone.utc)
     for p in prods:
@@ -393,12 +415,12 @@ def update_batch_state(
             estado_nuevo_uid=nuevo_estado.uid,
             usuario_uid=current_user.uid,
             fecha_hora=now,
-            observaciones=state_in.observaciones or f"Cambio de estado masivo a {nuevo_estado.nombre}"
+            observaciones=state_in.observaciones or f"Cambio de estado masivo a {nuevo_estado.nombre} (Lote {p.lote})"
         )
         db.add(audit)
 
     db.commit()
-    return {"message": f"Se actualizaron {len(prods)} lotes al estado '{nuevo_estado.nombre}'."}
+    return {"message": f"Se actualizaron {len(prods)} unidades de embalaje al estado '{nuevo_estado.nombre}'."}
 
 @router.patch("/{production_uid}/state")
 def update_single_lot_state(

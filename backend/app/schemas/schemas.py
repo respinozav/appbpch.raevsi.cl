@@ -233,3 +233,34 @@ class SessionConfigOut(BaseModel):
     clave: str = "session_inactivity_timeout_minutes"
     updated_at: Optional[datetime] = None
     usuario_actualizador: Optional[str] = None
+
+# --- CODIGOS INTERNOS SAP ---
+class SapCodigoInternoBase(BaseModel):
+    codigosap: str
+    codigointerno: str
+    articulo: str
+    materia: Optional[str] = None
+    color: Optional[str] = None
+    colorasa: Optional[str] = None
+    cantidad: Optional[int] = 0
+
+class SapCodigoInternoCreate(SapCodigoInternoBase):
+    pass
+
+class SapCodigoInternoUpdate(BaseModel):
+    codigosap: Optional[str] = None
+    codigointerno: Optional[str] = None
+    articulo: Optional[str] = None
+    materia: Optional[str] = None
+    color: Optional[str] = None
+    colorasa: Optional[str] = None
+    cantidad: Optional[int] = None
+
+class SapCodigoInternoOut(SapCodigoInternoBase):
+    uid: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+

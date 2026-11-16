@@ -377,8 +377,11 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
 
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-base font-extrabold text-[#0D3B22] tracking-tight">
-                            #{batch.codigo_interno}
+                          <span className="px-2 py-0.5 rounded bg-[#EEF6F0] text-[#0D3B22] font-mono text-xs font-bold border border-[#15803D]/20">
+                            LOTE #{batch.lote}
+                          </span>
+                          <span className="font-mono text-xs font-bold text-neutral-400">
+                            (Tirada #{batch.codigo_interno})
                           </span>
                           <span className="text-xs text-neutral-400">·</span>
                           <span className="font-semibold text-sm text-[#0F1F16]">
@@ -400,7 +403,7 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
                     <div className="flex items-center justify-between lg:justify-end gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-[#E5ECE6]">
                       <div className="text-left lg:text-right">
                         <div className="text-xs font-mono font-bold text-[#0D3B22]">
-                          Lotes {batch.lote_inicio} - {batch.lote_fin} ({batch.total_lotes} UND)
+                          {batch.total_unidades || batch.total_lotes} Unidades de Embalaje ({batch.embalaje_inicio || '0001'} - {batch.embalaje_fin || '0010'})
                         </div>
                         <div className="text-[11px] text-neutral-400 mt-0.5">
                           {batch.fecha ? new Date(batch.fecha).toLocaleDateString('es-CL') : ''}
@@ -431,11 +434,11 @@ export const ProduccionView: React.FC<{ initialCodigoInterno?: number }> = ({ in
                           <div className="flex items-center gap-2">
                             <Layers className="w-4 h-4 text-[#15803D]" />
                             <h3 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                              Sábana de Lotes Individuales · Código Interno #{batch.codigo_interno}
+                              Sábana de Unidades de Embalaje · Lote #{batch.lote} (Tirada #{batch.codigo_interno})
                             </h3>
                           </div>
                           <span className="text-xs text-neutral-500 font-mono">
-                            {expandedDetails?.lotes?.length || 0} tickets registrados
+                            {expandedDetails?.lotes?.length || 0} unidades registradas
                           </span>
                         </div>
 

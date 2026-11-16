@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from typing import List, Optional
 from datetime import date
 
@@ -14,57 +14,82 @@ router = APIRouter(prefix="/certificates", tags=["Certificados"])
 
 @router.get("/liberados")
 def list_liberados(
-    search: Optional[str] = Query(None, description="Filtrar por código interno o lote"),
+    search: Optional[str] = Query(None, description="Filtrar por lote o artículo"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=10, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # Solo lotes que contengan unidades en estado 'Despacho' o 'Liberado'
     estados_validos = db.query(Estado).filter(Estado.nombre.in_(["Despacho", "Liberado"])).all()
     estados_uids = [e.uid for e in estados_validos]
     if not estados_uids:
         return {"items": [], "total": 0, "page": page, "limit": limit, "pages": 1}
 
-    query = db.query(Production).filter(Production.uid_estado.in_(estados_uids))
+    # Agrupar por lote para mostrar los lotes disponibles
+    query = db.query(
+        Production.lote,
+        func.max(Production.fecha).label("fecha"),
+        func.max(Production.articulo).label("articulo"),
+        func.max(Production.material).label("material"),
+        func.max(Production.color_bidon).label("color_bidon"),
+        func.max(Production.color_asa).label("color_asa"),
+        func.count(Production.uid).label("total_unidades_validas")
+    ).filter(Production.uid_estado.in_(estados_uids))
 
     if search:
         s = search.strip()
         if s.isdigit():
             val = int(s)
-            query = query.filter((Production.codigo_interno == val) | (Production.lote == val))
+            query = query.filter(Production.lote == val)
         else:
             query = query.filter(Production.articulo.ilike(f"%{s}%"))
 
+    query = query.group_by(Production.lote)
     total = query.count()
-    items = query.order_by(desc(Production.fecha), desc(Production.codigo_interno)).offset((page - 1) * limit).limit(limit).all()
+    items = query.order_by(desc(func.max(Production.fecha)), desc(Production.lote)).offset((page - 1) * limit).limit(limit).all()
 
-    liberados_data = []
-    for p in items:
-        cert = db.query(Certificado).filter(Certificado.production_uid == p.uid).first()
-        liberados_data.append({
-            "uid": str(p.uid),
-            "codigo_interno": p.codigo_interno,
-            "fecha": p.fecha.isoformat(),
-            "numero_maquina": p.numero_maquina,
-            "turno": p.turno,
-            "operador": p.operador,
-            "cantidad": p.cantidad,
-            "lote": p.lote,
-            "unidad_embalaje": p.unidad_embalaje,
-            "peso": p.peso,
-            "articulo": p.articulo,
-            "material": p.material,
-            "color_bidon": p.color_bidon,
-            "color_asa": p.color_asa,
-            "estado_nombre": p.estado.nombre if p.estado else "Liberado",
-            "estado_color": p.estado.color if p.estado else "#10B981",
-            "certificado_emitido": cert is not None,
-            "numero_certificado": cert.numero_certificado if cert else None,
-            "certificado_uid": str(cert.uid) if cert else None
+    lotes_liberados = []
+    for r in items:
+        # Obtener las unidades de embalaje de este lote con estado despacho/liberado
+        unidades = db.query(Production).filter(
+            Production.lote == r.lote,
+            Production.uid_estado.in_(estados_uids)
+        ).order_by(Production.unidad_embalaje.asc()).all()
+
+        unidades_list = []
+        for u in unidades:
+            cert = db.query(Certificado).filter(Certificado.production_uid == u.uid).first()
+            unidades_list.append({
+                "uid": str(u.uid),
+                "lote": u.lote,
+                "unidad_embalaje": u.unidad_embalaje,
+                "fecha": u.fecha.isoformat(),
+                "cantidad": u.cantidad,
+                "articulo": u.articulo,
+                "material": u.material,
+                "color_bidon": u.color_bidon,
+                "color_asa": u.color_asa,
+                "estado_nombre": u.estado.nombre if u.estado else "Liberado",
+                "estado_color": u.estado.color if u.estado else "#10B981",
+                "certificado_emitido": cert is not None,
+                "numero_certificado": cert.numero_certificado if cert else None,
+                "certificado_uid": str(cert.uid) if cert else None
+            })
+
+        lotes_liberados.append({
+            "lote": r.lote,
+            "fecha": r.fecha.isoformat() if r.fecha else None,
+            "articulo": r.articulo,
+            "material": r.material,
+            "color_bidon": r.color_bidon,
+            "color_asa": r.color_asa,
+            "total_unidades": r.total_unidades_validas,
+            "unidades": unidades_list
         })
 
     return {
-        "items": liberados_data,
+        "items": lotes_liberados,
         "total": total,
         "page": page,
         "limit": limit,
@@ -197,7 +222,6 @@ def get_certificate_data(
         "item": {
             "numero": 1,
             "articulo": prod.articulo,
-            "codigo_interno": str(prod.codigo_interno),
             "lote": str(prod.lote),
             "unidad_embalaje": str(prod.unidad_embalaje),
             "material": prod.material,

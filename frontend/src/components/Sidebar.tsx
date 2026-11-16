@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusCircle, Layers, FileCheck, Users, User, LogOut,
   Search, Menu, X, Shield, ChevronRight, Sparkles, Factory,
-  LayoutDashboard, Settings, BookOpen
+  LayoutDashboard, Settings, BookOpen, Barcode
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -35,6 +35,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
       label: 'Producción & Sábana',
       desc: 'Trazabilidad y lotes',
       icon: Layers
+    },
+    {
+      id: 'codigos-internos',
+      label: 'Códigos Internos',
+      desc: 'Maestro SAP y Artículos',
+      icon: Barcode
     },
     {
       id: 'certificados',

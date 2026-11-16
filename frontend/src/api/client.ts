@@ -45,6 +45,19 @@ export interface Estado {
   color: string;
 }
 
+export interface SapCodigoInternoItem {
+  uid: string;
+  codigosap: string;
+  codigointerno: string;
+  articulo: string;
+  materia?: string;
+  color?: string;
+  colorasa?: string;
+  cantidad?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ProductionTicket {
   uid: string;
   codigo_interno: number;
@@ -112,7 +125,7 @@ export interface CertificateData {
   item: {
     numero: number;
     articulo: string;
-    codigo_interno: string;
+    codigo_interno?: string;
     lote: string;
     unidad_embalaje: string;
     material: string;
@@ -488,4 +501,31 @@ export const api = {
     if (params.limit) q.append('limit', String(params.limit));
     return request<{ items: LoginAuditItem[]; total: number; page: number; limit: number; pages: number }>(`/config/audit/logins?${q.toString()}`);
   },
+
+  // Códigos Internos SAP
+  listCodigosInternos: (params?: { search?: string; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.search) q.append('search', params.search);
+    if (params?.page) q.append('page', String(params.page));
+    if (params?.limit) q.append('limit', String(params.limit));
+    return request<{ items: SapCodigoInternoItem[]; total: number; page: number; limit: number; pages: number }>(`/codigos-internos?${q.toString()}`);
+  },
+  getAllCodigosInternos: () =>
+    request<SapCodigoInternoItem[]>('/codigos-internos/all'),
+  getCodigoInterno: (uid: string) =>
+    request<SapCodigoInternoItem>(`/codigos-internos/${uid}`),
+  createCodigoInterno: (data: Omit<SapCodigoInternoItem, 'uid' | 'created_at' | 'updated_at'>) =>
+    request<SapCodigoInternoItem>('/codigos-internos', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateCodigoInterno: (uid: string, data: Partial<Omit<SapCodigoInternoItem, 'uid' | 'created_at' | 'updated_at'>>) =>
+    request<SapCodigoInternoItem>(`/codigos-internos/${uid}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteCodigoInterno: (uid: string) =>
+    request<{ success: boolean; message: string }>(`/codigos-internos/${uid}`, {
+      method: 'DELETE',
+    }),
 };

@@ -2,7 +2,8 @@ import React from 'react';
 import { 
   Printer, CheckCircle2, ShieldCheck, HelpCircle, Layers, 
   FileCheck, QrCode, Settings, Users, AlertTriangle, ArrowRight,
-  Factory, Calendar, Award, BookOpen, Clock, Lock, Sparkles, Check
+  Factory, Calendar, Award, BookOpen, Clock, Lock, Sparkles, Check,
+  Database, Tag, PackageCheck
 } from 'lucide-react';
 
 interface ManualDocumentProps {
@@ -36,7 +37,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         <div className="flex items-center gap-3">
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v2.6 Vigente</span>
+            <span>Versión v3.0 Vigente</span>
           </div>
           <button
             onClick={handlePrint}
@@ -48,13 +49,13 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         </div>
       </div>
 
-      {/* Official Manual Document Container (Matches Certificate format & margins) */}
+      {/* Official Manual Document Container */}
       <div 
         id="manual-printable-area"
         className="printable-area bg-white text-black p-6 sm:p-12 w-full max-w-[900px] shadow-lg border border-neutral-300 font-sans text-xs leading-relaxed"
         style={{ fontFamily: '"Arial", "Helvetica", sans-serif' }}
       >
-        {/* Header 3-Column Box (Identical structure to CertificateDocument.tsx) */}
+        {/* Header 3-Column Box */}
         <div className="border border-black grid grid-cols-12 mb-6">
           {/* Col 1: Logo Bioplast */}
           <div className="col-span-3 border-r border-black p-3 flex flex-col justify-center items-center text-center bg-white">
@@ -81,10 +82,10 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               Código: <span className="font-bold">MAN-SGI-01</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
-              Versión: <span className="font-bold">v2.6</span>
+              Versión: <span className="font-bold">v3.0</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
-              Actualización: <span className="font-bold">15-Nov-2026</span>
+              Actualización: <span className="font-bold">16-Nov-2026</span>
             </div>
             <div className="p-1 px-2 font-medium">
               Ámbito: <span className="font-bold">Planta Quilicura</span>
@@ -126,28 +127,20 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <td className="p-1 text-left px-2">Integración de plataforma web, módulo R-CAL-07 y sábana de trazabilidad.</td>
               </tr>
               <tr className="border-b border-neutral-200">
-                <td className="border-r border-black p-1 font-mono">v2.4</td>
+                <td className="border-r border-black p-1 font-mono">v2.6</td>
                 <td className="border-r border-black p-1">15-Nov-2026</td>
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Susana Avila C.</td>
                 <td className="border-r border-black p-1">Dirección General</td>
-                <td className="p-1 text-left px-2">Ajustes de inactividad de sesión, filtros fecha mes actual, gráfico donut de turnos y manual unificado.</td>
+                <td className="p-1 text-left px-2">Administrador de Roles (RBAC), auditoría de logins y exportación CSV.</td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="border-r border-black p-1 font-mono">v2.5</td>
-                <td className="border-r border-black p-1">15-Nov-2026</td>
+              <tr className="bg-emerald-50/40">
+                <td className="border-r border-black p-1 font-mono font-bold">v3.0</td>
+                <td className="border-r border-black p-1 font-bold">16-Nov-2026</td>
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2">Bento Header con Lotes Retenidos, evolución diaria full-width, exportación CSV, validación estricta de 5 campos en certificados e interactividad global de menú.</td>
-              </tr>
-              <tr className="bg-emerald-50/40">
-                <td className="border-r border-black p-1 font-mono font-bold">v2.6</td>
-                <td className="border-r border-black p-1 font-bold">15-Nov-2026</td>
-                <td className="border-r border-black p-1">Tech Lead TI</td>
-                <td className="border-r border-black p-1">Susana Avila C.</td>
-                <td className="border-r border-black p-1">Dirección General</td>
-                <td className="p-1 text-left px-2 font-medium">Administrador de Roles y Módulos dinámico (RBAC), registro y visor de Auditoría de Logins en tiempo real, trazado SVG de tendencia diaria y fechas formato DD/MM/AAAA.</td>
+                <td className="p-1 text-left px-2 font-medium">Nuevo Módulo Códigos Internos SAP (CRUD sapcodigointerno), emisión con 1 solo lote por tirada y correlativo por unidad de embalaje (0001 a NNNN), agrupación de Producción por Lote, y Certificados exclusivos para Despacho/Liberado con remoción de código interno en R-CAL-07.</td>
               </tr>
             </tbody>
           </table>
@@ -198,238 +191,173 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 Visualización a <strong>ancho completo (full-width)</strong> con barras diarias estilizadas y línea punteada de meta de planta. Incluye cálculo automático de días activos, promedio diario y tooltips detallados por tirada.
               </p>
             </div>
+          </div>
+        </section>
 
-            <div className="border border-neutral-200 p-2.5 rounded bg-white">
-              <div className="font-bold text-[10.5px] text-[#0D3B22] mb-1">
-                C. Simetría Inferior: Estados, Auditoría y Gráfico Donut
-              </div>
-              <p className="text-[10px] text-neutral-600">
-                Estructura balanceada en dos columnas coordinadas en altura: la columna izquierda integra el <strong>Gráfico de Barras de Trazabilidad</strong> arriba y el <strong>Timeline de Actividad Reciente</strong> en tiempo real abajo, alineada con el <strong>Donut Chart de Eficiencia por Turno y Máquina</strong> en la columna derecha.
-              </p>
-            </div>
+        {/* ========================================================================= */}
+        {/* SECCIÓN 2: CÓDIGOS INTERNOS & SAP */}
+        {/* ========================================================================= */}
+        <section id="sec-codigos-sap" className="mb-8 break-inside-avoid scroll-mt-20">
+          <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
+            <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">2</span>
+              <span>Módulo 2 · Códigos Internos & SAP (Catálogo Maestro)</span>
+            </h2>
+            <span className="text-[10px] font-mono text-neutral-500">Ruta: /codigos-internos</span>
+          </div>
 
-            <div className="border border-neutral-200 p-2.5 rounded bg-white">
-              <div className="font-bold text-[10.5px] text-[#0D3B22] mb-1">
-                D. Exportación de Lotes a CSV / Excel con UTF-8 BOM
-              </div>
-              <p className="text-[10px] text-neutral-600">
-                Botón integrado en la barra de filtros que descarga instantáneamente la sábana de lotes del período seleccionado en formato delimitado por punto y coma, con codificación compatible con acentos y caracteres de Microsoft Excel.
-              </p>
+          <p className="text-justify text-[11px] mb-3 text-neutral-700">
+            Administra el catálogo maestro de homologación entre códigos de sistema ERP SAP (<code>codigosap</code>) y la codificación interna de planta (<code>codigointerno</code>). Esta tabla centraliza los parámetros estándar de fabricación para cada tipo de envase y bidón.
+          </p>
+
+          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
+            <div className="font-bold text-neutral-900 underline">Estructura de la Tabla SAP / Códigos Internos:</div>
+            <ul className="list-disc pl-5 space-y-1 text-neutral-700">
+              <li><strong>Código SAP:</strong> Identificador comercial asignado en el ERP empresarial.</li>
+              <li><strong>Código Interno:</strong> Clave única interna de planta (ej. 110000001).</li>
+              <li><strong>Artículo:</strong> Denominación formal del envase (ej. Bidón 20 Litros Natural Asa Azul).</li>
+              <li><strong>Materia Prima:</strong> Tipo de polímero estándar (HDPE Virgen, HDPE PCR Reciclado, etc.).</li>
+              <li><strong>Color Bidón / Color Asa:</strong> Coloración predeterminada del cuerpo y del componente.</li>
+              <li><strong>Cantidad por Embalaje:</strong> Número estándar de unidades contenidas en cada pallet o paquete.</li>
+            </ul>
+            <div className="p-2 bg-emerald-50 border border-emerald-200 rounded text-[9.5px] text-emerald-950 font-medium mt-2">
+              <strong>Autocompletado Operacional:</strong> En el módulo de Iniciar Producción, el operador puede seleccionar directamente un SKU del catálogo de Códigos Internos para autocompletar artículo, materia prima, colores y cantidad estándar en un solo clic.
             </div>
           </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 2: INICIAR PRODUCCIÓN */}
+        {/* SECCIÓN 3: INICIAR PRODUCCIÓN */}
         {/* ========================================================================= */}
         <section id="sec-iniciar" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">2</span>
-              <span>Módulo 2 · Iniciar Producción (Emisión de Tiradas & Etiquetas Zebra)</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">3</span>
+              <span>Módulo 3 · Iniciar Producción (1 Solo Lote + Unidades 0001 a NNNN)</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /iniciar</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Punto de entrada físico en planta donde el operador de máquina registra la tirada de producción y emite las etiquetas térmicas con código QR para cada uno de los paquetes o pallets.
+            Punto de registro de tiradas de soplado en línea de planta. Modificado en la versión 3.0 para implementar la <strong>regla de Lote Único por Emisión</strong>.
           </p>
 
           <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
-            <div className="font-bold text-neutral-900 underline">Protocolo de Registro de Tirada:</div>
+            <div className="font-bold text-neutral-900 underline">Protocolo de Registro y Correlativo por Embalaje:</div>
             <ol className="list-decimal pl-5 space-y-1.5 text-neutral-700">
               <li>
-                <strong>Código Interno Automatizado:</strong> El sistema asigna un folio secuencial único de 9 dígitos que inicia en la base <code>110000000+</code>.
+                <strong>Un Solo Lote por Tirada:</strong> Al emitir N tickets para una orden (ej. 10 paquetes), ya no se generan 10 lotes distintos. Se calcula <strong>un único número de lote</strong> para toda la emisión (tomando el consecutivo máximo + 1).
               </li>
               <li>
-                <strong>Generación de Lotes Consecutivos:</strong> A partir del correlativo base <code>10000+</code>, cada tirada genera 10 lotes individuales consecutivos (por ejemplo, del lote 10001 al 10010).
+                <strong>Correlativo de Unidad por Embalaje:</strong> Cada ticket individual dentro del lote recibe su identificador correlativo formateado a 4 dígitos: <code>0001</code>, <code>0002</code>, ... hasta <code>0010</code> (o N).
               </li>
               <li>
-                <strong>Parámetros de Operación:</strong> Se selecciona Máquina (Línea 1, 2, 3), Turno (1, 2, 3), Operador (1 a 10), Tipo de Artículo (Bidón 20L, Bidón 5L, etc.), Material (HDPE Virgen, PCR Reciclado), Color de Bidón y Color de Asa.
-              </li>
-              <li>
-                <strong>Previsualización en Vivo de la Etiqueta Zebra:</strong> Antes de confirmar, el operador visualiza el ticket térmico exacto que se imprimirá, incluyendo el código QR que enlaza a la trazabilidad pública.
-              </li>
-              <li>
-                <strong>Emisión Térmica:</strong> Al confirmar, el sistema registra los 10 registros en PostgreSQL y lanza la impresión térmica en impresoras Zebra ZPL o formato Web directo.
+                <strong>Etiquetas Térmicas Zebra:</strong> Cada etiqueta impresa incluye el Número de Lote común, su Unidad de Embalaje individual (ej. <code>0001</code>), cantidad unitaria, operador, máquina y su código QR de verificación pública.
               </li>
             </ol>
           </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 3: PRODUCCIÓN Y SÁBANA */}
+        {/* SECCIÓN 4: PRODUCCIÓN Y SÁBANA */}
         {/* ========================================================================= */}
         <section id="sec-produccion" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">3</span>
-              <span>Módulo 3 · Producción & Sábana de Lotes (Trazabilidad Continua)</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">4</span>
+              <span>Módulo 4 · Producción & Sábana (Jerarquía Lote ➔ Unidades de Embalaje)</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /produccion</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Constituye el corazón operativo de la trazabilidad. Permite auditar, filtrar y modificar el estado de cada tirada y de cada lote individual a medida que avanza por la cadena logística de planta.
+            La vista de Producción y Sábana agrupa los registros directamente por <strong>Lote de Producción</strong>.
           </p>
 
-          <div className="border border-black p-3 mb-3 bg-white">
-            <div className="font-bold text-[11px] mb-1.5 text-neutral-900">
-              Secuencia Oficial del Flujo de Estados Operativos:
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold">
-              <span className="px-2.5 py-1 rounded bg-[#15803D] text-white">1. Producción</span>
-              <span>➔</span>
-              <span className="px-2.5 py-1 rounded bg-[#1D4ED8] text-white">2. Almacenaje</span>
-              <span>➔</span>
-              <span className="px-2.5 py-1 rounded bg-[#6D28D9] text-white">3. Despacho</span>
-              <span>➔</span>
-              <span className="px-2.5 py-1 rounded bg-[#059669] text-white">4. Liberado (Calidad)</span>
-              <span>|</span>
-              <span className="px-2.5 py-1 rounded bg-[#DC2626] text-white">5. Retenido (Alerta)</span>
-            </div>
-          </div>
-
-          <div className="space-y-2 text-[10.5px] text-neutral-700">
+          <div className="space-y-2 text-[10.5px] text-neutral-700 mb-3">
             <p>
-              • <strong>Filtros Temporales Inteligentes:</strong> La sábana se inicializa de forma predeterminada con el rango del mes en curso (desde el 1° del mes hasta el día actual), optimizando el rendimiento y mostrando siempre los lotes vigentes, con la opción de restaurar el rango con el botón <em>"Mes en curso"</em>.
+              • <strong>Agrupación por Lote Principal:</strong> La tabla principal lista los lotes producidos, mostrando fecha, máquina, turno, artículo y total de unidades de embalaje contenidas.
             </p>
             <p>
-              • <strong>Expansión de la Sábana:</strong> Al hacer clic sobre cualquier fila de código interno, se despliega la sábana interna mostrando los 10 lotes hijos, su peso registrado, operador, estado actual, botón de reimpresión de ticket y acceso al historial inmutable.
+              • <strong>Despliegue de Unidades de Embalaje:</strong> Al presionar sobre un lote, se expande la sub-tabla con cada una de las unidades de embalaje (<code>0001</code>, <code>0002</code>...).
             </p>
             <p>
-              • <strong>Cambio de Estado Masivo o Individual:</strong> Se puede cambiar el estado de toda la tirada en bloque o de un lote específico (por ejemplo, retener un bidón con defecto de espesor sin frenar el resto del pallet). Cada cambio exige observaciones y queda registrado en la bitácora con usuario, fecha y hora UTC.
+              • <strong>Gestión Individual de Estados:</strong> Cada unidad de embalaje posee su estado operativo independiente (<em>Producción</em>, <em>Almacenaje</em>, <em>Despacho</em>, <em>Liberado</em> o <em>Retenido</em>). Si una unidad sufre un incidente de calidad, se puede marcar como Retenida sin afectar al resto de unidades del lote.
             </p>
           </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 4: CERTIFICADOS DE CALIDAD */}
+        {/* SECCIÓN 5: CERTIFICADOS DE CALIDAD */}
         {/* ========================================================================= */}
         <section id="sec-certificados" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">4</span>
-              <span>Módulo 4 · Certificados de Calidad R-CAL-07</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">5</span>
+              <span>Módulo 5 · Certificados de Calidad R-CAL-07</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /certificados</span>
           </div>
 
-          <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Módulo normativo reservado para la emisión de los certificados oficiales de conformidad técnica e inocuidad alimentaria que acompañan a cada despacho comercial.
-          </p>
-
           <div className="p-3 bg-amber-50 border border-amber-300 rounded text-[10.5px] text-amber-900 mb-3 space-y-1.5">
-            <strong className="block mb-1 text-amber-950 font-bold uppercase tracking-wide">REGLA DE NEGOCIO CRÍTICA DE CALIDAD & BLOQUEO PREVENTIVO:</strong>
+            <strong className="block mb-1 text-amber-950 font-bold uppercase tracking-wide">REGLAS NORMATIVAS DE EMISIÓN DE CERTIFICADOS:</strong>
             <p>
-              1. <strong>Elegibilidad Operativa:</strong> Únicamente los lotes en estado <strong>"Despacho"</strong> o <strong>"Liberado"</strong> son elegibles para emitir certificados R-CAL-07. Lotes en <em>Producción</em>, <em>Almacenaje</em> o <em>Retenido</em> están estrictamente bloqueados por el sistema.
+              1. <strong>Filtro Exclusivo Despacho y Liberado:</strong> En este módulo solo se cargan lotes que posean unidades en estado <strong>Despacho</strong> o <strong>Liberado</strong>.
             </p>
             <p>
-              2. <strong>Campos Obligatorios Ineludibles:</strong> No es posible imprimir ni emitir un certificado si alguno de los siguientes 5 campos se encuentra vacío: <strong>Nombre del Cliente</strong>, <strong>N° de Despacho</strong>, <strong>N° de Factura</strong>, <strong>Responsable de Aprobación</strong> y <strong>Cargo / Departamento</strong>.
+              2. <strong>Selección de Unidad de Embalaje:</strong> Al pinchar un lote, se muestran sus unidades de embalaje habilitadas para seleccionar cuál certificar.
             </p>
             <p>
-              3. <strong>Valores Vacíos por Defecto:</strong> Para salvaguardar la veracidad legal y técnica del documento, el sistema inicializa todos estos campos vacíos por defecto, prohibiendo precargas automáticas no auditadas.
-            </p>
-          </div>
-
-          <div className="space-y-1.5 text-[10.5px] text-neutral-700">
-            <p>
-              • <strong>Validación en Tiempo Real:</strong> El botón <em>"Imprimir / PDF"</em> permanece deshabilitado hasta que se guarden los 5 metadatos obligatorios en la base de datos de producción.
+              3. <strong>Remoción de Código Interno:</strong> Conforme al nuevo estándar de aseguramiento de calidad, el <em>código interno</em> ha sido eliminado de la interfaz de certificados y de la tabla técnica del documento impreso R-CAL-07 (mostrando únicamente Item, Artículo, Lote, Unid. Embalaje, Material, Color Bidón, Color Asa, Cantidad y Aprobación A/R).
             </p>
             <p>
-              • <strong>Estandarización del Documento:</strong> Diseño corporativo formal con código oficial R-CAL-07, declaraciones de conformidad técnica Ficha Nº 0101, condiciones de almacenamiento hasta 18 meses y firma digital de jefatura.
+              4. <strong>5 Campos Obligatorios:</strong> Se mantiene el bloqueo estricto que exige completar Cliente, N° Despacho, N° Factura, Responsable y Cargo antes de imprimir.
             </p>
           </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 5: CONSULTA PÚBLICA QR */}
+        {/* SECCIÓN 6: CONSULTA PÚBLICA QR */}
         {/* ========================================================================= */}
         <section id="sec-qr" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">5</span>
-              <span>Módulo 5 · Consulta Pública de Trazabilidad (Escaneo QR)</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">6</span>
+              <span>Módulo 6 · Consulta Pública de Trazabilidad (Escaneo QR)</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /trazabilidad/:uid</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Permite a clientes, operadores logísticos, recicladores finales y fiscalizadores de la Superintendencia del Medio Ambiente verificar la autenticidad del envase escaneando directamente con su smartphone el código QR de la etiqueta Zebra.
+            Permite a clientes finales, transportistas y auditores verificar la trazabilidad y validez de la unidad de embalaje escaneando el código QR de la etiqueta sin necesidad de autenticación.
           </p>
-
-          <div className="border border-neutral-200 p-2.5 rounded bg-white text-[10px] space-y-1 text-neutral-700">
-            <p>• <strong>Acceso Público Seguro:</strong> No requiere usuario ni contraseña; consulta de forma segura un endpoint de solo lectura (<code>/api/public/trazabilidad/:uid</code>).</p>
-            <p>• <strong>Ficha de Origen:</strong> Expone fecha de fabricación, máquina, turno, resina empleada, porcentaje de PCR, estado del lote y certificación de conformidad.</p>
-          </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 6: CONFIGURACIÓN GLOBAL */}
+        {/* SECCIÓN 7: CONFIGURACIÓN GLOBAL */}
         {/* ========================================================================= */}
         <section id="sec-config" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">6</span>
-              <span>Módulo 6 · Configuración, Roles (RBAC) & Auditoría de Logins</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">7</span>
+              <span>Módulo 7 · Configuración, Roles (RBAC) & Auditoría de Logins</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /configuracion</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Exclusivo para el rol Administrador del sistema. Centraliza las políticas globales de seguridad operacional, control de accesos por rol y trazabilidad forense de inicios de sesión en AWS RDS.
+            Administración de políticas de inactividad de sesión (5 a 480 minutos), gestión de matriz RBAC de roles y visor de auditoría forense de inicios de sesión en AWS RDS.
           </p>
-
-          <div className="space-y-3 text-[10.5px] text-neutral-700">
-            {/* 1. Inactividad de sesión */}
-            <div className="border border-neutral-300 p-3 rounded bg-neutral-50 space-y-1.5">
-              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#15803D]" />
-                <span>1. Control de Inactividad de Sesión:</span>
-              </div>
-              <p className="text-justify">
-                Previene que terminales de planta o estaciones de trabajo queden abiertas sin supervisión. El administrador puede parametrizar el tiempo de expiración entre <strong>5 y 480 minutos</strong> (con preajustes recomendados de 15 min para planta compartida, 30 min estándar, 60 min supervisores y 120 min administración).
-              </p>
-              <p className="text-justify">
-                Un detector global monitorea actividad de teclado, ratón y toques. Cuando resta <strong>1 minuto</strong> para el cierre, despliega un aviso modal en pantalla con cuenta regresiva en segundos, permitiendo extender la sesión o cerrarla de manera segura.
-              </p>
-            </div>
-
-            {/* 2. Administrador de Roles y Módulos */}
-            <div className="border border-neutral-300 p-3 rounded bg-white space-y-1.5">
-              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#15803D]" />
-                <span>2. Administrador de Roles & Módulos (RBAC):</span>
-              </div>
-              <p className="text-justify">
-                Permite crear nuevos perfiles operativos o desactivar temporalmente roles existentes. A través de una matriz visual de casillas de verificación, se pueden asignar o desasignar módulos del sistema (menús de navegación) de forma granular a cada rol.
-              </p>
-              <div className="p-2 bg-amber-50 border border-amber-200 rounded text-[9.5px] text-amber-900 font-medium">
-                <strong>Regla de Integridad Estricta:</strong> Por política inviolable de ciberseguridad, el rol <em>Administrador</em> nunca puede ser desactivado ni se le puede desasignar el módulo <em>Configuración</em>, garantizando que el sistema jamás quede inaccesible para la gobernanza TI.
-              </div>
-            </div>
-
-            {/* 3. Auditoría de Inicios de Sesión */}
-            <div className="border border-neutral-300 p-3 rounded bg-neutral-50 space-y-1.5">
-              <div className="font-bold text-neutral-900 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-[#15803D]" />
-                <span>3. Auditoría Forense de Inicios de Sesión:</span>
-              </div>
-              <p className="text-justify">
-                Registra cronológicamente cada intento de ingreso a la plataforma, identificando si fue <strong>exitoso</strong> o <strong>erróneo</strong>. Almacena en base de datos la dirección IP del cliente, fecha y hora local chilena, correo consultado, usuario vinculado y el motivo específico en caso de fallo (<em>"Usuario no encontrado"</em>, <em>"Contraseña incorrecta"</em>, <em>"Cuenta desactivada"</em> o <em>"Rol desactivado"</em>).
-              </p>
-            </div>
-          </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 7: USUARIOS Y ROLES */}
+        {/* SECCIÓN 8: USUARIOS Y ROLES */}
         {/* ========================================================================= */}
         <section id="sec-usuarios" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">7</span>
-              <span>Módulo 7 · Administración de Usuarios & Matriz RBAC</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">8</span>
+              <span>Módulo 8 · Administración de Usuarios & Permisos</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /usuarios</span>
           </div>
@@ -440,11 +368,11 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <tr className="bg-neutral-100 border-b border-black font-bold">
                   <th className="border-r border-black p-1.5">Rol</th>
                   <th className="border-r border-black p-1.5">Dashboard</th>
+                  <th className="border-r border-black p-1.5">Códigos SAP</th>
                   <th className="border-r border-black p-1.5">Iniciar Prod.</th>
                   <th className="border-r border-black p-1.5">Sábana & Lotes</th>
                   <th className="border-r border-black p-1.5">Certificados</th>
-                  <th className="border-r border-black p-1.5">Configuración</th>
-                  <th className="p-1.5">Usuarios</th>
+                  <th className="p-1.5">Configuración</th>
                 </tr>
               </thead>
               <tbody>
@@ -460,18 +388,18 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <tr className="border-b border-neutral-200">
                   <td className="border-r border-black p-1.5 font-bold text-left px-2">Jefatura</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
+                  <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Gestión</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
-                  <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Emitir / Auditar</td>
-                  <td className="border-r border-black p-1.5 text-neutral-400">Sin acceso</td>
+                  <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Emitir</td>
                   <td className="p-1.5 text-neutral-400">Sin acceso</td>
                 </tr>
                 <tr>
                   <td className="border-r border-black p-1.5 font-bold text-left px-2">Colaborador / Planta</td>
                   <td className="border-r border-black p-1.5 text-neutral-600">Visualizar</td>
+                  <td className="border-r border-black p-1.5 text-neutral-600">Consulta</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Registrar</td>
                   <td className="border-r border-black p-1.5 text-neutral-600">Consulta</td>
-                  <td className="border-r border-black p-1.5 text-neutral-400">Sin acceso</td>
                   <td className="border-r border-black p-1.5 text-neutral-400">Sin acceso</td>
                   <td className="p-1.5 text-neutral-400">Sin acceso</td>
                 </tr>
@@ -481,13 +409,13 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 8: PREGUNTAS FRECUENTES (FAQ) Y CONTINGENCIAS */}
+        {/* SECCIÓN 9: PREGUNTAS FRECUENTES (FAQ) Y CONTINGENCIAS */}
         {/* ========================================================================= */}
         <section id="sec-faq" className="mb-6 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">8</span>
-              <span>Sección 8 · Preguntas Frecuentes (FAQ) & Protocolos de Contingencia</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">9</span>
+              <span>Sección 9 · Preguntas Frecuentes (FAQ) & Protocolos de Contingencia</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Soporte Técnico</span>
           </div>
@@ -495,37 +423,37 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           <div className="space-y-3 text-[10.5px]">
             <div className="border border-neutral-300 p-2.5 rounded bg-white">
               <div className="font-bold text-neutral-900 mb-1">
-                P1: ¿Por qué no puedo emitir el certificado de un lote recién producido?
+                P1: ¿Por qué en una tirada de 10 paquetes todos tienen el mismo lote?
               </div>
               <p className="text-neutral-700 text-justify">
-                <strong>Respuesta:</strong> Por política estricta de calidad, un lote no puede certificarse mientras esté en estado <em>Producción</em> o <em>Almacenaje</em>. Debe avanzar primero a <strong>Despacho</strong> o ser evaluado e inspeccionado por el área de Aseguramiento de Calidad para pasar a <strong>Liberado</strong>.
+                <strong>Respuesta:</strong> A partir de la versión v3.0, el sistema asigna un solo número de Lote para la tirada completa de producción. La distinción entre cada paquete o pallet se realiza mediante la <strong>Unidad de Embalaje</strong> numerada correlativamente (<code>0001</code> a <code>0010</code>).
               </p>
             </div>
 
             <div className="border border-neutral-300 p-2.5 rounded bg-white">
               <div className="font-bold text-neutral-900 mb-1">
-                P2: ¿Cómo proceder si un bidón sale con defecto durante la tirada?
+                P2: ¿Por qué ya no aparece el "Código Interno" en el Certificado R-CAL-07?
               </div>
               <p className="text-neutral-700 text-justify">
-                <strong>Respuesta:</strong> Ingrese a <em>Producción & Sábana</em>, localice el código interno de la tirada y despliegue los lotes. Busque el lote específico afectado, presione el botón de estado y cámbielo a <strong>Retenido</strong> indicando en las notas el motivo (ej. <em>"Falla de espesor en asa, retenido para molienda interna"</em>). El resto de los 9 lotes continuará su ciclo normal.
+                <strong>Respuesta:</strong> Por directriz técnica de Calidad, el código interno es un identificador de uso exclusivo de planta que no debe ser expuesto al cliente final. El documento oficial de calidad se rige exclusivamente por el Artículo, Número de Lote y Unidad de Embalaje.
               </p>
             </div>
 
             <div className="border border-neutral-300 p-2.5 rounded bg-white">
               <div className="font-bold text-neutral-900 mb-1">
-                P3: ¿Qué hacer si la impresora Zebra se queda sin etiquetas o se traba?
+                P3: ¿Qué lotes aparecen disponibles en el módulo de Certificados?
               </div>
               <p className="text-neutral-700 text-justify">
-                <strong>Respuesta:</strong> No vuelva a crear la tirada para evitar duplicar códigos internos. Una vez resuelto el problema mecánico de la impresora, abra la sábana de la tirada creada y presione el icono de impresora en el lote que necesite reimprimir.
+                <strong>Respuesta:</strong> Únicamente aquellos lotes cuyas unidades de embalaje se encuentren en estado <strong>Despacho</strong> o <strong>Liberado</strong>. Al hacer clic sobre el lote, se desplegarán las unidades correspondientes para seleccionar cuál emitir.
               </p>
             </div>
 
             <div className="border border-neutral-300 p-2.5 rounded bg-white">
               <div className="font-bold text-neutral-900 mb-1">
-                P4: ¿Por qué se cerró mi sesión mientras estaba en la línea de soplado?
+                P4: ¿Cómo agrego un nuevo artículo al catálogo para no tener que escribirlo siempre?
               </div>
               <p className="text-neutral-700 text-justify">
-                <strong>Respuesta:</strong> Por protocolo de ciberseguridad, el sistema cuenta con un temporizador de inactividad configurable (por defecto 30 minutos). Si transcurre el tiempo sin interacción, la sesión se cierra automáticamente. Para evitarlo, preste atención a la advertencia sonora y visual que se muestra 60 segundos antes del vencimiento y pulse <em>"Extender Sesión"</em>.
+                <strong>Respuesta:</strong> Ingrese al módulo <em>"Códigos Internos"</em> desde el menú lateral y pulse el botón <em>"+ Nuevo Código Interno"</em>. Complete el Código SAP, Código Interno, nombre del Artículo, Materia, Colores y Cantidad estándar. Quedará disponible de inmediato en el formulario de Iniciar Producción.
               </p>
             </div>
           </div>
