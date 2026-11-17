@@ -4,7 +4,8 @@ import jsQR from 'jsqr';
 import { 
   Scan, QrCode, Camera, CheckCircle2, AlertTriangle, ArrowRight, 
   Clock, RefreshCw, Package, User, Tag, Calendar, 
-  RotateCcw, FileText, Check, X, Sparkles, AlertCircle, Eye
+  RotateCcw, FileText, Check, X, Sparkles, AlertCircle, Eye,
+  ArrowDownCircle, ShieldAlert, History, Volume2
 } from 'lucide-react';
 import { api, PublicTrazabilidadData, Estado } from '../api/client';
 
@@ -18,10 +19,25 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   'Liberado': ['Retenido']
 };
 
+interface ScanLogEntry {
+  id: string;
+  lote: number;
+  unidad_embalaje: string;
+  articulo: string;
+  estado_anterior: string;
+  estado_nuevo?: string;
+  exitoso: boolean;
+  motivo_rechazo?: string;
+  hora: Date;
+}
+
 export const GestionEstadosView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'pistola' | 'camara'>('pistola');
   const [estados, setEstados] = useState<Estado[]>([]);
   const [loadingEstados, setLoadingEstados] = useState(true);
+
+  // Modo de operación: 'inspect' o el UID de un estado destino preseleccionado
+  const [targetStateUid, setTargetStateUid] = useState<string>(''); // Si está vacío o un UID específico
 
   // Input de escaneo
   const [scanInput, setScanInput] = useState('');
@@ -33,6 +49,9 @@ export const GestionEstadosView: React.FC = () => {
   const [unitData, setUnitData] = useState<PublicTrazabilidadData | null>(null);
   const [observaciones, setObservaciones] = useState('');
   const [updatingState, setUpdatingState] = useState(false);
+
+  // Registro histórico de la sesión de escaneo continuo
+  const [sessionLogs, setSessionLogs] = useState<ScanLogEntry[]>([]);
 
   // Refs de Pistola
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,6 +72,11 @@ export const GestionEstadosView: React.FC = () => {
         setLoadingEstados(true);
         const res = await api.getEstados();
         setEstados(res || []);
+        // Seleccionar por defecto "Almacenaje" si existe, ya que es el salto natural tras Producción
+        const almacenaje = (res || []).find((e) => e.nombre === 'Almacenaje');
+        if (almacenaje) {
+          setTargetStateUid(almacenaje.uid);
+        }
       } catch (err: any) {
         console.error('Error al cargar lista de estados:', err);
       } finally {
@@ -67,7 +91,7 @@ export const GestionEstadosView: React.FC = () => {
     if (activeTab === 'pistola' && inputRef.current && !searching && !updatingState) {
       inputRef.current.focus();
     }
-  }, [activeTab, unitData, searching, updatingState]);
+  }, [activeTab, searching, updatingState, successMessage, errorMessage]);
 
   // Manejo de la cámara cuando cambia la pestaña
   useEffect(() => {
@@ -81,8 +105,8 @@ export const GestionEstadosView: React.FC = () => {
     };
   }, [activeTab]);
 
-  // Audio feedback al escanear correctamente
-  const playBeep = () => {
+  // Audio feedback táctil/sonoro
+  const playBeep = (type: 'success' | 'error' = 'success') => {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtx) {
@@ -91,15 +115,28 @@ export const GestionEstadosView: React.FC = () => {
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime); // 880 Hz (La5)
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.15);
+
+        if (type === 'success') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime); // 880 Hz
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.15);
+          navigator.vibrate?.(100);
+        } else {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(300, ctx.currentTime);
+          osc.frequency.setValueAtTime(200, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.35);
+          navigator.vibrate?.([150, 80, 150]);
+        }
       }
     } catch {
-      // Ignorar si el navegador bloquea audio sin interacción previa
+      // Ignorar restricciones de audio del navegador
     }
   };
 
@@ -107,17 +144,17 @@ export const GestionEstadosView: React.FC = () => {
   const extractUid = (input: string): string | null => {
     if (!input) return null;
     const clean = input.trim();
-    // Regex estándar para UUID v4 / v1
     const match = clean.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
     if (match) return match[0];
     return null;
   };
 
-  // Consultar unidad por UUID
-  const handleLookup = async (rawCode: string) => {
+  // Procesar escaneo (Modo Automático Preseleccionado vs Modo Inspección)
+  const handleProcessScan = async (rawCode: string) => {
     const uid = extractUid(rawCode);
     if (!uid) {
-      setErrorMessage(`El código escaneado no contiene un UUID válido. Formato recibido: "${rawCode.slice(0, 40)}..."`);
+      setErrorMessage(`El código escaneado no contiene un formato de UUID válido.`);
+      playBeep('error');
       return;
     }
 
@@ -126,16 +163,100 @@ export const GestionEstadosView: React.FC = () => {
     setSuccessMessage(null);
 
     try {
-      playBeep();
-      const data = await api.getPublicTrazabilidad(uid);
-      setUnitData(data);
-      setObservaciones('');
+      // 1. Consultar estado y datos de la unidad
+      const unit = await api.getPublicTrazabilidad(uid);
+      setUnitData(unit);
+
+      // 2. Si no hay estado preseleccionado o es modo inspección ('inspect'), solo mostrar la ficha
+      if (!targetStateUid || targetStateUid === 'inspect') {
+        playBeep('success');
+        setSuccessMessage(`Unidad Lote #${unit.lote} - Emb. ${unit.unidad_embalaje} cargada en modo inspección.`);
+        setScanInput('');
+        setIsPausedScanning(true);
+        return;
+      }
+
+      // 3. Obtener el estado objetivo seleccionado
+      const targetState = estados.find((e) => e.uid === targetStateUid);
+      if (!targetState) {
+        throw new Error('Estado destino seleccionado no es válido en el sistema.');
+      }
+
+      // 4. Validar la regla de flujo obligatorio:
+      // Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido
+      const allowedNext = VALID_TRANSITIONS[unit.estado_actual] || [];
+
+      if (!allowedNext.includes(targetState.nombre)) {
+        // ERROR: La transición viola la regla de negocio
+        const errorDetail = `La unidad se encuentra en estado "${unit.estado_actual}" y no puede pasar a "${targetState.nombre}". Regla de flujo obligatorio: Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido.`;
+        setErrorMessage(`✕ Transición Rechazada: ${errorDetail}`);
+        playBeep('error');
+
+        // Registrar intento fallido en el historial de sesión
+        setSessionLogs((prev) => [
+          {
+            id: uid,
+            lote: unit.lote,
+            unidad_embalaje: unit.unidad_embalaje,
+            articulo: unit.articulo,
+            estado_anterior: unit.estado_actual,
+            estado_nuevo: targetState.nombre,
+            exitoso: false,
+            motivo_rechazo: errorDetail,
+            hora: new Date(),
+          },
+          ...prev.slice(0, 49),
+        ]);
+
+        setScanInput('');
+        return;
+      }
+
+      // 5. TRANSICIÓN VÁLIDA: Aplicar cambio de estado de inmediato
+      await api.updateSingleLotState(unit.uid, {
+        nuevo_estado_uid: targetState.uid,
+        observaciones: observaciones.trim() || `Transición automática a ${targetState.nombre} vía escáner QR`,
+      });
+
+      playBeep('success');
+      setSuccessMessage(
+        `✓ Envase Lote #${unit.lote} - Emb. ${unit.unidad_embalaje} (${unit.articulo}): Pasó exitosamente al estado "${targetState.nombre}".`
+      );
+
+      // Registrar éxito en el historial de sesión
+      setSessionLogs((prev) => [
+        {
+          id: uid,
+          lote: unit.lote,
+          unidad_embalaje: unit.unidad_embalaje,
+          articulo: unit.articulo,
+          estado_anterior: unit.estado_actual,
+          estado_nuevo: targetState.nombre,
+          exitoso: true,
+          hora: new Date(),
+        },
+        ...prev.slice(0, 49),
+      ]);
+
+      // Refrescar datos locales de la unidad
+      const refreshed = await api.getPublicTrazabilidad(unit.uid);
+      setUnitData(refreshed);
       setScanInput('');
-      setIsPausedScanning(true);
+
+      // En modo cámara, pausar brevemente y reanudar tras 1.2 segundos para flujo continuo
+      if (activeTab === 'camara') {
+        setIsPausedScanning(true);
+        setTimeout(() => {
+          setIsPausedScanning(false);
+          if (cameraActive) {
+            animationFrameRef.current = requestAnimationFrame(tickScan);
+          }
+        }, 1200);
+      }
     } catch (err: any) {
-      console.error('Error al consultar unidad:', err);
-      setErrorMessage(err.message || 'No se encontró ninguna unidad o lote con ese identificador.');
-      setUnitData(null);
+      console.error('Error al procesar escaneo:', err);
+      setErrorMessage(err.message || 'Error al comunicarse con el servidor o lote no encontrado.');
+      playBeep('error');
     } finally {
       setSearching(false);
     }
@@ -145,7 +266,7 @@ export const GestionEstadosView: React.FC = () => {
   const handlePistolaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!scanInput.trim()) return;
-    handleLookup(scanInput);
+    handleProcessScan(scanInput);
   };
 
   // -------------------------------------------------------------
@@ -158,7 +279,6 @@ export const GestionEstadosView: React.FC = () => {
         throw new Error('La cámara no está disponible en este dispositivo o navegador.');
       }
 
-      // Detener cualquier stream anterior
       stopCamera();
 
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -218,8 +338,8 @@ export const GestionEstadosView: React.FC = () => {
           const raw = code.data;
           const foundUid = extractUid(raw);
           if (foundUid) {
-            handleLookup(raw);
-            return; // Detiene el loop de este tick
+            handleProcessScan(raw);
+            return;
           }
         }
       }
@@ -240,10 +360,8 @@ export const GestionEstadosView: React.FC = () => {
     }
   };
 
-  // -------------------------------------------------------------
-  // Transición de Estado
-  // -------------------------------------------------------------
-  const handleTransitionState = async (targetEstado: Estado) => {
+  // Transición manual desde la ficha
+  const handleManualTransition = async (targetEstado: Estado) => {
     if (!unitData) return;
 
     setUpdatingState(true);
@@ -256,25 +374,36 @@ export const GestionEstadosView: React.FC = () => {
         observaciones: observaciones.trim() || undefined,
       });
 
-      setSuccessMessage(
-        `Estado actualizado exitosamente a "${targetEstado.nombre}".`
-      );
+      playBeep('success');
+      setSuccessMessage(`Estado actualizado exitosamente a "${targetEstado.nombre}".`);
 
-      // Recargar datos actualizados
+      setSessionLogs((prev) => [
+        {
+          id: unitData.uid,
+          lote: unitData.lote,
+          unidad_embalaje: unitData.unidad_embalaje,
+          articulo: unitData.articulo,
+          estado_anterior: unitData.estado_actual,
+          estado_nuevo: targetEstado.nombre,
+          exitoso: true,
+          hora: new Date(),
+        },
+        ...prev.slice(0, 49),
+      ]);
+
       const refreshed = await api.getPublicTrazabilidad(unitData.uid);
       setUnitData(refreshed);
       setObservaciones('');
     } catch (err: any) {
       console.error('Error al actualizar estado:', err);
       setErrorMessage(err.message || 'Error al procesar la transición de estado.');
+      playBeep('error');
     } finally {
       setUpdatingState(false);
     }
   };
 
-  // Estados permitidos según la máquina de estados
-  const allowedNextStateNames = unitData ? VALID_TRANSITIONS[unitData.estado_actual] || [] : [];
-  const allowedNextEstados = estados.filter((est) => allowedNextStateNames.includes(est.nombre));
+  const selectedTargetObj = estados.find((e) => e.uid === targetStateUid);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
@@ -290,7 +419,7 @@ export const GestionEstadosView: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs text-neutral-500 mt-1">
-            Control de flujo obligatorio de planta: Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido.
+            Control de flujo obligatorio de planta: <code>Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido</code>.
           </p>
         </div>
 
@@ -301,12 +430,104 @@ export const GestionEstadosView: React.FC = () => {
         </div>
       </div>
 
+      {/* ========================================================================= */}
+      {/* 1. SELECTOR PREVIO DE ESTADO DESTINO (ACCIÓN AL ESCANEAR) */}
+      {/* ========================================================================= */}
+      <div className="bg-white rounded-2xl border-2 border-[#15803D]/25 p-5 shadow-sm space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span className="text-[10px] font-bold text-[#15803D] uppercase tracking-wider block">
+              Paso 1 · Preselección de Acción Operativa
+            </span>
+            <h3 className="text-sm font-bold text-[#0D3B22] flex items-center gap-1.5">
+              <span>Estado Destino al Pistolear / Escanear</span>
+              <span className="text-[11px] font-normal text-neutral-500">(Modo Continuo de Planta)</span>
+            </h3>
+          </div>
+
+          {selectedTargetObj ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-white shadow-2xs self-start sm:self-auto" style={{ backgroundColor: selectedTargetObj.color }}>
+              <ArrowDownCircle className="w-3.5 h-3.5" />
+              <span>Modo Activo: Mover a {selectedTargetObj.nombre}</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-neutral-100 text-neutral-700 border border-neutral-300 self-start sm:self-auto">
+              <Eye className="w-3.5 h-3.5" />
+              <span>Modo Activo: Solo Inspeccionar / Consultar</span>
+            </div>
+          )}
+        </div>
+
+        <p className="text-xs text-neutral-600">
+          Selecciona a qué etapa pasarán los envases leídos. Al escanear con la pistola o cámara, el sistema validará la regla de negocio y moverá el envase automáticamente:
+        </p>
+
+        {/* Botones de Selección Rápida de Estado Destino */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1">
+          {estados.map((est) => {
+            const isSelected = targetStateUid === est.uid;
+            return (
+              <button
+                key={est.uid}
+                type="button"
+                onClick={() => setTargetStateUid(est.uid)}
+                className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer ${
+                  isSelected
+                    ? 'border-2 text-white shadow-sm ring-2 ring-offset-1'
+                    : 'border-[#E5ECE6] bg-neutral-50/80 hover:bg-neutral-100/80 text-neutral-800'
+                }`}
+                style={isSelected ? { backgroundColor: est.color, borderColor: est.color } : {}}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold">{est.nombre}</span>
+                  {isSelected ? (
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  ) : (
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: est.color }} />
+                  )}
+                </div>
+                <span className={`text-[10px] ${isSelected ? 'text-white/90' : 'text-neutral-500'}`}>
+                  {est.nombre === 'Almacenaje' && 'Recepción en bodega'}
+                  {est.nombre === 'Despacho' && 'Preparación de carga'}
+                  {est.nombre === 'Liberado' && 'Aprobación de calidad'}
+                  {est.nombre === 'Retenido' && 'Apartado / Cuarentena'}
+                  {est.nombre === 'Producción' && 'Retorno a línea'}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Opción de Solo Consulta */}
+          <button
+            type="button"
+            onClick={() => setTargetStateUid('inspect')}
+            className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 cursor-pointer ${
+              targetStateUid === 'inspect'
+                ? 'border-2 border-neutral-700 bg-neutral-800 text-white shadow-sm ring-2 ring-offset-1'
+                : 'border-[#E5ECE6] bg-neutral-50/80 hover:bg-neutral-100/80 text-neutral-800'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold">Solo Inspección</span>
+              {targetStateUid === 'inspect' ? (
+                <Check className="w-4 h-4 stroke-[3]" />
+              ) : (
+                <Eye className="w-3.5 h-3.5 text-neutral-400" />
+              )}
+            </div>
+            <span className={`text-[10px] ${targetStateUid === 'inspect' ? 'text-white/90' : 'text-neutral-500'}`}>
+              Consultar sin modificar estado
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Tabs Selector: Pistola vs Cámara */}
       <div className="bg-white p-1.5 rounded-2xl border border-[#E5ECE6] shadow-sm flex items-center gap-2">
         <button
           type="button"
           onClick={() => setActiveTab('pistola')}
-          className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 transition-all ${
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
             activeTab === 'pistola'
               ? 'bg-[#0D3B22] text-white shadow-sm'
               : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
@@ -319,7 +540,7 @@ export const GestionEstadosView: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('camara')}
-          className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 transition-all ${
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
             activeTab === 'camara'
               ? 'bg-[#0D3B22] text-white shadow-sm'
               : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
@@ -330,44 +551,46 @@ export const GestionEstadosView: React.FC = () => {
         </button>
       </div>
 
-      {/* Mensajes de Alerta */}
+      {/* ========================================================================= */}
+      {/* MENSAJES DE ALERTA: SUCCESS (ÉXITO) Y ERROR (RECHAZO CON EXPLICACIÓN) */}
+      {/* ========================================================================= */}
       <AnimatePresence>
-        {errorMessage && (
+        {successMessage && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 text-red-700 text-xs"
+            className="p-4 rounded-xl bg-emerald-50 border-2 border-emerald-400 flex items-start gap-3 text-emerald-900 text-xs shadow-xs"
           >
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600" />
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5 text-[#15803D]" />
             <div className="flex-1">
-              <p className="font-semibold">Atención</p>
-              <p className="mt-0.5">{errorMessage}</p>
+              <p className="font-bold text-sm text-[#0D3B22]">Transición Exitosa</p>
+              <p className="mt-0.5 text-emerald-800 leading-relaxed font-medium">{successMessage}</p>
             </div>
             <button
-              onClick={() => setErrorMessage(null)}
-              className="text-red-400 hover:text-red-700"
+              onClick={() => setSuccessMessage(null)}
+              className="text-emerald-500 hover:text-emerald-800 p-1 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </motion.div>
         )}
 
-        {successMessage && (
+        {errorMessage && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-3 text-emerald-800 text-xs"
+            className="p-4 rounded-xl bg-red-50 border-2 border-red-400 flex items-start gap-3 text-red-900 text-xs shadow-xs"
           >
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5 text-[#15803D]" />
+            <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600" />
             <div className="flex-1">
-              <p className="font-semibold">Operación Exitosa</p>
-              <p className="mt-0.5">{successMessage}</p>
+              <p className="font-bold text-sm text-red-800">Transición Bloqueada por Regla de Negocio</p>
+              <p className="mt-0.5 text-red-700 leading-relaxed font-medium">{errorMessage}</p>
             </div>
             <button
-              onClick={() => setSuccessMessage(null)}
-              className="text-emerald-400 hover:text-emerald-700"
+              onClick={() => setErrorMessage(null)}
+              className="text-red-400 hover:text-red-700 p-1 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -375,7 +598,9 @@ export const GestionEstadosView: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ÁREA DE ENTRADA / ESCANEO */}
+      {/* ========================================================================= */}
+      {/* 2. ÁREA DE ENTRADA / ESCANEO */}
+      {/* ========================================================================= */}
       {activeTab === 'pistola' ? (
         <div className="bg-white rounded-2xl border border-[#E5ECE6] p-6 shadow-sm">
           <div className="max-w-2xl mx-auto text-center space-y-4">
@@ -387,7 +612,7 @@ export const GestionEstadosView: React.FC = () => {
                 Lector de Pistola Láser / Bluetooth
               </h2>
               <p className="text-xs text-neutral-500 mt-1">
-                Apunta al código QR del envase o ticket con la pistola. Al capturar, se procesará automáticamente.
+                Apunta al código QR del ticket Zebra. Al pistolear, el envase pasará directamente al estado seleccionado.
               </p>
             </div>
 
@@ -399,29 +624,33 @@ export const GestionEstadosView: React.FC = () => {
                 onChange={(e) => setScanInput(e.target.value)}
                 placeholder="Escanee aquí con la pistola o ingrese la URL/UUID..."
                 disabled={searching}
-                className="w-full pl-4 pr-28 py-3.5 bg-neutral-50 border-2 border-[#15803D]/30 focus:border-[#15803D] focus:bg-white rounded-xl text-sm font-mono text-neutral-800 placeholder-neutral-400 transition-all outline-none shadow-inner"
+                className="w-full pl-4 pr-28 py-3.5 bg-neutral-50 border-2 border-[#15803D]/40 focus:border-[#15803D] focus:bg-white rounded-xl text-sm font-mono text-neutral-800 placeholder-neutral-400 transition-all outline-none shadow-inner"
               />
               <button
                 type="submit"
                 disabled={searching || !scanInput.trim()}
-                className="absolute right-2 top-2 bottom-2 px-4 rounded-lg bg-[#0D3B22] text-white text-xs font-semibold hover:bg-[#15803D] disabled:opacity-40 disabled:hover:bg-[#0D3B22] transition flex items-center gap-1.5"
+                className="absolute right-2 top-2 bottom-2 px-4 rounded-lg bg-[#0D3B22] text-white text-xs font-semibold hover:bg-[#15803D] disabled:opacity-40 disabled:hover:bg-[#0D3B22] transition flex items-center gap-1.5 cursor-pointer"
               >
                 {searching ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <ArrowRight className="w-3.5 h-3.5" />
                 )}
-                <span>Buscar</span>
+                <span>Procesar</span>
               </button>
             </form>
 
-            <div className="flex items-center justify-center gap-4 text-[11px] text-neutral-400">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-neutral-400">
               <span className="flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-[#15803D]" /> Autofocus permanente
+                <Check className="w-3.5 h-3.5 text-[#15803D]" /> Autofocus permanente listo
               </span>
               <span>·</span>
               <span className="flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 text-[#15803D]" /> Soporta URL directa o UUID
+                <Check className="w-3.5 h-3.5 text-[#15803D]" /> Transición en 1 solo paso al pistolear
+              </span>
+              <span>·</span>
+              <span className="flex items-center gap-1">
+                <Check className="w-3.5 h-3.5 text-[#15803D]" /> Soporta URL o UUID plano
               </span>
             </div>
           </div>
@@ -431,10 +660,10 @@ export const GestionEstadosView: React.FC = () => {
           <div className="max-w-xl mx-auto flex flex-col items-center text-center space-y-4">
             <div>
               <h2 className="font-display font-bold text-lg text-[#0D3B22]">
-                Escáner con Cámara
+                Escáner con Cámara (Celular / Web)
               </h2>
               <p className="text-xs text-neutral-500 mt-1">
-                Enfoque el código QR del ticket Zebra para identificar la unidad.
+                Enfoque el código QR del ticket Zebra. El sistema detectará la unidad y aplicará la transición inmediatamente.
               </p>
             </div>
 
@@ -445,7 +674,7 @@ export const GestionEstadosView: React.FC = () => {
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="px-4 py-2 rounded-xl bg-[#0D3B22] text-white text-xs font-semibold hover:bg-[#15803D] transition inline-flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl bg-[#0D3B22] text-white text-xs font-semibold hover:bg-[#15803D] transition inline-flex items-center gap-2 cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Reintentar Acceso
                 </button>
@@ -466,8 +695,8 @@ export const GestionEstadosView: React.FC = () => {
                   <div className="w-12 h-12 border-b-2 border-r-2 border-[#15803D] absolute -bottom-1 -right-1" />
                   
                   {isPausedScanning && (
-                    <div className="px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-semibold backdrop-blur-sm">
-                      QR Capturado
+                    <div className="px-3 py-1.5 rounded-full bg-emerald-600/90 text-white text-xs font-bold backdrop-blur-sm animate-pulse">
+                      ¡Código QR Procesado!
                     </div>
                   )}
                 </div>
@@ -475,7 +704,7 @@ export const GestionEstadosView: React.FC = () => {
                 {searching && (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white gap-2">
                     <RefreshCw className="w-8 h-8 animate-spin text-[#15803D]" />
-                    <span className="text-xs font-semibold">Consultando unidad...</span>
+                    <span className="text-xs font-semibold">Validando y aplicando estado...</span>
                   </div>
                 )}
               </div>
@@ -485,7 +714,7 @@ export const GestionEstadosView: React.FC = () => {
               <button
                 type="button"
                 onClick={resumeScanning}
-                className="px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold transition inline-flex items-center gap-2"
+                className="px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold transition inline-flex items-center gap-2 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> Reanudar Cámara
               </button>
@@ -494,7 +723,72 @@ export const GestionEstadosView: React.FC = () => {
         </div>
       )}
 
-      {/* FICHA DE LA UNIDAD Y GESTIÓN DE ESTADO */}
+      {/* ========================================================================= */}
+      {/* 3. HISTORIAL DE LECTURAS DE LA SESIÓN EN TIEMPO REAL */}
+      {/* ========================================================================= */}
+      {sessionLogs.length > 0 && (
+        <div className="bg-white rounded-2xl border border-[#E5ECE6] p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6]">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-[#15803D]" />
+              <h3 className="font-bold text-xs text-[#0D3B22] uppercase tracking-wide">
+                Bitácora de Escaneos de la Sesión ({sessionLogs.length} envases procesados)
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSessionLogs([])}
+              className="text-[11px] text-neutral-400 hover:text-neutral-700 transition cursor-pointer"
+            >
+              Limpiar bitácora
+            </button>
+          </div>
+
+          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+            {sessionLogs.map((log, idx) => (
+              <div
+                key={log.id + idx}
+                className={`p-2.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                  log.exitoso
+                    ? 'bg-emerald-50/50 border-emerald-200 text-emerald-950'
+                    : 'bg-red-50/50 border-red-200 text-red-950'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {log.exitoso ? (
+                    <CheckCircle2 className="w-4 h-4 text-[#15803D] shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  )}
+                  <span className="font-mono font-bold">
+                    Lote #{log.lote} - Emb. {log.unidad_embalaje}
+                  </span>
+                  <span className="text-neutral-500 line-clamp-1">({log.articulo})</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px]">
+                  {log.exitoso ? (
+                    <span className="px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-[#15803D]">
+                      {log.estado_anterior} ➔ {log.estado_nuevo}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700" title={log.motivo_rechazo}>
+                      Rechazado ({log.estado_anterior})
+                    </span>
+                  )}
+                  <span className="text-neutral-400">
+                    {log.hora.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. FICHA DE DETALLES DEL ÚLTIMO ENVASE ESCANEADO */}
+      {/* ========================================================================= */}
       {unitData && (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -539,7 +833,7 @@ export const GestionEstadosView: React.FC = () => {
               <button
                 type="button"
                 onClick={resumeScanning}
-                className="p-2.5 rounded-xl border border-neutral-200 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition"
+                className="p-2.5 rounded-xl border border-neutral-200 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition cursor-pointer"
                 title="Escanear otra unidad"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -600,175 +894,58 @@ export const GestionEstadosView: React.FC = () => {
             </div>
           </div>
 
-          {/* PANEL DE TRANSICIÓN DE ESTADO */}
-          <div className="p-6 space-y-6">
-            <div>
-              <h4 className="font-display font-bold text-sm text-[#0D3B22] flex items-center gap-2">
-                <span>Transición de Flujo Obligatorio</span>
-                <span className="text-xs font-normal text-neutral-500">
-                  (Regla de negocio: Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido)
-                </span>
-              </h4>
-              <p className="text-xs text-neutral-500 mt-1">
-                Seleccione el siguiente estado reglamentario para este envase. Los estados fuera de secuencia están estrictamente bloqueados.
-              </p>
+          {/* Transiciones Manuales Alternativas */}
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-xs text-[#0D3B22] uppercase tracking-wide">
+                  Acciones Manuales Disponibles
+                </h4>
+                <p className="text-[11px] text-neutral-500">
+                  Opciones permitidas según el estado actual "{unitData.estado_actual}":
+                </p>
+              </div>
             </div>
 
-            {/* Visualización de la Cadena de Flujo */}
-            <div className="flex flex-wrap items-center gap-2 p-3 bg-neutral-50 rounded-xl border border-neutral-200 text-xs">
-              {['Producción', 'Almacenaje', 'Despacho', 'Liberado'].map((etapa, idx) => {
-                const isCurrent = unitData.estado_actual === etapa;
-                const isPassed =
-                  (etapa === 'Producción' && ['Almacenaje', 'Despacho', 'Liberado'].includes(unitData.estado_actual)) ||
-                  (etapa === 'Almacenaje' && ['Despacho', 'Liberado'].includes(unitData.estado_actual)) ||
-                  (etapa === 'Despacho' && unitData.estado_actual === 'Liberado');
-                const isNext = allowedNextStateNames.includes(etapa);
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {(VALID_TRANSITIONS[unitData.estado_actual] || []).map((destName) => {
+                const targetEst = estados.find((e) => e.nombre === destName);
+                if (!targetEst) return null;
+                const isRetenido = destName === 'Retenido';
 
                 return (
-                  <React.Fragment key={etapa}>
-                    {idx > 0 && <ArrowRight className="w-3.5 h-3.5 text-neutral-300 flex-shrink-0" />}
-                    <div
-                      className={`px-3 py-1 rounded-lg font-medium flex items-center gap-1.5 transition ${
-                        isCurrent
-                          ? 'bg-[#0D3B22] text-white font-bold shadow-xs'
-                          : isPassed
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : isNext
-                          ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse'
-                          : 'bg-neutral-200/60 text-neutral-400'
-                      }`}
-                    >
-                      {isPassed && <Check className="w-3 h-3" />}
-                      <span>{etapa}</span>
-                    </div>
-                  </React.Fragment>
+                  <button
+                    key={targetEst.uid}
+                    type="button"
+                    disabled={updatingState}
+                    onClick={() => handleManualTransition(targetEst)}
+                    className={`p-3 rounded-xl border text-left transition flex items-center justify-between cursor-pointer ${
+                      isRetenido
+                        ? 'border-red-200 bg-red-50/50 hover:bg-red-50 text-red-900'
+                        : 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 text-[#0D3B22]'
+                    } disabled:opacity-50`}
+                  >
+                    <span className="text-xs font-bold">Mover a {destName}</span>
+                    <ArrowRight className="w-4 h-4 opacity-70" />
+                  </button>
                 );
               })}
-
-              <span className="text-neutral-300">|</span>
-              <div
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  unitData.estado_actual === 'Retenido'
-                    ? 'bg-red-600 text-white font-bold shadow-xs'
-                    : allowedNextStateNames.includes('Retenido')
-                    ? 'bg-red-50 text-red-700 border border-red-200'
-                    : 'bg-neutral-100 text-neutral-400'
-                }`}
-              >
-                Retenido (Cuarentena)
-              </div>
             </div>
 
-            {/* Botones de Acción de Estado */}
-            <div className="space-y-4">
-              <span className="text-xs font-semibold text-neutral-700 block">
-                Acciones Permitidas desde "{unitData.estado_actual}":
-              </span>
-
-              {allowedNextEstados.length === 0 ? (
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-500">
-                  Esta unidad se encuentra en estado terminal o no posee transiciones adicionales permitidas en este momento.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {allowedNextEstados.map((destEstado) => {
-                    const isRetenido = destEstado.nombre === 'Retenido';
-                    return (
-                      <button
-                        key={destEstado.uid}
-                        type="button"
-                        disabled={updatingState}
-                        onClick={() => handleTransitionState(destEstado)}
-                        className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 shadow-xs ${
-                          isRetenido
-                            ? 'border-red-200 bg-red-50/50 hover:bg-red-50 text-red-900 hover:border-red-400'
-                            : 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 text-[#0D3B22] hover:border-[#15803D]'
-                        } disabled:opacity-50`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white shadow-xs"
-                            style={{ backgroundColor: destEstado.color }}
-                          >
-                            Mover a {destEstado.nombre}
-                          </span>
-                          <ArrowRight className="w-4 h-4 opacity-60" />
-                        </div>
-                        <p className="text-[11px] text-neutral-500">
-                          {isRetenido
-                            ? 'Apartar por no-conformidad o control de calidad.'
-                            : `Avanzar la unidad al estado reglamentario de ${destEstado.nombre}.`}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Observaciones del Cambio */}
-              <div className="pt-2">
-                <label className="text-xs font-semibold text-neutral-700 block mb-1">
-                  Observaciones / Justificación de Transición (Opcional)
-                </label>
-                <textarea
-                  value={observaciones}
-                  onChange={(e) => setObservaciones(e.target.value)}
-                  placeholder="Ej. Aprobado por control de calidad; Despachado según guía #1234; Apartado por defecto visual..."
-                  rows={2}
-                  disabled={updatingState}
-                  className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-800 placeholder-neutral-400 focus:bg-white focus:border-[#15803D] outline-none transition"
-                />
-              </div>
+            {/* Observaciones */}
+            <div className="pt-2">
+              <label className="text-[11px] font-semibold text-neutral-700 block mb-1">
+                Observaciones / Justificación adicional (Opcional):
+              </label>
+              <input
+                type="text"
+                value={observaciones}
+                onChange={(e) => setObservaciones(e.target.value)}
+                placeholder="Ej. Aprobado por control de calidad; Despachado según guía..."
+                disabled={updatingState}
+                className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-800 placeholder-neutral-400 focus:bg-white focus:border-[#15803D] outline-none transition"
+              />
             </div>
-
-            {/* Historial de Trazabilidad */}
-            {unitData.historial && unitData.historial.length > 0 && (
-              <div className="pt-4 border-t border-[#E5ECE6]">
-                <h5 className="font-display font-bold text-xs text-[#0D3B22] mb-3 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#15803D]" /> Historial de Cambios de Estado
-                </h5>
-                <div className="space-y-2">
-                  {unitData.historial.map((item, idx) => (
-                    <div
-                      key={item.uid || idx}
-                      className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        {item.estado_anterior && (
-                          <span className="font-semibold text-neutral-600">
-                            {item.estado_anterior.nombre} ➔
-                          </span>
-                        )}
-                        <span
-                          className="px-2 py-0.5 rounded-full text-[10px] font-bold text-white shadow-xs"
-                          style={{ backgroundColor: item.estado_nuevo?.color || '#15803D' }}
-                        >
-                          {item.estado_nuevo?.nombre}
-                        </span>
-                        {item.observaciones && (
-                          <span className="text-neutral-500 italic">
-                            — "{item.observaciones}"
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-neutral-400 sm:text-right">
-                        <span>{item.usuario_nombre || 'Sistema de Planta'}</span>
-                        <span className="mx-1">·</span>
-                        <span>
-                          {new Date(item.fecha_hora).toLocaleString('es-CL', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </motion.div>
       )}

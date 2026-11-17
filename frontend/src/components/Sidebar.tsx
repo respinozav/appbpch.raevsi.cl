@@ -88,14 +88,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
 
   // RBAC Dinámico: El rol Administrador siempre tiene acceso total.
   // Para los demás roles, se filtran según los módulos asignados en la base de datos (con fallback seguro).
-  const userModules = user?.rol?.modulos || [];
+  const userModules = user?.rol?.modulos;
   const navItems = rawNavItems.filter((item) => {
     if (isAdmin) return true;
     if (item.id === 'perfil' || item.id === 'faq') return true; // Módulos básicos siempre accesibles
-    if (userModules.length > 0) {
+    if (user?.rol && Array.isArray(userModules)) {
       return userModules.includes(item.id);
     }
-    // Fallback si modulos no se cargaron: jefatura ve operativos sin admin/config
+    // Fallback de contingencia solo si rol.modulos es nulo
     if (user?.rol?.nombre === 'Jefatura') {
       return ['dashboard', 'iniciar', 'produccion', 'gestion-estados', 'certificados', 'faq', 'perfil'].includes(item.id);
     }

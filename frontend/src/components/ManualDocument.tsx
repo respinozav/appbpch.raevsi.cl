@@ -37,7 +37,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         <div className="flex items-center gap-3">
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v3.2 Vigente</span>
+            <span>Versión v3.3 Vigente</span>
           </div>
           <button
             onClick={handlePrint}
@@ -82,7 +82,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               Código: <span className="font-bold">MAN-SGI-01</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
-              Versión: <span className="font-bold">v3.2</span>
+              Versión: <span className="font-bold">v3.3</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
               Actualización: <span className="font-bold">16-Nov-2026</span>
@@ -142,13 +142,21 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
                 <td className="p-1 text-left px-2">Materia fija automática, CRUD Operadores, turnos 1-3, rango 0001-00NN y unificación SAP.</td>
               </tr>
+              <tr className="border-b border-neutral-200">
+                <td className="border-r border-black p-1 font-mono">v3.2</td>
+                <td className="border-r border-black p-1">16-Nov-2026</td>
+                <td className="border-r border-black p-1">Tech Lead TI</td>
+                <td className="border-r border-black p-1">Control de Calidad</td>
+                <td className="border-r border-black p-1">Gerencia Operaciones</td>
+                <td className="p-1 text-left px-2">Módulo "Gestión de Estados" con flujo estricto (Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido), soporte Pistola QR y Cámara Celular/Web (jsQR).</td>
+              </tr>
               <tr className="bg-emerald-50/40">
-                <td className="border-r border-black p-1 font-mono font-bold">v3.2</td>
+                <td className="border-r border-black p-1 font-mono font-bold">v3.3</td>
                 <td className="border-r border-black p-1 font-bold">16-Nov-2026</td>
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2 font-medium">Nuevo Módulo "Gestión de Estados" con máquina de flujo obligatorio (Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido), soporte dual para Pistola QR y Cámara Celular/Web (jsQR), extracción de UUID por regex/split, y sincronización horaria de sábana de lotes.</td>
+                <td className="p-1 text-left px-2 font-medium">Modo Continuo de Gestión de Estados: preselección previa de estado destino, transición automática al pistolear o enfocar cámara, notificaciones de éxito y rechazo detallado por violación de flujo, bitácora de escaneos en tiempo real y sincronización RBAC garantizada.</td>
               </tr>
             </tbody>
           </table>
@@ -287,32 +295,36 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">6</span>
-              <span>Módulo 6 · Gestión de Estados (Flujo Obligatorio & Lectura QR)</span>
+              <span>Módulo 6 · Gestión de Estados (Modo Continuo & Lectura QR)</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /gestion-estados</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Módulo especializado para el cambio de etapas de envases en línea de planta y bodega, mediante captura óptica de códigos QR de tickets Zebra y cumplimiento estricto de la máquina de estados reglamentaria.
+            Módulo de alta velocidad diseñado para el control de etapas de envases en línea de planta y bodega. Integra un <strong>Modo Continuo de Transición Automática</strong> que permite a los operarios procesar decenas de unidades por minuto mediante pistola láser o cámara móvil sin necesidad de interactuar con el mouse.
           </p>
 
           <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
-            <div className="font-bold text-neutral-900 underline">Reglas y Operatoria del Módulo:</div>
+            <div className="font-bold text-neutral-900 underline">Protocolo Operativo de 2 Pasos:</div>
+            <ol className="list-decimal pl-5 space-y-1.5 text-neutral-700">
+              <li>
+                <strong>Paso 1 · Preselección de Estado Destino:</strong> Antes de iniciar la lectura masiva, el operario selecciona el estado objetivo (ej. <em>Mover a Almacenaje</em> al recibir en bodega, <em>Mover a Despacho</em> al preparar pallet de carga, o <em>Mover a Liberado</em> en control de calidad final). También dispone del modo <em>Solo Inspección</em> para auditoría sin alteración de datos.
+              </li>
+              <li>
+                <strong>Paso 2 · Lectura Óptica Ininterrumpida:</strong> Al disparar la pistola o enfocar con la cámara del celular, el sistema captura el UUID y aplica de inmediato la transición hacia el estado preseleccionado.
+              </li>
+            </ol>
+
+            <div className="font-bold text-neutral-900 underline mt-2">Mecanismo de Validación & Retroalimentación:</div>
             <ul className="list-disc pl-5 space-y-1 text-neutral-700">
               <li>
-                <strong>Máquina de Estados Estricta:</strong> Flujo obligatorio unidireccional: <code>Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido</code>. Los estados fuera de secuencia están bloqueados por sistema (ej. una unidad en <em>Producción</em> no puede saltar directo a <em>Despacho</em> o <em>Liberado</em> sin pasar por <em>Almacenaje</em>).
+                <strong>Transición Exitosa:</strong> Si el cambio cumple el flujo obligatorio, emite un tono auditivo agudo (beep 880 Hz), despliega una notificación de éxito con datos de lote y embalaje (ej. <em>"✓ Envase Lote #10010 - Emb. 0001: Pasó exitosamente al estado [Almacenaje]"</em>), lo anota en la bitácora de sesión y mantiene el foco listo para el siguiente envase.
               </li>
               <li>
-                <strong>Modalidad 1 · Pistola Láser/Bluetooth:</strong> Diseñada para puestos fijos de embalaje y pesaje. Cuenta con caja de texto con autofocus permanente que procesa lecturas continuas sin necesidad de clics manuales del operario.
+                <strong>Transición Rechazada por Flujo Inválido:</strong> Si la unidad se encuentra en una etapa no compatible con el destino preseleccionado, el sistema bloquea el cambio, emite una señal sonora de advertencia y presenta un mensaje explicativo (ej. <em>"✕ Transición Rechazada: La unidad se encuentra en estado 'Producción' y no puede pasar a 'Despacho'. Flujo obligatorio: Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido"</em>).
               </li>
               <li>
-                <strong>Modalidad 2 · Cámara Celular / Web:</strong> Diseñada para supervisores y operarios móviles en bodega, utilizando la cámara posterior con detección de códigos en tiempo real (librería <code>jsQR</code>) y confirmación sonora de captura.
-              </li>
-              <li>
-                <strong>Extracción Automática de UUID:</strong> Si el código QR contiene la URL oficial <code>https://appbpch.raevsi.cl/trazabilidad/&lt;UUID&gt;</code>, el sistema aísla por regex/split el UUID exacto para consultar el registro en la base de datos sin errores de digitación.
-              </li>
-              <li>
-                <strong>Trazabilidad y Cuarentena:</strong> Permite ingresar observaciones de justificación en cada transición y enviar cualquier envase a <em>Retenido</em> en caso de no-conformidad visual o química.
+                <strong>Bitácora en Tiempo Real:</strong> Registra cada envase escaneado durante la sesión con su correlativo, hora exacta y estado anterior/nuevo, permitiendo al supervisor comprobar el total de unidades pistoleadas en su turno.
               </li>
             </ul>
           </div>
@@ -465,10 +477,28 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
 
             <div className="border border-neutral-300 p-2.5 rounded bg-white">
               <div className="font-bold text-neutral-900 mb-1">
-                P4: ¿Cómo funciona la lectura QR con pistola láser o cámara celular en Gestión de Estados?
+                P4: ¿Cómo opera el Modo Continuo en Gestión de Estados con pistola láser y cámara?
               </div>
               <p className="text-neutral-700 text-justify">
-                <strong>Respuesta:</strong> En la opción Pistola QR el sistema mantiene el foco permanente en el lector; al escanear, el software procesa el QR o la URL pública, extrae el UUID de la unidad y muestra los botones de transición válidos según la regla <code>Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido</code>. En la opción Cámara, enfoca el ticket Zebra con el lente de tu móvil o tablet y el sistema detectará el QR en tiempo real con confirmación sonora.
+                <strong>Respuesta:</strong> El operario selecciona en el encabezado el estado destino al que deben pasar los envases (ej. <em>Almacenaje</em> o <em>Despacho</em>). A partir de ese momento, cada lectura con pistola o cámara transiciona automáticamente la unidad. Si cumple el flujo reglamentario, emite un tono agudo y muestra un mensaje de éxito; si la unidad no cumple la regla de avance, emite una alerta sonora grave y rechaza el cambio explicando detalladamente el porqué.
+              </p>
+            </div>
+
+            <div className="border border-neutral-300 p-2.5 rounded bg-white">
+              <div className="font-bold text-neutral-900 mb-1">
+                P5: ¿Qué hacer si el sistema arroja "Transición Rechazada" al pistolear un envase?
+              </div>
+              <p className="text-neutral-700 text-justify">
+                <strong>Respuesta:</strong> Verifique en pantalla el estado actual del envase. Si está en <em>Producción</em>, debe ser recibido en <em>Almacenaje</em> antes de enviarse a <em>Despacho</em>. La máquina de estados impide saltos arbitrarios para resguardar la trazabilidad ante auditorías ISO y clientes. Si el envase tiene una falla de calidad, puede ser apartado inmediatamente a <em>Retenido</em> desde cualquier etapa.
+              </p>
+            </div>
+
+            <div className="border border-neutral-300 p-2.5 rounded bg-white">
+              <div className="font-bold text-neutral-900 mb-1">
+                P6: ¿Cómo se actualizan los permisos de módulos para cada rol y cuándo se aplican?
+              </div>
+              <p className="text-neutral-700 text-justify">
+                <strong>Respuesta:</strong> Desde el módulo <em>Configuración ➔ Administrador de Roles</em>, el Administrador puede marcar o desmarcar módulos por rol. El cambio se persiste de inmediato en la base de datos (tabla <code>bdbioplastchile.rol_modulos</code>) y se sincroniza en tiempo real con la barra de navegación del usuario sin necesidad de reiniciar la sesión.
               </p>
             </div>
           </div>

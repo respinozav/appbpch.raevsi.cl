@@ -23,7 +23,7 @@ const ALL_SYSTEM_MODULES = [
 ];
 
 export const ConfiguracionView: React.FC = () => {
-  const { isAdmin, setTimeoutMinutes: setGlobalTimeout, refreshTimeoutConfig } = useAuth();
+  const { isAdmin, refreshUser, setTimeoutMinutes: setGlobalTimeout, refreshTimeoutConfig } = useAuth();
   const [activeTab, setActiveTab] = useState<'session' | 'roles' | 'audit'>('session');
 
   // ==========================================
@@ -170,6 +170,7 @@ export const ConfiguracionView: React.FC = () => {
       if (selectedRole?.uid === updated.uid) setSelectedRole(updated);
       setRoleMsg({ type: 'success', text: `Permisos actualizados para el rol ${role.nombre}.` });
       setTimeout(() => setRoleMsg(null), 3000);
+      await refreshUser();
     } catch (err: any) {
       alert(err.message || 'Error al actualizar permisos del rol');
     }
