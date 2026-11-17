@@ -214,7 +214,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Módulo dedicado al registro, edición y control de estado de los operadores de planta. Permite mantener actualizado el equipo humano responsable de las líneas de producción, habilitando o deshabilitando personal según rotación o turnos de trabajo.
+            Módulo dedicado al registro, edición y control de estado de los operadores de planta. Por motivos de auditoría y trazabilidad histórica de órdenes previas, los operadores <strong>no se eliminan físicamente</strong>; únicamente se habilitan o deshabilitan mediante el control de estado.
           </p>
         </section>
 
@@ -234,19 +234,22 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
             <div className="font-bold text-neutral-900 underline">Nuevas Reglas de Entrada en Planta:</div>
             <ol className="list-decimal pl-5 space-y-1.5 text-neutral-700">
               <li>
+                <strong>Denominación "Color":</strong> Se simplifica el término visual a <em>Color</em> para el cuerpo principal y <em>Color Asa</em> para el componente.
+              </li>
+              <li>
                 <strong>Materia Prima Automática:</strong> El campo Materia ya no es editable manualmente; se fija y visualiza automáticamente al seleccionar el artículo del catálogo SAP.
               </li>
               <li>
-                <strong>Operador Seleccionable:</strong> El operador se selecciona desde la lista de operadores activos de base de datos.
+                <strong>Operador Seleccionable & Nombre en Etiqueta:</strong> El operador se selecciona desde la lista de operadores activos. En la etiqueta física Zebra se imprime exclusivamente el nombre del operador en la fila <code>MÁQ. / TURNO / OP</code>.
               </li>
               <li>
                 <strong>Turnos Restringidos (1 a 3):</strong> Las opciones válidas se limitan estrictamente a los turnos operacionales 1, 2 y 3.
               </li>
               <li>
-                <strong>Confirmación de Tirada:</strong> El modal de éxito muestra el Código SAP y el rango de unidades de embalaje: <code>0001</code> al <code>00NN</code>, junto con el número de lote único común.
+                <strong>Unidades de Embalaje y Peso:</strong> Se define el total de embalajes a generar (<code>0001</code> al <code>00NN</code>) y se registra el campo de peso por unidad/pallet (ej. N/A o 18.5 kg).
               </li>
               <li>
-                <strong>Tickets Zebra:</strong> La casilla de código interno en el ticket térmico imprime el <code>CÓDIGO SAP</code> asignado.
+                <strong>Tickets Zebra:</strong> La casilla central mantiene el rótulo oficial <code>CODIGO INTERNO</code>, imprimiendo el código SAP correspondiente.
               </li>
             </ol>
           </div>
@@ -394,19 +397,19 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
 
             <div className="border border-neutral-300 p-2.5 rounded bg-white">
               <div className="font-bold text-neutral-900 mb-1">
-                P2: ¿Cómo se administra a un nuevo operador de máquina?
+                P2: ¿Cómo se administra a un nuevo operador de máquina y por qué no hay botón de eliminar?
               </div>
               <p className="text-neutral-700 text-justify">
-                <strong>Respuesta:</strong> Ingrese al módulo <em>"Operadores"</em> desde el menú lateral y pulse <em>"+ Nuevo Operador"</em>. Si un colaborador deja la planta, use el botón de encendido/apagado para deshabilitarlo sin perder el historial de sus tiradas previas.
+                <strong>Respuesta:</strong> Ingrese al módulo <em>"Operadores"</em> desde el menú lateral y pulse <em>"+ Nuevo Operador"</em>. Por política de integridad referencial y auditoría, los operadores nunca se eliminan físicamente de la base de datos; simplemente se desactivan con el botón de alternar estado, preservando el histórico de sus tiradas.
               </p>
             </div>
 
             <div className="border border-neutral-300 p-2.5 rounded bg-white">
               <div className="font-bold text-neutral-900 mb-1">
-                P3: ¿Qué código se imprime ahora en la casilla del Código Interno de la etiqueta?
+                P3: ¿Qué código y operador se imprimen en la etiqueta térmica Zebra?
               </div>
               <p className="text-neutral-700 text-justify">
-                <strong>Respuesta:</strong> Se imprime el <strong>Código SAP</strong> correspondiente al artículo producido, unificando la codificación con los sistemas de gestión corporativos.
+                <strong>Respuesta:</strong> En la casilla central de <strong>CODIGO INTERNO</strong> se imprime el código SAP asignado, y en la fila <code>MÁQ. / TURNO / OP</code> se imprime exclusivamente el nombre del operador seleccionado para fácil lectura de supervisores y clientes.
               </p>
             </div>
           </div>

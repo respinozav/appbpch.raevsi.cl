@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api, OperadorItem } from '../api/client';
 import { 
-  Users2, Plus, Search, Edit3, Trash2, CheckCircle2, XCircle, 
-  RefreshCw, Power, AlertTriangle, X
+  Users2, Plus, Search, Edit3, CheckCircle2, XCircle, 
+  RefreshCw, Power, X
 } from 'lucide-react';
 
 export const OperadoresView: React.FC = () => {
@@ -24,10 +24,6 @@ export const OperadoresView: React.FC = () => {
   const [formActivo, setFormActivo] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  // Modal Confirmar Eliminar
-  const [deletingItem, setDeletingItem] = useState<OperadorItem | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const fetchOperadores = async () => {
     setLoading(true);
@@ -115,20 +111,6 @@ export const OperadoresView: React.FC = () => {
       fetchOperadores();
     } catch (err: any) {
       alert(err.message || 'Error al cambiar estado del operador');
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deletingItem) return;
-    setDeleting(true);
-    try {
-      await api.deleteOperador(deletingItem.uid);
-      setDeletingItem(null);
-      fetchOperadores();
-    } catch (err: any) {
-      alert(err.message || 'Error al eliminar operador');
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -282,13 +264,6 @@ export const OperadoresView: React.FC = () => {
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
-                        <button
-                          onClick={() => setDeletingItem(op)}
-                          title="Eliminar operador"
-                          className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -418,55 +393,6 @@ export const OperadoresView: React.FC = () => {
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* MODAL ELIMINAR */}
-      <AnimatePresence>
-        {deletingItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setDeletingItem(null)}
-              className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl border border-[#E5ECE6] p-6 z-10"
-            >
-              <div className="flex items-center gap-3 text-red-600 mb-3">
-                <AlertTriangle className="w-6 h-6 shrink-0" />
-                <h3 className="font-bold text-base text-neutral-900">
-                  ¿Eliminar Operador?
-                </h3>
-              </div>
-              <p className="text-xs text-neutral-600 mb-5 leading-relaxed">
-                Estás a punto de eliminar a <strong>{deletingItem.nombre}</strong>. Si este operador ya tiene tiradas registradas, se recomienda deshabilitarlo en lugar de eliminarlo para mantener la trazabilidad.
-              </p>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDeletingItem(null)}
-                  className="px-4 py-2 rounded-xl border border-[#E5ECE6] text-neutral-600 hover:bg-neutral-100 text-xs font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5"
-                >
-                  {deleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
-                  <span>Sí, Eliminar</span>
-                </button>
-              </div>
             </motion.div>
           </div>
         )}
