@@ -34,12 +34,12 @@ def get_dashboard_metrics(
     # Base query for Production
     query = db.query(Production)
 
-    # Apply Fecha Desde / Fecha Hasta if provided
+    # Apply Fecha Desde / Fecha Hasta if provided (con tolerancia horaria UTC)
     if fecha_desde:
         try:
             d_desde = datetime.strptime(fecha_desde.strip(), "%Y-%m-%d").replace(
                 hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc
-            )
+            ) - timedelta(days=1)
             query = query.filter(Production.fecha >= d_desde)
         except ValueError:
             pass
@@ -48,7 +48,7 @@ def get_dashboard_metrics(
         try:
             d_hasta = datetime.strptime(fecha_hasta.strip(), "%Y-%m-%d").replace(
                 hour=23, minute=59, second=59, microsecond=999999, tzinfo=timezone.utc
-            )
+            ) + timedelta(days=1)
             query = query.filter(Production.fecha <= d_hasta)
         except ValueError:
             pass

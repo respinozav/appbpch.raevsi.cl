@@ -37,7 +37,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         <div className="flex items-center gap-3">
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v3.3 Vigente</span>
+            <span>Versión v3.4 Vigente</span>
           </div>
           <button
             onClick={handlePrint}
@@ -82,7 +82,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               Código: <span className="font-bold">MAN-SGI-01</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
-              Versión: <span className="font-bold">v3.3</span>
+              Versión: <span className="font-bold">v3.4</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
               Actualización: <span className="font-bold">16-Nov-2026</span>
@@ -148,15 +148,23 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2">Módulo "Gestión de Estados" con flujo estricto (Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido), soporte Pistola QR y Cámara Celular/Web (jsQR).</td>
+                <td className="p-1 text-left px-2">Módulo Gestión de Estados con flujo estricto (Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido), soporte Pistola QR y Cámara Celular/Web (jsQR).</td>
+              </tr>
+              <tr className="border-b border-neutral-200">
+                <td className="border-r border-black p-1 font-mono">v3.3</td>
+                <td className="border-r border-black p-1">16-Nov-2026</td>
+                <td className="border-r border-black p-1">Tech Lead TI</td>
+                <td className="border-r border-black p-1">Control de Calidad</td>
+                <td className="border-r border-black p-1">Gerencia Operaciones</td>
+                <td className="p-1 text-left px-2">Modo Continuo de Gestión de Estados: preselección previa de estado destino, alertas de flujo inválido y bitácora de sesión en tiempo real.</td>
               </tr>
               <tr className="bg-emerald-50/40">
-                <td className="border-r border-black p-1 font-mono font-bold">v3.3</td>
+                <td className="border-r border-black p-1 font-mono font-bold">v3.4</td>
                 <td className="border-r border-black p-1 font-bold">16-Nov-2026</td>
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2 font-medium">Modo Continuo de Gestión de Estados: preselección previa de estado destino, transición automática al pistolear o enfocar cámara, notificaciones de éxito y rechazo detallado por violación de flujo, bitácora de escaneos en tiempo real y sincronización RBAC garantizada.</td>
+                <td className="p-1 text-left px-2 font-medium">Formulario de Iniciar Producción blindado: Artículo, Materia Prima, Color y Color Asa 100% no editables / derivados de Códigos SAP; Dashboard Ejecutivo con accesos rápidos directos a los 11 módulos de planta y formalización rigurosa de la máquina de estados.</td>
               </tr>
             </tbody>
           </table>
@@ -180,14 +188,24 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">1</span>
-              <span>Módulo 1 · Dashboard Ejecutivo (Inteligencia Operativa & OEE)</span>
+              <span>Módulo 1 · Dashboard Ejecutivo (Inteligencia Operativa, Accesos Directos & OEE)</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /dashboard</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            El Dashboard centraliza las métricas en tiempo real de la planta de producción. Brinda a la gerencia y supervisores una radiografía instantánea del volumen procesado, la eficiencia de los turnos, el cumplimiento frente a la meta operacional y la exportación masiva de datos auditados.
+            El Dashboard centraliza las métricas en tiempo real de la planta de producción. Brinda a la gerencia y supervisores una radiografía instantánea del volumen procesado, la eficiencia de los turnos, el cumplimiento frente a la meta operacional, la barra de accesos rápidos a los 11 módulos de planta y la exportación masiva de datos auditados a CSV.
           </p>
+
+          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
+            <div className="font-bold text-neutral-900 underline">Componentes Clave del Dashboard:</div>
+            <ul className="list-disc pl-5 space-y-1 text-neutral-700">
+              <li><strong>Barra de Accesos Rápidos:</strong> Enlaces directos a Iniciar Producción, Gestión de Estados, Sábana de Lotes, Códigos SAP, Operadores y Certificados.</li>
+              <li><strong>KPIs Bento Principales:</strong> Producción Acumulada (UND), Lotes Liberados (Ficha F-0101), En Tránsito y Lotes Retenidos (Cuarentena).</li>
+              <li><strong>Evolución Diaria vs Meta:</strong> Curva continua de tendencia y barras diarias con porcentaje de cumplimiento de planta.</li>
+              <li><strong>Distribución por Estados:</strong> Conteo gráfico de unidades según la secuencia oficial <code>Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido</code>.</li>
+            </ul>
+          </div>
         </section>
 
         {/* ========================================================================= */}
@@ -241,31 +259,28 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">4</span>
-              <span>Módulo 4 · Iniciar Producción (Reglas Operativas v3.1)</span>
+              <span>Módulo 4 · Iniciar Producción (Campos Maestros Bloqueados & Emisión Zebra ZPL)</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /iniciar</span>
           </div>
 
           <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
-            <div className="font-bold text-neutral-900 underline">Nuevas Reglas de Entrada en Planta:</div>
+            <div className="font-bold text-neutral-900 underline">Blindaje Operativo de Formulario (v3.4):</div>
             <ol className="list-decimal pl-5 space-y-1.5 text-neutral-700">
               <li>
-                <strong>Denominación "Color":</strong> Se simplifica el término visual a <em>Color</em> para el cuerpo principal y <em>Color Asa</em> para el componente.
+                <strong>Campos Maestros Bloqueados (Solo Lectura):</strong> Al seleccionar el Código SAP, los campos <em>Artículo / Denominación</em>, <em>Materia Prima</em>, <em>Color (Bidón)</em> y <em>Color Asa</em> se completan automáticamente y quedan estrictamente bloqueados (no editables). Esto suprime por completo los errores de digitación en planta y asegura conformidad con el catálogo oficial.
               </li>
               <li>
-                <strong>Materia Prima Automática:</strong> El campo Materia ya no es editable manualmente; se fija y visualiza automáticamente al seleccionar el artículo del catálogo SAP.
-              </li>
-              <li>
-                <strong>Operador Seleccionable & Nombre en Etiqueta:</strong> El operador se selecciona desde la lista de operadores activos. En la etiqueta física Zebra se imprime exclusivamente el nombre del operador en la fila <code>MÁQ. / TURNO / OP</code>.
+                <strong>Operador Seleccionable & Nombre en Etiqueta:</strong> El operador responsable se selecciona desde la lista de operadores activos. En la etiqueta física Zebra se imprime exclusivamente el nombre del operador en la fila <code>MÁQ. / TURNO / OP</code>.
               </li>
               <li>
                 <strong>Turnos Restringidos (1 a 3):</strong> Las opciones válidas se limitan estrictamente a los turnos operacionales 1, 2 y 3.
               </li>
               <li>
-                <strong>Unidades de Embalaje y Peso:</strong> Se define el total de embalajes a generar (<code>0001</code> al <code>00NN</code>) y se registra el campo de peso por unidad/pallet (ej. N/A o 18.5 kg).
+                <strong>Unidades de Embalaje y Peso:</strong> Se define el total de embalajes a generar (<code>0001</code> al <code>00NN</code>), cantidad por unidad y se registra el peso por pallet/bulto (ej. N/A o 18.5 kg).
               </li>
               <li>
-                <strong>Tickets Zebra:</strong> La casilla central mantiene el rótulo oficial <code>CODIGO INTERNO</code>, imprimiendo el código SAP correspondiente.
+                <strong>Tickets Zebra:</strong> La casilla central mantiene el rótulo oficial <code>CODIGO INTERNO</code>, imprimiendo el código SAP correspondiente junto al código QR con URL de trazabilidad.
               </li>
             </ol>
           </div>
@@ -337,10 +352,14 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">7</span>
-              <span>Módulo 7 · Certificados de Calidad R-CAL-07</span>
+              <span>Módulo 7 · Certificados de Calidad R-CAL-07 Oficiales</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /certificados</span>
           </div>
+
+          <p className="text-justify text-[11px] mb-3 text-neutral-700">
+            Generador oficial del documento R-CAL-07 exigido por clientes B2B. Acredita la inocuidad, materialidad y parámetros de control del producto terminado.
+          </p>
 
           <div className="p-3 bg-amber-50 border border-amber-300 rounded text-[10.5px] text-amber-900 mb-3 space-y-1.5">
             <p>
@@ -353,30 +372,52 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 8: CONFIGURACIÓN GLOBAL & RBAC */}
+        {/* SECCIÓN 8: CONSULTA PÚBLICA QR */}
+        {/* ========================================================================= */}
+        <section id="sec-qr" className="mb-8 break-inside-avoid scroll-mt-20">
+          <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
+            <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">8</span>
+              <span>Módulo 8 · Consulta Pública de Trazabilidad QR (Portal B2B)</span>
+            </h2>
+            <span className="text-[10px] font-mono text-neutral-500">Ruta: /trazabilidad/:uuid</span>
+          </div>
+
+          <p className="text-justify text-[11px] mb-3 text-neutral-700">
+            Portal web de libre acceso (sin requerir credenciales de usuario) diseñado para clientes finales, inspectores de aduanas y auditores que escanean el código QR impreso en el ticket térmico Zebra de cada envase.
+          </p>
+
+          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-1 text-[10.5px] text-neutral-700">
+            <div><strong>Verificación Inmutable:</strong> Certifica la autenticidad del envase producido en Planta Quilicura.</div>
+            <div><strong>Atributos Desplegados:</strong> Artículo, Material (HDPE/PCR), Colores, Lote, Unidad de Embalaje, Fecha de Fabricación, Estado Actual y el Historial de Trazabilidad completo registrado en la nube.</div>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* SECCIÓN 9: CONFIGURACIÓN GLOBAL & RBAC */}
         {/* ========================================================================= */}
         <section id="sec-config" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">8</span>
-              <span>Módulo 8 · Configuración, Roles (RBAC) & Auditoría</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">9</span>
+              <span>Módulo 9 · Configuración del Sistema, Políticas RBAC & Auditoría</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /configuracion</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Control de inactividad de sesión (5 a 480 minutos) y matriz de asignación granular de módulos para roles (incluyendo <em>Códigos Internos SAP</em>, <em>Operadores</em> y <em>Gestión de Estados</em>).
+            Control de inactividad de sesión (5 a 480 minutos), matriz de asignación granular de módulos para roles (con actualización y sincronización instantánea en tiempo real sin requerir relogin) y bitácora de auditoría de inicios de sesión en AWS RDS.
           </p>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 9: USUARIOS Y MATRIZ RBAC */}
+        {/* SECCIÓN 10: USUARIOS Y MATRIZ RBAC */}
         {/* ========================================================================= */}
         <section id="sec-usuarios" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">9</span>
-              <span>Módulo 9 · Matriz de Roles y Módulos RBAC</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">10</span>
+              <span>Módulo 10 · Usuarios & Matriz de Roles (Control de Accesos RBAC)</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /usuarios</span>
           </div>
@@ -436,13 +477,13 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 10: PREGUNTAS FRECUENTES (FAQ) Y CONTINGENCIAS */}
+        {/* SECCIÓN 11: PREGUNTAS FRECUENTES (FAQ) Y CONTINGENCIAS */}
         {/* ========================================================================= */}
         <section id="sec-faq" className="mb-6 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">10</span>
-              <span>Sección 10 · Preguntas Frecuentes (FAQ) & Protocolos de Planta</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">11</span>
+              <span>Sección 11 · Preguntas Frecuentes (FAQ) & Protocolos de Planta</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Soporte Técnico</span>
           </div>
@@ -499,6 +540,15 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               </div>
               <p className="text-neutral-700 text-justify">
                 <strong>Respuesta:</strong> Desde el módulo <em>Configuración ➔ Administrador de Roles</em>, el Administrador puede marcar o desmarcar módulos por rol. El cambio se persiste de inmediato en la base de datos (tabla <code>bdbioplastchile.rol_modulos</code>) y se sincroniza en tiempo real con la barra de navegación del usuario sin necesidad de reiniciar la sesión.
+              </p>
+            </div>
+
+            <div className="border border-neutral-300 p-2.5 rounded bg-white">
+              <div className="font-bold text-neutral-900 mb-1">
+                P7: ¿Cuál es la regla obligatoria de estados y por qué el sistema prohíbe saltar etapas?
+              </div>
+              <p className="text-neutral-700 text-justify">
+                <strong>Respuesta:</strong> La máquina de estados oficial sigue estrictamente el ciclo de vida: <code>Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido</code>. Un envase recién soplado no puede ser despachado sin ingresar formalmente a bodega (Almacenaje), y ningún lote puede ser liberado sin haber pasado por control de despacho e inspección R-CAL-07. Desde cualquier etapa, un envase puede ser enviado a <em>Retenido (Cuarentena)</em> si presenta defectos visuales o técnicos, y solo retornará al flujo tras la disposición formal del área de Calidad.
               </p>
             </div>
           </div>

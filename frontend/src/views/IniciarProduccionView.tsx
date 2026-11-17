@@ -29,7 +29,18 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
   // Cargar listas iniciales
   useEffect(() => {
     api.getAllCodigosInternos()
-      .then(items => setCodigosInternos(items))
+      .then(items => {
+        setCodigosInternos(items);
+        if (items.length > 0 && !selectedCodigoSap) {
+          const first = items[0];
+          setSelectedCodigoSap(first.codigosap);
+          setArticulo(first.articulo);
+          setMaterial(first.materia ? first.materia.toUpperCase() : 'HDPE');
+          setColorBidon(first.color || 'TRANSPARENTE');
+          setColorAsa(first.colorasa || 'VERDE');
+          if (first.cantidad) setCantidad(first.cantidad);
+        }
+      })
       .catch(err => console.error('Error cargando códigos internos:', err));
 
     api.getOperadoresActivos()
@@ -205,22 +216,20 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                   </div>
                 )}
 
+                {/* Artículo / Denominación: Solo lectura desde Catálogo SAP */}
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                    Artículo / Denominación de Envase
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
+                    <span>Artículo / Denominación de Envase</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">Solo Lectura · Catálogo SAP</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={articulo}
-                    onChange={(e) => setArticulo(e.target.value)}
-                    placeholder="Ej. ENVASE TRAVERSO 1000-24"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] focus:ring-4 focus:ring-[#15803D]/10 uppercase font-medium bg-[#F7FAF7]/40"
-                  />
+                  <div className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
+                    <span>{articulo || 'SELECCIONE CÓDIGO SAP'}</span>
+                    <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Materia: Auto-completado y Solo Lectura */}
+                  {/* Materia Prima: Solo Lectura desde Catálogo SAP */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
                       <span>Materia Prima</span>
@@ -232,32 +241,28 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     </div>
                   </div>
 
+                  {/* Color: Solo Lectura desde Catálogo SAP */}
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                      Color
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
+                      <span>Color</span>
+                      <span className="text-[10px] text-neutral-400 font-mono">Auto</span>
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={colorBidon}
-                      onChange={(e) => setColorBidon(e.target.value)}
-                      placeholder="Ej. Transparente, Ámbar, Blanco..."
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] uppercase font-medium bg-[#F7FAF7]/40"
-                    />
+                    <div className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
+                      <span>{colorBidon || 'TRANSPARENTE'}</span>
+                      <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                    </div>
                   </div>
 
+                  {/* Color Asa: Solo Lectura desde Catálogo SAP */}
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                      Color Asa
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
+                      <span>Color Asa</span>
+                      <span className="text-[10px] text-neutral-400 font-mono">Auto</span>
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={colorAsa}
-                      onChange={(e) => setColorAsa(e.target.value)}
-                      placeholder="Ej. Verde, Rojo, Azul, Negro..."
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] uppercase font-medium bg-[#F7FAF7]/40"
-                    />
+                    <div className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
+                      <span>{colorAsa || 'VERDE'}</span>
+                      <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                    </div>
                   </div>
                 </div>
               </div>

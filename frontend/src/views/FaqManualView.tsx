@@ -49,7 +49,7 @@ export const FaqManualView: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
             <span>Manual de Operaciones & FAQ</span>
             <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
-              MAN-SGI-01 · v3.3
+              MAN-SGI-01 · v3.4
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
