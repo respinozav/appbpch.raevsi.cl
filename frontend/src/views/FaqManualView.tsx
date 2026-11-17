@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ManualDocument } from '../components/ManualDocument';
 import { 
   BookOpen, Search, Printer, Layers, HelpCircle, 
-  ChevronRight, Bookmark, ArrowUpRight, Sparkles, Shield, Database
+  ChevronRight, Bookmark, ArrowUpRight, Sparkles, Shield, Database, Download
 } from 'lucide-react';
 
 export const FaqManualView: React.FC = () => {
@@ -10,8 +10,8 @@ export const FaqManualView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const sections = [
-    { id: 'sec-dashboard', label: '1. Dashboard Ejecutivo', desc: 'KPIs, metas diarias y estado de planta' },
-    { id: 'sec-codigos-sap', label: '2. Códigos Internos & SAP', desc: 'Código SAP unificado y materias estándar' },
+    { id: 'sec-dashboard', label: '1. Dashboard Ejecutivo', desc: 'KPIs, embudo de operadores y metas de planta' },
+    { id: 'sec-codigos-sap', label: '2. Códigos Internos', desc: 'Catálogo de artículos y materias estándar' },
     { id: 'sec-operadores', label: '3. Operadores de Planta', desc: 'Personal autorizado y asignación activa' },
     { id: 'sec-iniciar', label: '4. Iniciar Producción', desc: 'Tiradas, un solo lote y embalajes 0001-NNNN' },
     { id: 'sec-produccion', label: '5. Producción & Sábana', desc: 'Jerarquía por Lote y unidades de embalaje' },
@@ -49,7 +49,7 @@ export const FaqManualView: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
             <span>Manual de Operaciones & FAQ</span>
             <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
-              MAN-SGI-01 · v3.4
+              MAN-SGI-01 · v3.5
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
@@ -61,9 +61,10 @@ export const FaqManualView: React.FC = () => {
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] shadow-sm transition active:scale-95 cursor-pointer"
+            title="Exportar documento oficial a formato PDF"
           >
-            <Printer className="w-4 h-4" />
-            <span>Imprimir Manual</span>
+            <Download className="w-4 h-4" />
+            <span>Exportar a PDF</span>
           </button>
         </div>
       </div>

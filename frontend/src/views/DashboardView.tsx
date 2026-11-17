@@ -5,7 +5,7 @@ import {
   Factory, Award, Leaf, Layers, ArrowUpRight, 
   RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck, 
   Sliders, History, Clock, ArrowRight, TrendingUp, Calendar,
-  PieChart, Download
+  PieChart, Download, Users, UserCheck, Filter
 } from 'lucide-react';
 
 const getInitialMonthDates = () => {
@@ -29,6 +29,7 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
   const [loading, setLoading] = useState(true);
   const [donutHoverIndex, setDonutHoverIndex] = useState<number | null>(null);
   const [donutViewMode, setDonutViewMode] = useState<'turnos' | 'maquinas'>('turnos');
+  const [actividadTab, setActividadTab] = useState<'operadores' | 'transiciones'>('operadores');
   const [exporting, setExporting] = useState(false);
 
   const handleExportData = async () => {
@@ -730,64 +731,172 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
             </div>
           </div>
 
-          {/* Card B: Actividad Reciente & Transiciones de Estado */}
+          {/* Card B: Actividad Reciente & Transiciones de Estado con Gráfico de Embudo para Operadores */}
           <div className="bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm flex flex-col justify-between flex-1">
             <div>
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-3">
+              {/* Header with Switcher between Funnel Operadores and Audit Transiciones */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#E5ECE6] gap-2 mb-3">
                 <div className="flex items-center gap-2">
-                  <History className="w-4 h-4 text-[#15803D]" />
+                  {actividadTab === 'operadores' ? (
+                    <Users className="w-4 h-4 text-[#15803D]" />
+                  ) : (
+                    <History className="w-4 h-4 text-[#15803D]" />
+                  )}
                   <h2 className="font-bold text-sm text-[#0D3B22] uppercase tracking-wide">
-                    Actividad Reciente & Transiciones de Estado
+                    {actividadTab === 'operadores'
+                      ? 'Embudo de Producción por Operador'
+                      : 'Actividad Reciente & Transiciones de Estado'}
                   </h2>
                 </div>
-                <span className="text-xs text-neutral-400 font-mono flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  <span>Tiempo Real</span>
-                </span>
+
+                <div className="inline-flex items-center p-0.5 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] text-[11px] self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setActividadTab('operadores')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      actividadTab === 'operadores'
+                        ? 'bg-white text-[#0D3B22] shadow-2xs'
+                        : 'text-neutral-500 hover:text-neutral-900'
+                    }`}
+                  >
+                    <Filter className="w-3 h-3 text-[#15803D]" />
+                    <span>Embudo Operadores ({data?.operadores?.length || 0})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActividadTab('transiciones')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      actividadTab === 'transiciones'
+                        ? 'bg-white text-[#0D3B22] shadow-2xs'
+                        : 'text-neutral-500 hover:text-neutral-900'
+                    }`}
+                  >
+                    <History className="w-3 h-3 text-neutral-400" />
+                    <span>Transiciones ({data?.actividad_reciente?.length || 0})</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Audit Stream List */}
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                {data?.actividad_reciente && data.actividad_reciente.length > 0 ? (
-                  data.actividad_reciente.map((item) => (
-                    <div
-                      key={item.uid}
-                      className="p-2.5 rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] hover:bg-white transition flex items-center justify-between gap-3 text-xs"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: item.estado_color }}
-                        />
-                        <div>
-                          <div className="font-bold text-[#0F1F16]">
-                            {item.articulo} · Lote #{item.lote}
-                          </div>
-                          <div className="text-[11px] text-neutral-500">
-                            Tirada #{item.codigo_interno} · Por <strong className="text-neutral-700">{item.responsable}</strong>
-                          </div>
-                        </div>
-                      </div>
+              {/* View 1: Gráfico de Embudo (Funnel Chart) de Operadores */}
+              {actividadTab === 'operadores' ? (
+                <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                  {data?.operadores && data.operadores.length > 0 ? (
+                    (() => {
+                      const ops = [...data.operadores].sort((a, b) => b.lotes - a.lotes);
+                      const maxLotes = ops[0]?.lotes || 1;
+                      const funnelColors = [
+                        { from: 'from-[#0D3B22]', to: 'to-[#15803D]', text: 'text-white' },
+                        { from: 'from-[#15803D]', to: 'to-[#16A34A]', text: 'text-white' },
+                        { from: 'from-[#16A34A]', to: 'to-[#22C55E]', text: 'text-white' },
+                        { from: 'from-[#22C55E]', to: 'to-[#4ADE80]', text: 'text-[#0D3B22]' },
+                        { from: 'from-[#4ADE80]', to: 'to-[#86EFAC]', text: 'text-[#0D3B22]' },
+                      ];
 
-                      <div className="text-right shrink-0">
-                        <span
-                          className="px-2 py-0.5 rounded text-[10px] font-bold text-white inline-block"
-                          style={{ backgroundColor: item.estado_color }}
-                        >
-                          {item.estado_nuevo}
-                        </span>
-                        <div className="text-[10px] font-mono text-neutral-400 mt-0.5">
-                          {new Date(item.fecha_hora).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                      return (
+                        <div className="space-y-2 py-1">
+                          {ops.map((op, idx) => {
+                            const ratio = op.lotes / maxLotes;
+                            // Embudo escalonado decreciente: 100% en top y decrece proporcionalmente
+                            const widthPct = Math.max(38, Math.round(ratio * 100));
+                            const colorScheme = funnelColors[Math.min(idx, funnelColors.length - 1)];
+
+                            return (
+                              <div
+                                key={op.codigo || idx}
+                                className="group p-2.5 rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] hover:bg-white hover:border-[#15803D]/40 transition shadow-2xs"
+                              >
+                                <div className="flex items-center justify-between text-xs mb-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-md bg-white border border-[#E5ECE6] text-[#0D3B22] font-black font-mono text-[10px] flex items-center justify-center shadow-2xs">
+                                      {idx + 1}°
+                                    </span>
+                                    <span className="font-bold text-[#0D3B22] group-hover:text-[#15803D] transition">
+                                      {op.nombre}
+                                    </span>
+                                    <span className="text-[10px] text-neutral-400 font-mono">
+                                      Cod #{op.codigo} · {op.tiradas} tiradas
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 font-mono">
+                                    <span className="font-bold text-[#0D3B22]">
+                                      {op.lotes} <span className="text-[10px] font-normal text-neutral-500">lotes</span>
+                                    </span>
+                                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                                      {op.percentage}%
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Barra de Embudo Proporcional */}
+                                <div className="w-full bg-neutral-200/60 rounded-full h-3.5 overflow-hidden flex items-center p-0.5">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${widthPct}%` }}
+                                    transition={{ duration: 0.5, delay: idx * 0.08 }}
+                                    className={`h-full rounded-full bg-gradient-to-r ${colorScheme.from} ${colorScheme.to} flex items-center justify-end px-2 shadow-xs`}
+                                  >
+                                    <span className={`text-[9px] font-mono font-bold ${colorScheme.text} truncate`}>
+                                      {op.unidades.toLocaleString('es-CL')} und
+                                    </span>
+                                  </motion.div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="p-8 text-center text-xs text-neutral-400">
+                      No hay registros de operadores en el período seleccionado.
                     </div>
-                  ))
-                ) : (
-                  <div className="p-8 text-center text-xs text-neutral-400">
-                    No hay transiciones recientes registradas en planta.
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                /* View 2: Audit Stream List */
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {data?.actividad_reciente && data.actividad_reciente.length > 0 ? (
+                    data.actividad_reciente.map((item) => (
+                      <div
+                        key={item.uid}
+                        className="p-2.5 rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] hover:bg-white transition flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: item.estado_color }}
+                          />
+                          <div>
+                            <div className="font-bold text-[#0F1F16]">
+                              {item.articulo} · Lote #{item.lote}
+                            </div>
+                            <div className="text-[11px] text-neutral-500">
+                              Tirada #{item.codigo_interno} · Por <strong className="text-neutral-700">{item.responsable}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-bold text-white inline-block"
+                            style={{ backgroundColor: item.estado_color }}
+                          >
+                            {item.estado_nuevo}
+                          </span>
+                          <div className="text-[10px] font-mono text-neutral-400 mt-0.5">
+                            {new Date(item.fecha_hora).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-xs text-neutral-400">
+                      No hay transiciones recientes registradas en planta.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 pt-3 border-t border-[#E5ECE6] text-[11px] text-neutral-400 font-mono flex justify-between">

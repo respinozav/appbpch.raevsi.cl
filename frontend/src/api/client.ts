@@ -225,6 +225,14 @@ export interface DashboardMetricsData {
     lotes: number;
     unidades: number;
   }[];
+  operadores?: {
+    nombre: string;
+    codigo: number;
+    lotes: number;
+    unidades: number;
+    tiradas: number;
+    percentage: number;
+  }[];
   tendencia_diaria?: {
     fecha: string;
     unidades: number;

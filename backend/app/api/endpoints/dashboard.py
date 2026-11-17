@@ -172,6 +172,27 @@ def get_dashboard_metrics(
         for t in turnos_query
     ]
 
+    # Operadores breakdown (Funnel de operadores por volumen y lotes)
+    operadores_query = query.with_entities(
+        Production.operador_nombre,
+        Production.operador,
+        func.count(Production.uid).label("lotes"),
+        func.coalesce(func.sum(Production.cantidad), 0).label("unidades"),
+        func.count(func.distinct(Production.codigo_interno)).label("tiradas")
+    ).group_by(Production.operador_nombre, Production.operador).order_by(desc("lotes")).all()
+
+    operadores_breakdown = [
+        {
+            "nombre": op.operador_nombre.strip() if (op.operador_nombre and op.operador_nombre.strip()) else f"Operador #{op.operador}",
+            "codigo": op.operador,
+            "lotes": op.lotes,
+            "unidades": op.unidades,
+            "tiradas": op.tiradas,
+            "percentage": round((op.lotes / total_lots * 100), 1) if total_lots > 0 else 0.0
+        }
+        for op in operadores_query
+    ]
+
     # Recent Audit Log Activity (Last 8 events)
     recent_audit = db.query(HistorialEstado).order_by(desc(HistorialEstado.fecha_hora)).limit(8).all()
     activity_timeline = []
@@ -287,6 +308,7 @@ def get_dashboard_metrics(
         "materiales": materials_breakdown,
         "maquinas": machines_breakdown,
         "turnos": turnos_breakdown,
+        "operadores": operadores_breakdown,
         "tendencia_diaria": daily_timeline,
         "actividad_reciente": activity_timeline,
         "ley_rep": rep_goals

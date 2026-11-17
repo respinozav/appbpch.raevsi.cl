@@ -98,7 +98,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
       setCreatedBatch(res);
       setSelectedTicketIndex(0);
 
-      // Limpiar sección 1: Atributos del Envase & Catálogo SAP tras emitir la tirada
+      // Limpiar sección 1: Atributos del Envase & Catálogo de Códigos Internos tras emitir la tirada
       setSelectedCodigoSap('');
       setArticulo('');
       setMaterial('');
@@ -125,7 +125,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
     lote: 10001,
     unidad_embalaje: '0001',
     peso: peso.trim() || 'N/A',
-    articulo: (articulo.trim() || 'SELECCIONE CÓDIGO SAP').toUpperCase(),
+    articulo: (articulo.trim() || 'SELECCIONE CÓDIGO INTERNO').toUpperCase(),
     material: (material.trim() || 'HDPE').toUpperCase(),
     color_bidon: (colorBidon.trim() || 'TRANSPARENTE').toUpperCase(),
     color_asa: (colorAsa.trim() || 'VERDE').toUpperCase(),
@@ -193,7 +193,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
             <div>
               <h2 className="text-xs font-bold text-[#0D3B22] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-[#E5ECE6] pb-1.5">
                 <Package className="w-4 h-4 text-[#15803D]" />
-                <span>1. Atributos del Envase & Catálogo SAP</span>
+                <span>1. Atributos del Envase & Catálogo de Códigos Internos</span>
               </h2>
 
               <div className="space-y-3">
@@ -201,14 +201,14 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                   <div className="p-3 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6]">
                     <label className="block text-xs font-bold text-[#0D3B22] mb-1 flex items-center gap-1.5">
                       <Barcode className="w-3.5 h-3.5 text-[#15803D]" />
-                      <span>Seleccionar Artículo por Código SAP / Interno</span>
+                      <span>Seleccionar Artículo por Código Interno</span>
                     </label>
                     <select
                       value={selectedCodigoSap}
                       onChange={(e) => handleSelectCodigoSap(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] focus:border-[#15803D] bg-white font-medium"
                     >
-                      <option value="">-- Seleccionar Código SAP --</option>
+                      <option value="">-- Seleccionar Código Interno --</option>
                       {codigosInternos.map(c => (
                         <option key={c.uid} value={c.codigosap}>
                           {c.codigosap} · {c.articulo} ({c.materia || 'HDPE'})
@@ -218,20 +218,20 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                   </div>
                 )}
 
-                {/* Artículo / Denominación: Solo lectura desde Catálogo SAP */}
+                {/* Artículo / Denominación: Solo lectura desde Catálogo de Códigos Internos */}
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
                     <span>Artículo / Denominación de Envase</span>
-                    <span className="text-[10px] text-neutral-400 font-mono">Solo Lectura · Catálogo SAP</span>
+                    <span className="text-[10px] text-neutral-400 font-mono">Solo Lectura · Código Interno</span>
                   </label>
                   <div className={`w-full px-3.5 py-2.5 text-sm rounded-xl border ${articulo ? 'border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22]' : 'border-dashed border-amber-300 bg-amber-50/40 text-amber-800'} font-bold flex items-center justify-between`}>
-                    <span>{articulo || 'SELECCIONE CÓDIGO SAP ARRIBA'}</span>
+                    <span>{articulo || 'SELECCIONE CÓDIGO INTERNO ARRIBA'}</span>
                     <span className={`w-2 h-2 rounded-full ${articulo ? 'bg-[#15803D]' : 'bg-amber-400'}`} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Materia Prima: Solo Lectura desde Catálogo SAP */}
+                  {/* Materia Prima: Solo Lectura desde Catálogo */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
                       <span>Materia Prima</span>
@@ -243,7 +243,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     </div>
                   </div>
 
-                  {/* Color: Solo Lectura desde Catálogo SAP */}
+                  {/* Color: Solo Lectura desde Catálogo */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
                       <span>Color</span>
@@ -255,7 +255,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     </div>
                   </div>
 
-                  {/* Color Asa: Solo Lectura desde Catálogo SAP */}
+                  {/* Color Asa: Solo Lectura desde Catálogo */}
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1 flex items-center justify-between">
                       <span>Color Asa</span>
@@ -421,7 +421,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
               {(!selectedCodigoSap || !articulo.trim()) && (
                 <p className="text-center text-xs text-amber-700 mt-2.5 font-medium flex items-center justify-center gap-1.5 bg-amber-50 py-2 px-3 rounded-lg border border-amber-200">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-                  <span>Seleccione un Artículo por Código SAP para habilitar la emisión</span>
+                  <span>Seleccione un Artículo por Código Interno para habilitar la emisión</span>
                 </p>
               )}
             </div>
@@ -449,7 +449,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                   <div className="font-bold flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
-                      <span>CÓDIGO SAP / INTERNO:</span>
+                      <span>CÓDIGO INTERNO:</span>
                     </span>
                     <span className="font-mono px-2 py-0.5 rounded bg-white border border-[#15803D]/30 font-black">
                       {createdBatch.codigosap || createdBatch.codigo_interno}
