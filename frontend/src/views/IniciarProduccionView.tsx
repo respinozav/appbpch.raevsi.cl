@@ -333,15 +333,31 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
             <div>
               <h2 className="text-xs font-bold text-[#0D3B22] uppercase tracking-wider mb-3 flex items-center gap-1.5 border-b border-[#E5ECE6] pb-1.5">
                 <Hash className="w-4 h-4 text-[#15803D]" />
-                <span>3. Unidades de Embalaje & Peso</span>
+                <span>3. Unidades de Embalaje, Cantidad & Peso</span>
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-3.5 rounded-xl bg-[#EEF6F0]/60 border border-[#15803D]/20">
-                  <label className="block text-xs font-bold text-[#0D3B22] mb-1">
-                    Total Embalajes a Generar (Tickets)
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                    Cantidad por Embalaje
                   </label>
-                  <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={1}
+                    required
+                    value={cantidad}
+                    onChange={(e) => setCantidad(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="Ej. 2600"
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono text-center font-bold"
+                  />
+                  <span className="block text-[10px] text-neutral-400 mt-1">Unidades por pallet/paquete</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#EEF6F0]/60 border border-[#15803D]/20">
+                  <label className="block text-xs font-bold text-[#0D3B22] mb-1">
+                    Total Embalajes (Tickets)
+                  </label>
+                  <div className="flex items-center gap-2">
                     <input
                       type="number"
                       min={1}
@@ -349,15 +365,13 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       required
                       value={cantidadLotes}
                       onChange={(e) => setCantidadLotes(Number(e.target.value))}
-                      className="w-20 px-3 py-1.5 text-base font-bold font-mono rounded-lg border border-[#15803D]/30 bg-white text-center"
+                      className="w-16 px-2 py-1 text-sm font-bold font-mono rounded-lg border border-[#15803D]/30 bg-white text-center"
                     />
-                    <span className="text-xs text-neutral-700">
-                      Rango de unidades: <strong className="text-[#0D3B22] font-mono">0001 al {String(cantidadLotes).padStart(4, '0')}</strong> (1 solo lote)
+                    <span className="text-[11px] text-neutral-700">
+                      Rango: <strong className="text-[#0D3B22] font-mono">0001-{String(cantidadLotes).padStart(4, '0')}</strong>
                     </span>
                   </div>
-                  <div className="text-[11px] text-neutral-500 mt-2 font-mono">
-                    Lote único por emisión · Correlativo 0001 a 00NN automático
-                  </div>
+                  <span className="block text-[10px] text-neutral-500 mt-1 font-mono">1 lote único</span>
                 </div>
 
                 <div>
@@ -371,8 +385,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     placeholder="Ej. N/A o 18.5 kg"
                     className="w-full px-3 py-2 text-sm rounded-xl border border-[#E5ECE6] focus:outline-none focus:border-[#15803D] font-mono"
                   />
-                  <span className="block text-[11px] text-neutral-400 mt-1">
-                    Texto abierto para unidad de peso en kilos (ej: "N/A" o valor numérico).
+                  <span className="block text-[10px] text-neutral-400 mt-1">
+                    Peso en kilos (ej: "N/A" o valor).
                   </span>
                 </div>
               </div>
