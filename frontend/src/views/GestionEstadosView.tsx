@@ -36,8 +36,9 @@ export const GestionEstadosView: React.FC = () => {
   const [estados, setEstados] = useState<Estado[]>([]);
   const [loadingEstados, setLoadingEstados] = useState(true);
 
-  // Modo de operación: 'inspect' o el UID de un estado destino preseleccionado
-  const [targetStateUid, setTargetStateUid] = useState<string>(''); // Si está vacío o un UID específico
+  // Modo de operación: 'inspect' o el UID de un estado destino preseleccionado.
+  // Por defecto siempre seleccionado 'inspect' (Solo Inspección).
+  const [targetStateUid, setTargetStateUid] = useState<string>('inspect');
 
   // Input de escaneo
   const [scanInput, setScanInput] = useState('');
@@ -72,11 +73,7 @@ export const GestionEstadosView: React.FC = () => {
         setLoadingEstados(true);
         const res = await api.getEstados();
         setEstados(res || []);
-        // Seleccionar por defecto "Almacenaje" si existe, ya que es el salto natural tras Producción
-        const almacenaje = (res || []).find((e) => e.nombre === 'Almacenaje');
-        if (almacenaje) {
-          setTargetStateUid(almacenaje.uid);
-        }
+        // Por defecto siempre se mantiene 'inspect' (Solo Inspección)
       } catch (err: any) {
         console.error('Error al cargar lista de estados:', err);
       } finally {
