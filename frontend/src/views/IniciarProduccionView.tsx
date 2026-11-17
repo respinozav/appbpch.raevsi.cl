@@ -21,8 +21,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
   const [cantidad, setCantidad] = useState<number | ''>('');
   const [cantidadLotes, setCantidadLotes] = useState<number>(10);
   const [peso, setPeso] = useState<string>('');
-  const [articulo, setArticulo] = useState<string>('ENVASE TRAVERSO 1000-24');
-  const [material, setMaterial] = useState<string>('HDPE');
+  const [articulo, setArticulo] = useState<string>('');
+  const [material, setMaterial] = useState<string>('');
   const [colorBidon, setColorBidon] = useState<string>('');
   const [colorAsa, setColorAsa] = useState<string>('');
 
@@ -31,15 +31,6 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
     api.getAllCodigosInternos()
       .then(items => {
         setCodigosInternos(items);
-        if (items.length > 0 && !selectedCodigoSap) {
-          const first = items[0];
-          setSelectedCodigoSap(first.codigosap);
-          setArticulo(first.articulo);
-          setMaterial(first.materia ? first.materia.toUpperCase() : 'HDPE');
-          setColorBidon(first.color || 'TRANSPARENTE');
-          setColorAsa(first.colorasa || 'VERDE');
-          if (first.cantidad) setCantidad(first.cantidad);
-        }
       })
       .catch(err => console.error('Error cargando códigos internos:', err));
 
@@ -57,12 +48,16 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
     setSelectedCodigoSap(codigoSapVal);
     const found = codigosInternos.find(c => c.codigosap === codigoSapVal);
     if (found) {
-      setArticulo(found.articulo);
-      // Materia automática desde el catálogo
+      setArticulo(found.articulo || '');
       setMaterial(found.materia ? found.materia.toUpperCase() : 'HDPE');
-      if (found.color) setColorBidon(found.color);
-      if (found.colorasa) setColorAsa(found.colorasa);
+      setColorBidon(found.color || 'TRANSPARENTE');
+      setColorAsa(found.colorasa || 'VERDE');
       if (found.cantidad) setCantidad(found.cantidad);
+    } else {
+      setArticulo('');
+      setMaterial('');
+      setColorBidon('');
+      setColorAsa('');
     }
   };
 
@@ -102,6 +97,13 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
 
       setCreatedBatch(res);
       setSelectedTicketIndex(0);
+
+      // Limpiar sección 1: Atributos del Envase & Catálogo SAP tras emitir la tirada
+      setSelectedCodigoSap('');
+      setArticulo('');
+      setMaterial('');
+      setColorBidon('');
+      setColorAsa('');
     } catch (err: any) {
       setError(err.message || 'Error al iniciar tirada de producción.');
     } finally {
@@ -113,7 +115,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
   const previewTicket: ProductionTicket = {
     uid: '00000000-0000-0000-0000-000000000000',
     codigo_interno: 110000000,
-    codigosap: selectedCodigoSap || 'SAP-10024',
+    codigosap: selectedCodigoSap || 'SIN SELECCIONAR',
     fecha: new Date().toISOString(),
     numero_maquina: numeroMaquina !== '' ? Number(numeroMaquina) : 7,
     turno: Number(turno) || 1,
@@ -123,7 +125,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
     lote: 10001,
     unidad_embalaje: '0001',
     peso: peso.trim() || 'N/A',
-    articulo: (articulo.trim() || 'ENVASE TRAVERSO 1000-24').toUpperCase(),
+    articulo: (articulo.trim() || 'SELECCIONE CÓDIGO SAP').toUpperCase(),
     material: (material.trim() || 'HDPE').toUpperCase(),
     color_bidon: (colorBidon.trim() || 'TRANSPARENTE').toUpperCase(),
     color_asa: (colorAsa.trim() || 'VERDE').toUpperCase(),
@@ -222,9 +224,9 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                     <span>Artículo / Denominación de Envase</span>
                     <span className="text-[10px] text-neutral-400 font-mono">Solo Lectura · Catálogo SAP</span>
                   </label>
-                  <div className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
-                    <span>{articulo || 'SELECCIONE CÓDIGO SAP'}</span>
-                    <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                  <div className={`w-full px-3.5 py-2.5 text-sm rounded-xl border ${articulo ? 'border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22]' : 'border-dashed border-amber-300 bg-amber-50/40 text-amber-800'} font-bold flex items-center justify-between`}>
+                    <span>{articulo || 'SELECCIONE CÓDIGO SAP ARRIBA'}</span>
+                    <span className={`w-2 h-2 rounded-full ${articulo ? 'bg-[#15803D]' : 'bg-amber-400'}`} />
                   </div>
                 </div>
 
@@ -235,9 +237,9 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       <span>Materia Prima</span>
                       <span className="text-[10px] text-neutral-400 font-mono">Auto</span>
                     </label>
-                    <div className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
-                      <span>{material || 'HDPE VIRGEN'}</span>
-                      <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                    <div className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border ${material ? 'border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22]' : 'border-dashed border-neutral-300 bg-neutral-50 text-neutral-400'} font-bold flex items-center justify-between`}>
+                      <span>{material || '---'}</span>
+                      <span className={`w-2 h-2 rounded-full ${material ? 'bg-[#15803D]' : 'bg-neutral-300'}`} />
                     </div>
                   </div>
 
@@ -247,9 +249,9 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       <span>Color</span>
                       <span className="text-[10px] text-neutral-400 font-mono">Auto</span>
                     </label>
-                    <div className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
-                      <span>{colorBidon || 'TRANSPARENTE'}</span>
-                      <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                    <div className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border ${colorBidon ? 'border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22]' : 'border-dashed border-neutral-300 bg-neutral-50 text-neutral-400'} font-bold flex items-center justify-between`}>
+                      <span>{colorBidon || '---'}</span>
+                      <span className={`w-2 h-2 rounded-full ${colorBidon ? 'bg-[#15803D]' : 'bg-neutral-300'}`} />
                     </div>
                   </div>
 
@@ -259,9 +261,9 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       <span>Color Asa</span>
                       <span className="text-[10px] text-neutral-400 font-mono">Auto</span>
                     </label>
-                    <div className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22] font-bold flex items-center justify-between">
-                      <span>{colorAsa || 'VERDE'}</span>
-                      <span className="w-2 h-2 rounded-full bg-[#15803D]" />
+                    <div className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border ${colorAsa ? 'border-[#E5ECE6] bg-[#F7FAF7] text-[#0D3B22]' : 'border-dashed border-neutral-300 bg-neutral-50 text-neutral-400'} font-bold flex items-center justify-between`}>
+                      <span>{colorAsa || '---'}</span>
+                      <span className={`w-2 h-2 rounded-full ${colorAsa ? 'bg-[#15803D]' : 'bg-neutral-300'}`} />
                     </div>
                   </div>
                 </div>
@@ -401,8 +403,8 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={submitting}
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#15803D] to-[#22C55E] hover:opacity-95 active:scale-[0.99] transition shadow-lg shadow-[#15803D]/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                disabled={submitting || !selectedCodigoSap || !articulo.trim()}
+                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#15803D] to-[#22C55E] hover:opacity-95 active:scale-[0.99] transition shadow-lg shadow-[#15803D]/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
               >
                 {submitting ? (
                   <>
@@ -416,6 +418,12 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                   </>
                 )}
               </button>
+              {(!selectedCodigoSap || !articulo.trim()) && (
+                <p className="text-center text-xs text-amber-700 mt-2.5 font-medium flex items-center justify-center gap-1.5 bg-amber-50 py-2 px-3 rounded-lg border border-amber-200">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                  <span>Seleccione un Artículo por Código SAP para habilitar la emisión</span>
+                </p>
+              )}
             </div>
           </form>
         </div>

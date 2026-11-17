@@ -5,7 +5,7 @@ import {
   Factory, Award, Leaf, Layers, ArrowUpRight, 
   RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck, 
   Sliders, History, Clock, ArrowRight, TrendingUp, Calendar,
-  PieChart, Download, Scan, Barcode, Users2, PlusCircle, FileCheck
+  PieChart, Download
 } from 'lucide-react';
 
 const getInitialMonthDates = () => {
@@ -263,113 +263,6 @@ export const DashboardView: React.FC<{ onNavigate?: (view: string) => void }> = 
           </button>
         </div>
       </div>
-
-      {/* Accesos Rápidos a Módulos de Planta */}
-      {onNavigate && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <button
-            type="button"
-            onClick={() => onNavigate('iniciar')}
-            className="p-3 bg-white rounded-xl border border-[#E5ECE6] hover:border-[#15803D] hover:bg-[#EEF6F0]/40 transition text-left shadow-2xs group flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-emerald-50 text-[#15803D] group-hover:bg-[#15803D] group-hover:text-white transition">
-                <PlusCircle className="w-4 h-4" />
-              </span>
-              <div>
-                <span className="text-xs font-bold text-[#0D3B22] block leading-tight">Iniciar Prod.</span>
-                <span className="text-[10px] text-neutral-400">Tickets Zebra</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-[#15803D] transition" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('gestion-estados')}
-            className="p-3 bg-white rounded-xl border border-[#E5ECE6] hover:border-[#15803D] hover:bg-[#EEF6F0]/40 transition text-left shadow-2xs group flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-blue-50 text-blue-700 group-hover:bg-blue-700 group-hover:text-white transition">
-                <Scan className="w-4 h-4" />
-              </span>
-              <div>
-                <span className="text-xs font-bold text-[#0D3B22] block leading-tight">Gestión Estados</span>
-                <span className="text-[10px] text-neutral-400">Pistola QR / Cam</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-blue-700 transition" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('produccion')}
-            className="p-3 bg-white rounded-xl border border-[#E5ECE6] hover:border-[#15803D] hover:bg-[#EEF6F0]/40 transition text-left shadow-2xs group flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-amber-50 text-amber-700 group-hover:bg-amber-700 group-hover:text-white transition">
-                <Layers className="w-4 h-4" />
-              </span>
-              <div>
-                <span className="text-xs font-bold text-[#0D3B22] block leading-tight">Sábana Lotes</span>
-                <span className="text-[10px] text-neutral-400">0001 al 00NN</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-amber-700 transition" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('codigos-internos')}
-            className="p-3 bg-white rounded-xl border border-[#E5ECE6] hover:border-[#15803D] hover:bg-[#EEF6F0]/40 transition text-left shadow-2xs group flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-purple-50 text-purple-700 group-hover:bg-purple-700 group-hover:text-white transition">
-                <Barcode className="w-4 h-4" />
-              </span>
-              <div>
-                <span className="text-xs font-bold text-[#0D3B22] block leading-tight">Códigos SAP</span>
-                <span className="text-[10px] text-neutral-400">Maestro Artículos</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-purple-700 transition" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('operadores')}
-            className="p-3 bg-white rounded-xl border border-[#E5ECE6] hover:border-[#15803D] hover:bg-[#EEF6F0]/40 transition text-left shadow-2xs group flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-emerald-50 text-[#15803D] group-hover:bg-[#15803D] group-hover:text-white transition">
-                <Users2 className="w-4 h-4" />
-              </span>
-              <div>
-                <span className="text-xs font-bold text-[#0D3B22] block leading-tight">Operadores</span>
-                <span className="text-[10px] text-neutral-400">Línea de Planta</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-[#15803D] transition" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('certificados')}
-            className="p-3 bg-white rounded-xl border border-[#E5ECE6] hover:border-[#15803D] hover:bg-[#EEF6F0]/40 transition text-left shadow-2xs group flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-emerald-50 text-[#10B981] group-hover:bg-[#10B981] group-hover:text-white transition">
-                <FileCheck className="w-4 h-4" />
-              </span>
-              <div>
-                <span className="text-xs font-bold text-[#0D3B22] block leading-tight">Certificados</span>
-                <span className="text-[10px] text-neutral-400">R-CAL-07 PDF</span>
-              </div>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-300 group-hover:text-[#10B981] transition" />
-          </button>
-        </div>
-      )}
 
       {/* 2. Top Bento Row: 4 Main KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
