@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, ProductionBatchSummary, ProductionTicket, SapCodigoInternoItem, OperadorItem } from '../api/client';
 import { ZebraLabel } from '../components/ZebraLabel';
+import { ZebraConfig, getStoredZebraConfig } from '../utils/zebraConfig';
 import { 
   PlusCircle, Printer, CheckCircle2, AlertCircle, RefreshCw, 
   Package, Sliders, Hash, ArrowRight, Barcode, UserCheck, Layers
@@ -26,8 +27,20 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
   const [colorBidon, setColorBidon] = useState<string>('');
   const [colorAsa, setColorAsa] = useState<string>('');
 
-  // Cargar listas iniciales
+  // Configuración de Zebra activa (dimensiones, mandril y DPI)
+  const [zebraConfig, setZebraConfig] = useState<ZebraConfig>(getStoredZebraConfig);
+
+  // Cargar listas iniciales y escuchar cambios de configuración de Zebra
   useEffect(() => {
+    const handleZebraConfigUpdate = (e: any) => {
+      if (e.detail) {
+        setZebraConfig(e.detail);
+      } else {
+        setZebraConfig(getStoredZebraConfig());
+      }
+    };
+    window.addEventListener('bpch_zebra_config_updated', handleZebraConfigUpdate);
+
     api.getAllCodigosInternos()
       .then(items => {
         setCodigosInternos(items);
@@ -42,6 +55,10 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
         }
       })
       .catch(err => console.error('Error cargando operadores:', err));
+
+    return () => {
+      window.removeEventListener('bpch_zebra_config_updated', handleZebraConfigUpdate);
+    };
   }, []);
 
   const handleSelectCodigoSap = (codigoSapVal: string) => {
@@ -443,6 +460,37 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
               <div className="w-2.5 h-2.5 rounded-full bg-[#15803D] animate-pulse" />
             </div>
 
+            {/* Panel Técnico de Configuración Zebra Activa & Advertencia de Bobina */}
+            <div className="mb-4 p-3 rounded-xl bg-[#F7FAF7] border border-[#15803D]/25 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md bg-[#EEF6F0] text-[#15803D]">
+                    <Printer className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <span className="font-extrabold text-[#0D3B22] block">
+                      Configuración Zebra: {zebraConfig.anchoMm} x {zebraConfig.altoMm} mm
+                    </span>
+                    <span className="text-[10px] text-neutral-500 font-mono">
+                      {zebraConfig.dpi} DPI · Mandril {zebraConfig.mandrilPulgadas}" · Sensor {zebraConfig.sensorTipo === 'gap' ? 'Separación (Gap)' : zebraConfig.sensorTipo} · Oscuridad {zebraConfig.darkness}/30
+                    </span>
+                  </div>
+                </div>
+
+                <span className="text-[9px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 uppercase">
+                  {zebraConfig.presetId}
+                </span>
+              </div>
+
+              {/* Advertencia visual previa a la impresión */}
+              <div className="pt-2 border-t border-[#E5ECE6] flex items-center gap-1.5 text-[11px] text-amber-800">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>
+                  <strong>Verificación Operativa:</strong> Verifique que la impresora térmica tenga instalado el rollo de <strong>{zebraConfig.anchoMm} x {zebraConfig.altoMm} mm</strong> antes de imprimir.
+                </span>
+              </div>
+            </div>
+
             {createdBatch ? (
               <div>
                 <div className="mb-4 p-3.5 rounded-xl bg-[#EEF6F0] border border-[#15803D]/20 text-xs text-[#0D3B22] space-y-1">
@@ -470,7 +518,7 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                       key={t.uid}
                       type="button"
                       onClick={() => setSelectedTicketIndex(idx)}
-                      className={`px-2.5 py-1 text-xs font-mono rounded-lg border transition ${
+                      className={`px-2.5 py-1 text-xs font-mono rounded-lg border transition cursor-pointer ${
                         selectedTicketIndex === idx
                           ? 'bg-[#0D3B22] text-white border-[#0D3B22] font-bold'
                           : 'bg-[#F7FAF7] text-neutral-600 border-[#E5ECE6] hover:bg-[#EEF6F0]'
@@ -481,12 +529,15 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                   ))}
                 </div>
 
-                <ZebraLabel ticket={createdBatch.lotes[selectedTicketIndex]} />
+                <ZebraLabel 
+                  ticket={createdBatch.lotes[selectedTicketIndex]} 
+                  zebraConfig={zebraConfig}
+                />
 
                 {onNavigateToBatch && (
                   <button
                     onClick={() => onNavigateToBatch(createdBatch.codigo_interno)}
-                    className="w-full mt-4 py-2 px-3 rounded-xl border border-[#15803D]/30 text-xs font-bold text-[#0D3B22] bg-[#EEF6F0]/60 hover:bg-[#EEF6F0] transition flex items-center justify-center gap-1.5"
+                    className="w-full mt-4 py-2 px-3 rounded-xl border border-[#15803D]/30 text-xs font-bold text-[#0D3B22] bg-[#EEF6F0]/60 hover:bg-[#EEF6F0] transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>Ver en Sábana de Producción</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -494,7 +545,11 @@ export const IniciarProduccionView: React.FC<{ onNavigateToBatch?: (codigo: numb
                 )}
               </div>
             ) : (
-              <ZebraLabel ticket={previewTicket} showPrintButton={true} />
+              <ZebraLabel 
+                ticket={previewTicket} 
+                showPrintButton={true} 
+                zebraConfig={zebraConfig}
+              />
             )}
           </div>
         </div>

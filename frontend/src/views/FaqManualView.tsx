@@ -18,7 +18,7 @@ export const FaqManualView: React.FC = () => {
     { id: 'sec-gestion-estados', label: '6. Gestión de Estados', desc: 'Modo continuo, pistola QR, cámara y flujo obligatorio' },
     { id: 'sec-certificados', label: '7. Certificados R-CAL-07', desc: 'Emisión para lotes en despacho y liberados' },
     { id: 'sec-qr', label: '8. Consulta Pública QR', desc: 'Verificación externa sin login' },
-    { id: 'sec-config', label: '9. Configuración Global', desc: 'Tiempos de inactividad de sesión y RDS' },
+    { id: 'sec-config', label: '9. Configuración Global', desc: 'Inactividad de sesión, roles y parámetros Zebra' },
     { id: 'sec-usuarios', label: '10. Usuarios & Permisos', desc: 'Matriz de roles RBAC con nuevos módulos' },
     { id: 'sec-faq', label: '11. Preguntas Frecuentes (FAQ)', desc: 'Protocolos de contingencia en planta' },
   ];
@@ -49,7 +49,7 @@ export const FaqManualView: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
             <span>Manual de Operaciones & FAQ</span>
             <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
-              MAN-SGI-01 · v3.5
+              MAN-SGI-01 · v3.6
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">

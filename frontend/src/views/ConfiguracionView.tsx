@@ -3,9 +3,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { api, SessionConfig, Role, LoginAuditItem } from '../api/client';
 import { 
+  ZebraConfig, ZEBRA_PRESETS, DEFAULT_ZEBRA_CONFIG, 
+  getStoredZebraConfig, setStoredZebraConfig 
+} from '../utils/zebraConfig';
+import { 
   Clock, Shield, Save, CheckCircle2, AlertTriangle, 
   Settings, RefreshCw, Lock, UserCheck, 
-  HelpCircle, Users, Activity, Plus, Check, X, Search, ChevronRight
+  HelpCircle, Users, Activity, Plus, Check, X, Search, ChevronRight,
+  Printer, Sliders, Layers, Barcode, Disc, Eye
 } from 'lucide-react';
 
 const ALL_SYSTEM_MODULES = [
@@ -24,7 +29,7 @@ const ALL_SYSTEM_MODULES = [
 
 export const ConfiguracionView: React.FC = () => {
   const { isAdmin, refreshUser, setTimeoutMinutes: setGlobalTimeout, refreshTimeoutConfig } = useAuth();
-  const [activeTab, setActiveTab] = useState<'session' | 'roles' | 'audit'>('session');
+  const [activeTab, setActiveTab] = useState<'session' | 'roles' | 'zebra' | 'audit'>('session');
 
   // ==========================================
   // 1. AJUSTES DE SESIÓN
@@ -89,6 +94,65 @@ export const ConfiguracionView: React.FC = () => {
     } finally {
       setSavingSession(false);
     }
+  };
+
+  // ==========================================
+  // CONFIGURACIÓN DE ZEBRA (IMPRESIÓN TÉRMICA)
+  // ==========================================
+  const [zebraConfig, setZebraConfig] = useState<ZebraConfig>(getStoredZebraConfig);
+  const [originalZebraConfig, setOriginalZebraConfig] = useState<ZebraConfig>(getStoredZebraConfig);
+  const [savingZebra, setSavingZebra] = useState(false);
+  const [zebraSuccessMsg, setZebraSuccessMsg] = useState<string | null>(null);
+  const [zebraErrorMsg, setZebraErrorMsg] = useState<string | null>(null);
+
+  const hasZebraChanges = JSON.stringify(zebraConfig) !== JSON.stringify(originalZebraConfig);
+
+  const handleSelectZebraPreset = (presetId: ZebraConfig['presetId']) => {
+    const found = ZEBRA_PRESETS.find(p => p.id === presetId);
+    if (found && presetId !== 'custom') {
+      setZebraConfig(prev => ({
+        ...prev,
+        presetId,
+        anchoMm: found.ancho,
+        altoMm: found.alto,
+      }));
+    } else {
+      setZebraConfig(prev => ({
+        ...prev,
+        presetId: 'custom',
+      }));
+    }
+  };
+
+  const handleSaveZebraConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    setZebraErrorMsg(null);
+    setZebraSuccessMsg(null);
+
+    if (zebraConfig.anchoMm < 30 || zebraConfig.anchoMm > 150) {
+      setZebraErrorMsg('El ancho de la etiqueta debe estar comprendido entre 30 y 150 mm.');
+      return;
+    }
+    if (zebraConfig.altoMm < 40 || zebraConfig.altoMm > 350) {
+      setZebraErrorMsg('El alto de la etiqueta debe estar comprendido entre 40 y 350 mm.');
+      return;
+    }
+
+    setSavingZebra(true);
+    try {
+      setStoredZebraConfig(zebraConfig);
+      setOriginalZebraConfig(zebraConfig);
+      setZebraSuccessMsg(`Configuración de Zebra guardada exitosamente (${zebraConfig.anchoMm} x ${zebraConfig.altoMm} mm). Se ha sincronizado con Iniciar Producción.`);
+      setTimeout(() => setZebraSuccessMsg(null), 5000);
+    } catch (err: any) {
+      setZebraErrorMsg(err.message || 'Error al guardar la configuración de Zebra.');
+    } finally {
+      setSavingZebra(false);
+    }
+  };
+
+  const handleResetZebraDefault = () => {
+    setZebraConfig(DEFAULT_ZEBRA_CONFIG);
   };
 
   // ==========================================
@@ -300,6 +364,18 @@ export const ConfiguracionView: React.FC = () => {
         >
           <Users className="w-4 h-4 text-[#15803D]" />
           <span>Administrador de Roles & Módulos</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('zebra')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition border-b-2 cursor-pointer whitespace-nowrap ${
+            activeTab === 'zebra'
+              ? 'border-[#15803D] text-[#0D3B22] bg-[#EEF6F0]/50'
+              : 'border-transparent text-neutral-500 hover:text-neutral-800'
+          }`}
+        >
+          <Printer className="w-4 h-4 text-[#15803D]" />
+          <span>Configuración de Zebra</span>
         </button>
 
         <button
@@ -695,7 +771,466 @@ export const ConfiguracionView: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: AUDITORÍA DE INICIOS DE SESIÓN */}
+      {/* TAB 3: CONFIGURACIÓN DE ZEBRA (IMPRESIÓN TÉRMICA) */}
+      {/* ========================================================================= */}
+      {activeTab === 'zebra' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Columna Izquierda: Formulario de Parámetros Zebra (8 cols) */}
+          <div className="lg:col-span-8 bg-white p-6 rounded-2xl border border-[#E5ECE6] shadow-sm">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E5ECE6] gap-3 mb-6">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Printer className="w-5 h-5 text-[#15803D]" />
+                  <h2 className="text-base font-bold text-[#0D3B22]">
+                    Configuración de Impresoras Térmicas Zebra ZPL
+                  </h2>
+                </div>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Parámetros del rollo de etiquetas físicas, dimensiones en milímetros, mandril y cabezal térmico de planta.
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20 self-start sm:self-auto">
+                <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
+                <span>Activa: {zebraConfig.anchoMm} x {zebraConfig.altoMm} mm</span>
+              </div>
+            </div>
+
+            {/* Alertas */}
+            {zebraSuccessMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4 text-[#15803D] shrink-0" />
+                <span>{zebraSuccessMsg}</span>
+              </motion.div>
+            )}
+
+            {zebraErrorMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2"
+              >
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{zebraErrorMsg}</span>
+              </motion.div>
+            )}
+
+            <form onSubmit={handleSaveZebraConfig} className="space-y-6">
+              {/* Sección 1: Plantillas de Dimensiones */}
+              <div>
+                <label className="block text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-[#15803D]" />
+                  <span>1. Dimensiones de Etiqueta (Ancho x Alto en mm)</span>
+                </label>
+                <p className="text-xs text-neutral-500 mb-3">
+                  Selecciona la plantilla según el formato de rollo instalado físicamente en las impresoras Zebra ZT411 / ZD421 de planta:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  {ZEBRA_PRESETS.map((preset) => {
+                    const isSelected = zebraConfig.presetId === preset.id;
+                    return (
+                      <div
+                        key={preset.id}
+                        onClick={() => handleSelectZebraPreset(preset.id)}
+                        className={`p-3.5 rounded-xl border-2 transition cursor-pointer select-none flex flex-col justify-between ${
+                          isSelected
+                            ? 'border-[#15803D] bg-[#EEF6F0]/60 shadow-xs'
+                            : 'border-[#E5ECE6] hover:border-[#15803D]/40 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-mono font-black text-sm text-[#0D3B22]">
+                            {preset.label}
+                          </span>
+                          <span className="text-[10px] font-mono text-neutral-400">
+                            {preset.pulgadas}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-neutral-600 leading-normal">
+                          {preset.descripcion}
+                        </span>
+                        {preset.isPopular && (
+                          <div className="mt-2 pt-2 border-t border-[#15803D]/10">
+                            <span className="text-[9px] font-bold text-[#15803D] bg-emerald-100/80 px-2 py-0.5 rounded-full inline-block">
+                              ★ Estándar Pallet Bioplast
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Ajuste Fino / Personalizado */}
+                <div className="p-4 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] space-y-4">
+                  <div className="text-xs font-bold text-neutral-700 flex items-center justify-between">
+                    <span>Ajuste Milimétrico de Cabezal:</span>
+                    <span className="text-[10px] font-mono text-neutral-500">
+                      Resolución efectiva {zebraConfig.dpi} DPI
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Ancho mm */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-xs font-semibold text-neutral-700">Ancho (X)</label>
+                        <span className="font-mono font-bold text-xs text-[#0D3B22] px-2 py-0.5 rounded bg-white border border-[#E5ECE6]">
+                          {zebraConfig.anchoMm} mm
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={50}
+                        max={120}
+                        step={1}
+                        value={zebraConfig.anchoMm}
+                        onChange={(e) => {
+                          setZebraConfig(prev => ({
+                            ...prev,
+                            presetId: 'custom',
+                            anchoMm: Number(e.target.value)
+                          }));
+                        }}
+                        className="w-full accent-[#15803D] cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[10px] text-neutral-400 font-mono mt-0.5">
+                        <span>Min: 50 mm</span>
+                        <span>Max: 120 mm</span>
+                      </div>
+                    </div>
+
+                    {/* Alto mm */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-xs font-semibold text-neutral-700">Alto (Y)</label>
+                        <span className="font-mono font-bold text-xs text-[#0D3B22] px-2 py-0.5 rounded bg-white border border-[#E5ECE6]">
+                          {zebraConfig.altoMm} mm
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={80}
+                        max={250}
+                        step={1}
+                        value={zebraConfig.altoMm}
+                        onChange={(e) => {
+                          setZebraConfig(prev => ({
+                            ...prev,
+                            presetId: 'custom',
+                            altoMm: Number(e.target.value)
+                          }));
+                        }}
+                        className="w-full accent-[#15803D] cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[10px] text-neutral-400 font-mono mt-0.5">
+                        <span>Min: 80 mm</span>
+                        <span>Max: 250 mm</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 2: Especificaciones del Rollo & Mandril */}
+              <div className="pt-2 border-t border-[#E5ECE6]">
+                <label className="block text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Disc className="w-4 h-4 text-[#15803D]" />
+                  <span>2. Diámetro del Mandril & Dimensiones del Rollo</span>
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Diámetro del Mandril / Core */}
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Diámetro Mandril (Core)
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setZebraConfig(prev => ({ ...prev, mandrilPulgadas: 3 }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition text-center cursor-pointer ${
+                          zebraConfig.mandrilPulgadas === 3
+                            ? 'bg-[#0D3B22] text-white border-[#0D3B22] shadow-xs'
+                            : 'bg-white text-neutral-700 border-[#E5ECE6] hover:bg-neutral-50'
+                        }`}
+                      >
+                        3" (76 mm)
+                        <span className="block text-[9px] font-normal opacity-80">Industrial</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setZebraConfig(prev => ({ ...prev, mandrilPulgadas: 1 }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition text-center cursor-pointer ${
+                          zebraConfig.mandrilPulgadas === 1
+                            ? 'bg-[#0D3B22] text-white border-[#0D3B22] shadow-xs'
+                            : 'bg-white text-neutral-700 border-[#E5ECE6] hover:bg-neutral-50'
+                        }`}
+                      >
+                        1" (25 mm)
+                        <span className="block text-[9px] font-normal opacity-80">Desktop</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Diámetro Exterior Máx */}
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Diámetro Exterior Máx
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setZebraConfig(prev => ({ ...prev, diametroExteriorMaxMm: 203 }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition text-center cursor-pointer ${
+                          zebraConfig.diametroExteriorMaxMm === 203
+                            ? 'bg-[#0D3B22] text-white border-[#0D3B22] shadow-xs'
+                            : 'bg-white text-neutral-700 border-[#E5ECE6] hover:bg-neutral-50'
+                        }`}
+                      >
+                        8" (203 mm)
+                        <span className="block text-[9px] font-normal opacity-80">Rollo Grande</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setZebraConfig(prev => ({ ...prev, diametroExteriorMaxMm: 127 }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition text-center cursor-pointer ${
+                          zebraConfig.diametroExteriorMaxMm === 127
+                            ? 'bg-[#0D3B22] text-white border-[#0D3B22] shadow-xs'
+                            : 'bg-white text-neutral-700 border-[#E5ECE6] hover:bg-neutral-50'
+                        }`}
+                      >
+                        5" (127 mm)
+                        <span className="block text-[9px] font-normal opacity-80">Rollo Chico</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tipo de Sensor */}
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Sensor de Marca / Gap
+                    </label>
+                    <select
+                      value={zebraConfig.sensorTipo}
+                      onChange={(e) => setZebraConfig(prev => ({ ...prev, sensorTipo: e.target.value as any }))}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] bg-white font-medium focus:outline-none focus:border-[#15803D]"
+                    >
+                      <option value="gap">Separación / Web Gap (Recomendado)</option>
+                      <option value="black_mark">Marca Negra (Black Mark)</option>
+                      <option value="continuous">Papel Continuo</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 3: Cabezal Térmico & Calidad */}
+              <div className="pt-2 border-t border-[#E5ECE6]">
+                <label className="block text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Barcode className="w-4 h-4 text-[#15803D]" />
+                  <span>3. Cabezal Térmico & Densidad de Impresión</span>
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Resolución DPI */}
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Resolución Cabezal
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setZebraConfig(prev => ({ ...prev, dpi: 203 }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition text-center cursor-pointer ${
+                          zebraConfig.dpi === 203
+                            ? 'bg-[#15803D] text-white border-[#15803D] shadow-xs'
+                            : 'bg-white text-neutral-700 border-[#E5ECE6] hover:bg-neutral-50'
+                        }`}
+                      >
+                        203 DPI
+                        <span className="block text-[9px] font-normal opacity-80">8 dots/mm</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setZebraConfig(prev => ({ ...prev, dpi: 300 }))}
+                        className={`p-2 rounded-xl text-xs font-bold border transition text-center cursor-pointer ${
+                          zebraConfig.dpi === 300
+                            ? 'bg-[#15803D] text-white border-[#15803D] shadow-xs'
+                            : 'bg-white text-neutral-700 border-[#E5ECE6] hover:bg-neutral-50'
+                        }`}
+                      >
+                        300 DPI
+                        <span className="block text-[9px] font-normal opacity-80">12 dots/mm</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Oscuridad Térmica (Darkness) */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs font-semibold text-neutral-700">Oscuridad (Darkness)</label>
+                      <span className="font-mono font-bold text-xs text-[#0D3B22]">
+                        {zebraConfig.darkness} / 30
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={30}
+                      step={1}
+                      value={zebraConfig.darkness}
+                      onChange={(e) => setZebraConfig(prev => ({ ...prev, darkness: Number(e.target.value) }))}
+                      className="w-full accent-[#15803D] cursor-pointer mt-2"
+                    />
+                    <div className="flex justify-between text-[10px] text-neutral-400 font-mono mt-0.5">
+                      <span>Clara (1)</span>
+                      <span>Óptima (15)</span>
+                      <span>Oscura (30)</span>
+                    </div>
+                  </div>
+
+                  {/* Velocidad IPS */}
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Velocidad Impresión
+                    </label>
+                    <select
+                      value={zebraConfig.velocidadIps}
+                      onChange={(e) => setZebraConfig(prev => ({ ...prev, velocidadIps: Number(e.target.value) }))}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#E5ECE6] bg-white font-medium focus:outline-none focus:border-[#15803D]"
+                    >
+                      <option value={2}>2 Pulgadas/seg (Alta Calidad)</option>
+                      <option value={3}>3 Pulgadas/seg</option>
+                      <option value={4}>4 Pulgadas/seg (Recomendado Planta)</option>
+                      <option value={6}>6 Pulgadas/seg (Alta Velocidad)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de Guardado */}
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#E5ECE6]">
+                <button
+                  type="button"
+                  onClick={handleResetZebraDefault}
+                  className="px-4 py-2.5 rounded-xl border border-[#E5ECE6] hover:bg-neutral-50 text-xs font-semibold text-neutral-600 transition cursor-pointer"
+                >
+                  Restablecer a 100 x 200 mm
+                </button>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={savingZebra}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0D3B22] text-white hover:bg-[#15803D] text-xs font-bold shadow-sm transition active:scale-95 cursor-pointer disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{savingZebra ? 'Guardando...' : 'Guardar Configuración Zebra'}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          {/* Columna Derecha: Previsualización de Escala y Resumen Técnico (4 cols) */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="bg-white p-5 rounded-2xl border border-[#E5ECE6] shadow-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E5ECE6] mb-4">
+                <span className="text-xs font-bold text-[#0D3B22] uppercase tracking-wider flex items-center gap-1.5">
+                  <Eye className="w-4 h-4 text-[#15803D]" />
+                  <span>Proporción de Etiqueta</span>
+                </span>
+                <span className="text-[10px] font-mono text-neutral-400">Escala Visual</span>
+              </div>
+
+              {/* Simulación Gráfica de la Etiqueta Proporcional */}
+              <div className="flex justify-center items-center py-4 bg-neutral-50 rounded-xl border border-dashed border-[#E5ECE6]">
+                <div 
+                  className="bg-white border-2 border-black rounded shadow-md p-3 flex flex-col justify-between items-center text-center transition-all select-none"
+                  style={{
+                    width: `${Math.min(220, Math.round(zebraConfig.anchoMm * 1.8))}px`,
+                    height: `${Math.min(320, Math.round(zebraConfig.altoMm * 1.4))}px`,
+                  }}
+                >
+                  <div className="w-full border-b border-black pb-1">
+                    <span className="text-[9px] font-black uppercase tracking-wider block text-black">
+                      BIOPLAST SPA
+                    </span>
+                    <span className="text-[7.5px] font-bold text-neutral-500 block">
+                      {zebraConfig.anchoMm} x {zebraConfig.altoMm} mm
+                    </span>
+                  </div>
+
+                  <div className="my-auto py-2 flex flex-col items-center">
+                    <div className="w-14 h-14 bg-neutral-100 border border-neutral-300 rounded flex items-center justify-center text-[8px] font-mono font-bold text-neutral-500 mb-1">
+                      [ CÓDIGO QR ]
+                    </div>
+                    <span className="text-[8px] font-mono font-bold">LOTE #10001</span>
+                    <span className="text-[7.5px] text-neutral-400 font-mono">EMBALAJE 0001</span>
+                  </div>
+
+                  <div className="w-full pt-1 border-t border-black text-[7px] font-mono text-neutral-600 flex justify-between">
+                    <span>{zebraConfig.dpi} DPI</span>
+                    <span>CORE {zebraConfig.mandrilPulgadas}"</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Resumen Técnico de Configuración */}
+              <div className="mt-4 p-3 rounded-xl bg-[#F7FAF7] border border-[#E5ECE6] text-[11px] space-y-1.5 font-mono text-neutral-700">
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Ancho x Alto:</span>
+                  <strong className="text-[#0D3B22]">{zebraConfig.anchoMm} x {zebraConfig.altoMm} mm</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Mandril (Core):</span>
+                  <strong>{zebraConfig.mandrilPulgadas} pulgadas ({zebraConfig.mandrilPulgadas === 3 ? '76.2 mm' : '25.4 mm'})</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Diámetro Máx Rollo:</span>
+                  <strong>{zebraConfig.diametroExteriorMaxMm} mm ({zebraConfig.diametroExteriorMaxMm === 203 ? '8"' : '5"'})</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Densidad Cabezal:</span>
+                  <strong>{zebraConfig.dpi} DPI ({zebraConfig.dpi === 203 ? '8 dots/mm' : '12 dots/mm'})</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Sensor de Parada:</span>
+                  <strong className="capitalize">{zebraConfig.sensorTipo}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Puntos Totales (Dots):</span>
+                  <strong>
+                    {Math.round(zebraConfig.anchoMm * (zebraConfig.dpi / 25.4))} x {Math.round(zebraConfig.altoMm * (zebraConfig.dpi / 25.4))}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1.5">
+              <div className="font-bold flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+                <span>Impacto en Línea de Planta:</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-800">
+                Al guardar estas dimensiones, el módulo <strong>Iniciar Producción</strong> advertirá inmediatamente al operario qué tipo de bobina térmica debe estar cargada en la impresora antes de pulsar emitir tirada.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 4: AUDITORÍA DE INICIOS DE SESIÓN */}
       {/* ========================================================================= */}
       {activeTab === 'audit' && (
         <div className="space-y-4">

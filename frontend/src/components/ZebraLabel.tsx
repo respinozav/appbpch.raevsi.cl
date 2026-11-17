@@ -1,14 +1,21 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ProductionTicket } from '../api/client';
-import { Printer, ExternalLink } from 'lucide-react';
+import { ZebraConfig, getStoredZebraConfig } from '../utils/zebraConfig';
+import { Printer, ExternalLink, Settings } from 'lucide-react';
 
 interface ZebraLabelProps {
   ticket: ProductionTicket;
   showPrintButton?: boolean;
+  zebraConfig?: ZebraConfig;
 }
 
-export const ZebraLabel: React.FC<ZebraLabelProps> = ({ ticket, showPrintButton = true }) => {
+export const ZebraLabel: React.FC<ZebraLabelProps> = ({ 
+  ticket, 
+  showPrintButton = true,
+  zebraConfig
+}) => {
+  const activeConfig = zebraConfig || getStoredZebraConfig();
   const qrUrl = ticket.qr_url || `https://appbpch.raevsi.cl/trazabilidad/${ticket.uid}`;
 
   const handlePrint = () => {
@@ -123,22 +130,24 @@ export const ZebraLabel: React.FC<ZebraLabelProps> = ({ ticket, showPrintButton 
           </div>
         </div>
 
-        {/* Traceability footer indicator */}
+        {/* Traceability footer indicator & active Zebra dimensions */}
         <div className="mt-1 flex justify-between items-center text-[9px] text-neutral-500 font-mono">
           <span>{ticket.material} · {ticket.color_bidon} / {ticket.color_asa}</span>
-          <span className="truncate max-w-[170px]">{qrUrl}</span>
+          <span className="font-bold text-neutral-600">
+            {activeConfig.anchoMm}x{activeConfig.altoMm}mm · {activeConfig.dpi}DPI
+          </span>
         </div>
       </div>
 
       {/* Action Buttons (Hidden on Print) */}
       {showPrintButton && (
-        <div className="mt-3 flex items-center gap-2 no-print">
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2 no-print">
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#0D3B22] text-white hover:bg-[#15803D] transition shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#0D3B22] text-white hover:bg-[#15803D] transition shadow-sm cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            Imprimir Ticket Zebra
+            Imprimir Ticket ({activeConfig.anchoMm}x{activeConfig.altoMm}mm)
           </button>
           <a
             href={`/trazabilidad/${ticket.uid}`}

@@ -29,7 +29,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v3.5 Vigente</span>
+            <span>Versión v3.6 Vigente</span>
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
           {/* Col 3: Metadata Box */}
           <div className="col-span-3 p-2 text-[8.5px] font-mono space-y-1 flex flex-col justify-center bg-neutral-50">
             <div><strong>CÓDIGO:</strong> MAN-SGI-01</div>
-            <div><strong>REVISIÓN:</strong> v3.5</div>
+            <div><strong>REVISIÓN:</strong> v3.6</div>
             <div><strong>FECHA:</strong> 17-Nov-2026</div>
             <div><strong>PÁGINA:</strong> 1 de 1</div>
           </div>
@@ -134,13 +134,21 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
                 <td className="p-1 text-left px-2">Blindaje de formulario de producción con atributos bloqueados de solo lectura y retiro de accesos directos redundantes.</td>
               </tr>
+              <tr className="border-b border-neutral-200">
+                <td className="border-r border-black p-1 font-mono">v3.5</td>
+                <td className="border-r border-black p-1">17-Nov-2026</td>
+                <td className="border-r border-black p-1">Equipo TI</td>
+                <td className="border-r border-black p-1">Control de Calidad</td>
+                <td className="border-r border-black p-1">Gerencia Operaciones</td>
+                <td className="p-1 text-left px-2">Unificación total a Código Interno, Embudo de Operadores (Funnel Chart) en Dashboard, botón único Exportar a PDF y reescritura de manual para usuario final.</td>
+              </tr>
               <tr className="bg-emerald-50/50">
-                <td className="border-r border-black p-1 font-mono font-bold">v3.5</td>
+                <td className="border-r border-black p-1 font-mono font-bold">v3.6</td>
                 <td className="border-r border-black p-1 font-bold">17-Nov-2026</td>
                 <td className="border-r border-black p-1">Equipo TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2 font-medium">Unificación total a Código Interno, Embudo de Operadores (Funnel Chart) en Dashboard, botón único Exportar a PDF y reescritura de manual para usuario final.</td>
+                <td className="p-1 text-left px-2 font-medium">Nueva pestaña "Configuración de Zebra" (dimensiones 100x200mm, mandril, DPI, sensores) y panel de advertencia técnica previa a imprimir en Iniciar Producción.</td>
               </tr>
             </tbody>
           </table>
@@ -415,8 +423,21 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Módulo reservado para Administradores y Jefatura. Permite ajustar parámetros generales como el <strong>tiempo de inactividad de sesión</strong> (para que el sistema se bloquee automáticamente si se deja desatendido) y gestionar qué módulos puede ver cada rol de usuario.
+            Módulo reservado para Administradores y Jefatura. Permite ajustar parámetros generales como el <strong>tiempo de inactividad de sesión</strong> (para que el sistema se bloquee automáticamente si se deja desatendido), gestionar qué módulos puede ver cada rol de usuario y configurar los <strong>parámetros de impresión térmica Zebra</strong>.
           </p>
+
+          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
+            <div className="font-bold text-neutral-900 underline">Subsección 9.1 · Configuración de Impresoras Térmicas Zebra ZPL:</div>
+            <p className="text-neutral-700 text-justify">
+              Permite al supervisor o administrador adaptar el software a los rollos de etiquetas instalados físicamente en las impresoras Zebra ZT411 o ZD421 de planta:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-neutral-700">
+              <li><strong>Dimensiones de Etiqueta:</strong> Selecciona plantillas industriales como <code>100 x 200 mm</code> (pallet/alta capacidad), <code>100 x 150 mm</code> (logístico), <code>100 x 100 mm</code> (bulto) o define medidas personalizadas en milímetros.</li>
+              <li><strong>Mandril (Core) & Diámetro Exterior:</strong> Configura si el rollo es de núcleo <code>3 pulgadas (76.2 mm)</code> para impresoras industriales o <code>1 pulgada (25.4 mm)</code> para impresoras de escritorio.</li>
+              <li><strong>Densidad de Impresión (DPI):</strong> Soporta <code>203 DPI (8 dots/mm)</code> y <code>300 DPI (12 dots/mm)</code> para códigos QR de alta nitidez.</li>
+              <li><strong>Sincronización con Planta:</strong> Toda modificación realizada se refleja de inmediato en <strong>Iniciar Producción</strong>, donde el operario verá un banner con las dimensiones activas y una advertencia para verificar el rollo antes de imprimir.</li>
+            </ul>
+          </div>
         </section>
 
         {/* ========================================================================= */}
@@ -534,6 +555,15 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
               </div>
               <p className="text-neutral-700 text-justify">
                 <strong>Respuesta:</strong> En la parte superior derecha de esta pantalla encontrarás el botón verde <strong>"Exportar a PDF"</strong>. Al presionarlo se abrirá la ventana de impresión de tu navegador, donde podrás seleccionar "Guardar como PDF".
+              </p>
+            </div>
+
+            <div className="border border-neutral-300 p-2.5 rounded bg-white">
+              <div className="font-bold text-neutral-900 mb-1">
+                P7: ¿Cómo cambio el tamaño de etiqueta si instalamos un rollo de 100 x 200 mm en la impresora Zebra?
+              </div>
+              <p className="text-neutral-700 text-justify">
+                <strong>Respuesta:</strong> Ingresa a <em>Configuración</em> desde el menú lateral y haz clic en la pestaña <strong>"Configuración de Zebra"</strong>. Selecciona la tarjeta <strong>"100 x 200 mm"</strong> (o ajusta las medidas manuales en milímetros si utilizas un formato a medida), confirma que el mandril sea de 3" y presiona <strong>"Guardar Configuración Zebra"</strong>. Al volver a <em>Iniciar Producción</em>, verás el panel confirmando que el formato activo es 100 x 200 mm y las etiquetas se adaptarán automáticamente a ese tamaño.
               </p>
             </div>
           </div>
