@@ -13,10 +13,16 @@ const getDefaultDates = () => {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
+  
+  // Agregar 1 día a la fecha final para cubrir diferencias de zona horaria local vs UTC
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const tYear = tomorrow.getFullYear();
+  const tMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+  const tDay = String(tomorrow.getDate()).padStart(2, '0');
+
   return {
     desde: `${year}-${month}-01`,
-    hasta: `${year}-${month}-${day}`,
+    hasta: `${tYear}-${tMonth}-${tDay}`,
   };
 };
 

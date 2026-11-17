@@ -13,6 +13,7 @@ import { ConfiguracionView } from './views/ConfiguracionView';
 import { FaqManualView } from './views/FaqManualView';
 import { CodigosInternosView } from './views/CodigosInternosView';
 import { OperadoresView } from './views/OperadoresView';
+import { GestionEstadosView } from './views/GestionEstadosView';
 import { PublicTrazabilidadView } from './views/PublicTrazabilidadView';
 import { InactivityModal } from './components/InactivityModal';
 import { RefreshCw, Search } from 'lucide-react';
@@ -59,6 +60,7 @@ const MainAppContent: React.FC = () => {
     dashboard: { title: 'Dashboard Ejecutivo', subtitle: 'Inteligencia operativa y economía circular' },
     iniciar: { title: 'Iniciar Producción', subtitle: 'Emisión de tickets térmicos' },
     produccion: { title: 'Sábana de Producción', subtitle: 'Trazabilidad y gestión de lotes' },
+    'gestion-estados': { title: 'Gestión de Estados', subtitle: 'Control de flujo mediante escáner QR o cámara móvil' },
     'codigos-internos': { title: 'Códigos Internos SAP', subtitle: 'Catálogo de artículos y embalaje estándar' },
     operadores: { title: 'Operadores de Planta', subtitle: 'Personal autorizado para producción y soplado' },
     certificados: { title: 'Certificados de Calidad', subtitle: 'Emisión oficial R-CAL-07' },
@@ -121,6 +123,7 @@ const MainAppContent: React.FC = () => {
           {currentView === 'produccion' && (
             <ProduccionView initialCodigoInterno={jumpToBatchCodigo} />
           )}
+          {currentView === 'gestion-estados' && <GestionEstadosView />}
           {currentView === 'codigos-internos' && <CodigosInternosView />}
           {currentView === 'operadores' && <OperadoresView />}
           {currentView === 'certificados' && <CertificadosView />}

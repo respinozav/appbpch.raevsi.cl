@@ -168,6 +168,7 @@ export interface PublicTrazabilidadData {
   uid: string;
   verificado: boolean;
   codigo_interno: number;
+  codigosap?: string;
   lote: number;
   unidad_embalaje: string;
   articulo: string;
@@ -179,6 +180,7 @@ export interface PublicTrazabilidadData {
   numero_maquina: number;
   turno: number;
   operador: number;
+  operador_nombre?: string;
   fecha_fabricacion: string;
   estado_actual: string;
   estado_color: string;

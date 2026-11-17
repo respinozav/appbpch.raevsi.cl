@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, cast, String
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from app.db.session import get_db
 from app.models.models import Production, Estado, HistorialEstado, User
@@ -230,7 +230,8 @@ def list_production_batches(
         try:
             parts = [int(p) for p in fecha_desde.strip().split("-")]
             if len(parts) == 3:
-                d_desde = datetime(parts[0], parts[1], parts[2], 0, 0, 0, tzinfo=timezone.utc)
+                # Restar 1 día para cubrir discrepancias de zona horaria (ej: Santiago UTC-3 vs UTC)
+                d_desde = datetime(parts[0], parts[1], parts[2], 0, 0, 0, tzinfo=timezone.utc) - timedelta(days=1)
                 query = query.filter(Production.fecha >= d_desde)
         except Exception:
             pass
@@ -239,7 +240,8 @@ def list_production_batches(
         try:
             parts = [int(p) for p in fecha_hasta.strip().split("-")]
             if len(parts) == 3:
-                d_hasta = datetime(parts[0], parts[1], parts[2], 23, 59, 59, 999999, tzinfo=timezone.utc)
+                # Sumar 1 día para cubrir zona horaria de producción UTC
+                d_hasta = datetime(parts[0], parts[1], parts[2], 23, 59, 59, 999999, tzinfo=timezone.utc) + timedelta(days=1)
                 query = query.filter(Production.fecha <= d_hasta)
         except Exception:
             pass
@@ -499,7 +501,8 @@ def export_production_csv(
         try:
             parts = [int(p) for p in fecha_desde.strip().split("-")]
             if len(parts) == 3:
-                d_desde = datetime(parts[0], parts[1], parts[2], 0, 0, 0, tzinfo=timezone.utc)
+                # Restar 1 día para cubrir discrepancias de zona horaria (ej: Santiago UTC-3 vs UTC)
+                d_desde = datetime(parts[0], parts[1], parts[2], 0, 0, 0, tzinfo=timezone.utc) - timedelta(days=1)
                 query = query.filter(Production.fecha >= d_desde)
         except Exception:
             pass
@@ -508,7 +511,8 @@ def export_production_csv(
         try:
             parts = [int(p) for p in fecha_hasta.strip().split("-")]
             if len(parts) == 3:
-                d_hasta = datetime(parts[0], parts[1], parts[2], 23, 59, 59, 999999, tzinfo=timezone.utc)
+                # Sumar 1 día para cubrir zona horaria de producción UTC
+                d_hasta = datetime(parts[0], parts[1], parts[2], 23, 59, 59, 999999, tzinfo=timezone.utc) + timedelta(days=1)
                 query = query.filter(Production.fecha <= d_hasta)
         except Exception:
             pass

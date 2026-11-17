@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   PlusCircle, Layers, FileCheck, Users, User, LogOut,
   Search, Menu, X, Shield, ChevronRight, Sparkles, Factory,
-  LayoutDashboard, Settings, BookOpen, Barcode, Users2
+  LayoutDashboard, Settings, BookOpen, Barcode, Users2, Scan
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -35,6 +35,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
       label: 'Producción & Sábana',
       desc: 'Trazabilidad y lotes',
       icon: Layers
+    },
+    {
+      id: 'gestion-estados',
+      label: 'Gestión de Estados',
+      desc: 'Pistola QR y Cámara',
+      icon: Scan
     },
     {
       id: 'codigos-internos',
@@ -91,9 +97,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onOpe
     }
     // Fallback si modulos no se cargaron: jefatura ve operativos sin admin/config
     if (user?.rol?.nombre === 'Jefatura') {
-      return ['dashboard', 'iniciar', 'produccion', 'certificados', 'faq', 'perfil'].includes(item.id);
+      return ['dashboard', 'iniciar', 'produccion', 'gestion-estados', 'certificados', 'faq', 'perfil'].includes(item.id);
     }
-    return ['dashboard', 'iniciar', 'produccion', 'faq', 'perfil'].includes(item.id);
+    return ['dashboard', 'iniciar', 'produccion', 'gestion-estados', 'faq', 'perfil'].includes(item.id);
   });
 
   const handleItemClick = (id: string) => {

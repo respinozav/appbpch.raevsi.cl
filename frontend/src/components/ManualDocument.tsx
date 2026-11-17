@@ -37,7 +37,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         <div className="flex items-center gap-3">
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v3.1 Vigente</span>
+            <span>Versión v3.2 Vigente</span>
           </div>
           <button
             onClick={handlePrint}
@@ -82,7 +82,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               Código: <span className="font-bold">MAN-SGI-01</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
-              Versión: <span className="font-bold">v3.1</span>
+              Versión: <span className="font-bold">v3.2</span>
             </div>
             <div className="border-b border-black p-1 px-2 font-medium">
               Actualización: <span className="font-bold">16-Nov-2026</span>
@@ -134,13 +134,21 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                 <td className="border-r border-black p-1">Dirección General</td>
                 <td className="p-1 text-left px-2">Módulo Códigos SAP, Lote único por emisión y correlativo 0001-NNNN.</td>
               </tr>
+              <tr className="border-b border-neutral-200">
+                <td className="border-r border-black p-1 font-mono">v3.1</td>
+                <td className="border-r border-black p-1">16-Nov-2026</td>
+                <td className="border-r border-black p-1">Tech Lead TI</td>
+                <td className="border-r border-black p-1">Control de Calidad</td>
+                <td className="border-r border-black p-1">Gerencia Operaciones</td>
+                <td className="p-1 text-left px-2">Materia fija automática, CRUD Operadores, turnos 1-3, rango 0001-00NN y unificación SAP.</td>
+              </tr>
               <tr className="bg-emerald-50/40">
-                <td className="border-r border-black p-1 font-mono font-bold">v3.1</td>
+                <td className="border-r border-black p-1 font-mono font-bold">v3.2</td>
                 <td className="border-r border-black p-1 font-bold">16-Nov-2026</td>
                 <td className="border-r border-black p-1">Tech Lead TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2 font-medium">Materia prima fija automática según artículo, selector y CRUD maestro de Operadores de Planta, turnos restringidos (1 a 3), rango de unidades 0001-00NN en modal de éxito, código SAP como código interno unificado y actualización RBAC en Configuración.</td>
+                <td className="p-1 text-left px-2 font-medium">Nuevo Módulo "Gestión de Estados" con máquina de flujo obligatorio (Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido), soporte dual para Pistola QR y Cámara Celular/Web (jsQR), extracción de UUID por regex/split, y sincronización horaria de sábana de lotes.</td>
               </tr>
             </tbody>
           </table>
@@ -268,18 +276,56 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Agrupa la producción por Número de Lote. Al desplegar cada lote se acceden a las unidades de embalaje (0001 a NNNN), permitiendo auditar y modificar el estado operativo de forma unitaria sin frenar el lote completo.
+            Agrupa la producción por Número de Lote. Al desplegar cada lote se acceden a las unidades de embalaje (0001 a NNNN), permitiendo auditar y modificar el estado operativo de forma unitaria sin frenar el lote completo. Cuenta con ventana de consulta sincronizada con la zona horaria de planta para visualización inmediata de lotes recién emitidos.
           </p>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 6: CERTIFICADOS DE CALIDAD */}
+        {/* SECCIÓN 6: GESTIÓN DE ESTADOS (PISTOLA QR & CÁMARA) */}
+        {/* ========================================================================= */}
+        <section id="sec-gestion-estados" className="mb-8 break-inside-avoid scroll-mt-20">
+          <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
+            <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">6</span>
+              <span>Módulo 6 · Gestión de Estados (Flujo Obligatorio & Lectura QR)</span>
+            </h2>
+            <span className="text-[10px] font-mono text-neutral-500">Ruta: /gestion-estados</span>
+          </div>
+
+          <p className="text-justify text-[11px] mb-3 text-neutral-700">
+            Módulo especializado para el cambio de etapas de envases en línea de planta y bodega, mediante captura óptica de códigos QR de tickets Zebra y cumplimiento estricto de la máquina de estados reglamentaria.
+          </p>
+
+          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
+            <div className="font-bold text-neutral-900 underline">Reglas y Operatoria del Módulo:</div>
+            <ul className="list-disc pl-5 space-y-1 text-neutral-700">
+              <li>
+                <strong>Máquina de Estados Estricta:</strong> Flujo obligatorio unidireccional: <code>Producción ➔ Almacenaje ➔ Despacho ➔ Liberado / Retenido</code>. Los estados fuera de secuencia están bloqueados por sistema (ej. una unidad en <em>Producción</em> no puede saltar directo a <em>Despacho</em> o <em>Liberado</em> sin pasar por <em>Almacenaje</em>).
+              </li>
+              <li>
+                <strong>Modalidad 1 · Pistola Láser/Bluetooth:</strong> Diseñada para puestos fijos de embalaje y pesaje. Cuenta con caja de texto con autofocus permanente que procesa lecturas continuas sin necesidad de clics manuales del operario.
+              </li>
+              <li>
+                <strong>Modalidad 2 · Cámara Celular / Web:</strong> Diseñada para supervisores y operarios móviles en bodega, utilizando la cámara posterior con detección de códigos en tiempo real (librería <code>jsQR</code>) y confirmación sonora de captura.
+              </li>
+              <li>
+                <strong>Extracción Automática de UUID:</strong> Si el código QR contiene la URL oficial <code>https://appbpch.raevsi.cl/trazabilidad/&lt;UUID&gt;</code>, el sistema aísla por regex/split el UUID exacto para consultar el registro en la base de datos sin errores de digitación.
+              </li>
+              <li>
+                <strong>Trazabilidad y Cuarentena:</strong> Permite ingresar observaciones de justificación en cada transición y enviar cualquier envase a <em>Retenido</em> en caso de no-conformidad visual o química.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* SECCIÓN 7: CERTIFICADOS DE CALIDAD */}
         {/* ========================================================================= */}
         <section id="sec-certificados" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">6</span>
-              <span>Módulo 6 · Certificados de Calidad R-CAL-07</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">7</span>
+              <span>Módulo 7 · Certificados de Calidad R-CAL-07</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /certificados</span>
           </div>
@@ -295,30 +341,30 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 7: CONFIGURACIÓN GLOBAL & RBAC */}
+        {/* SECCIÓN 8: CONFIGURACIÓN GLOBAL & RBAC */}
         {/* ========================================================================= */}
         <section id="sec-config" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">7</span>
-              <span>Módulo 7 · Configuración, Roles (RBAC) & Auditoría</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">8</span>
+              <span>Módulo 8 · Configuración, Roles (RBAC) & Auditoría</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /configuracion</span>
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Control de inactividad de sesión (5 a 480 minutos) y matriz de asignación granular de módulos para roles (incluyendo los nuevos módulos de <em>Códigos Internos SAP</em> y <em>Operadores</em>).
+            Control de inactividad de sesión (5 a 480 minutos) y matriz de asignación granular de módulos para roles (incluyendo <em>Códigos Internos SAP</em>, <em>Operadores</em> y <em>Gestión de Estados</em>).
           </p>
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 8: USUARIOS Y MATRIZ RBAC */}
+        {/* SECCIÓN 9: USUARIOS Y MATRIZ RBAC */}
         {/* ========================================================================= */}
         <section id="sec-usuarios" className="mb-8 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">8</span>
-              <span>Módulo 8 · Matriz de Roles y Módulos RBAC</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">9</span>
+              <span>Módulo 9 · Matriz de Roles y Módulos RBAC</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Ruta: /usuarios</span>
           </div>
@@ -332,7 +378,8 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                   <th className="border-r border-black p-1.5">Códigos SAP</th>
                   <th className="border-r border-black p-1.5">Operadores</th>
                   <th className="border-r border-black p-1.5">Iniciar Prod.</th>
-                  <th className="border-r border-black p-1.5">Sábana Lotes</th>
+                  <th className="border-r border-black p-1.5">Sábana</th>
+                  <th className="border-r border-black p-1.5">Gestión Estados</th>
                   <th className="border-r border-black p-1.5">Certificados</th>
                   <th className="p-1.5">Configuración</th>
                 </tr>
@@ -340,6 +387,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               <tbody>
                 <tr className="border-b border-neutral-200">
                   <td className="border-r border-black p-1.5 font-bold text-left px-2">Administrador</td>
+                  <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
@@ -355,6 +403,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Gestión</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
+                  <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Total</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Emitir</td>
                   <td className="p-1.5 text-neutral-400">Sin acceso</td>
                 </tr>
@@ -365,6 +414,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
                   <td className="border-r border-black p-1.5 text-neutral-400">Sin acceso</td>
                   <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Registrar</td>
                   <td className="border-r border-black p-1.5 text-neutral-600">Consulta</td>
+                  <td className="border-r border-black p-1.5 text-emerald-700 font-bold">Operar</td>
                   <td className="border-r border-black p-1.5 text-neutral-400">Sin acceso</td>
                   <td className="p-1.5 text-neutral-400">Sin acceso</td>
                 </tr>
@@ -374,13 +424,13 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
         </section>
 
         {/* ========================================================================= */}
-        {/* SECCIÓN 9: PREGUNTAS FRECUENTES (FAQ) Y CONTINGENCIAS */}
+        {/* SECCIÓN 10: PREGUNTAS FRECUENTES (FAQ) Y CONTINGENCIAS */}
         {/* ========================================================================= */}
         <section id="sec-faq" className="mb-6 break-inside-avoid scroll-mt-20">
           <div className="border-b-2 border-black pb-1 mb-3 flex items-center justify-between">
             <h2 className="font-bold text-sm text-neutral-900 uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">9</span>
-              <span>Sección 9 · Preguntas Frecuentes (FAQ) & Protocolos de Planta</span>
+              <span className="w-5 h-5 rounded-full bg-[#15803D] text-white flex items-center justify-center text-[10px]">10</span>
+              <span>Sección 10 · Preguntas Frecuentes (FAQ) & Protocolos de Planta</span>
             </h2>
             <span className="text-[10px] font-mono text-neutral-500">Soporte Técnico</span>
           </div>
@@ -410,6 +460,15 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ onPrint, activeS
               </div>
               <p className="text-neutral-700 text-justify">
                 <strong>Respuesta:</strong> En la casilla central de <strong>CODIGO INTERNO</strong> se imprime el código SAP asignado, y en la fila <code>MÁQ. / TURNO / OP</code> se imprime exclusivamente el nombre del operador seleccionado para fácil lectura de supervisores y clientes.
+              </p>
+            </div>
+
+            <div className="border border-neutral-300 p-2.5 rounded bg-white">
+              <div className="font-bold text-neutral-900 mb-1">
+                P4: ¿Cómo funciona la lectura QR con pistola láser o cámara celular en Gestión de Estados?
+              </div>
+              <p className="text-neutral-700 text-justify">
+                <strong>Respuesta:</strong> En la opción Pistola QR el sistema mantiene el foco permanente en el lector; al escanear, el software procesa el QR o la URL pública, extrae el UUID de la unidad y muestra los botones de transición válidos según la regla <code>Producción ➔ Almacenaje ➔ Despacho ➔ Liberado/Retenido</code>. En la opción Cámara, enfoca el ticket Zebra con el lente de tu móvil o tablet y el sistema detectará el QR en tiempo real con confirmación sonora.
               </p>
             </div>
           </div>

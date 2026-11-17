@@ -212,6 +212,7 @@ class PublicTrazabilidadOut(BaseModel):
     uid: UUID
     verificado: bool = True
     codigo_interno: int
+    codigosap: Optional[str] = None
     lote: int
     unidad_embalaje: str
     articulo: str
@@ -223,6 +224,7 @@ class PublicTrazabilidadOut(BaseModel):
     numero_maquina: int
     turno: int
     operador: int
+    operador_nombre: Optional[str] = None
     fecha_fabricacion: datetime
     estado_actual: str
     estado_color: str

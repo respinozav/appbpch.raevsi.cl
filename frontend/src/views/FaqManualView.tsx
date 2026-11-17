@@ -15,11 +15,12 @@ export const FaqManualView: React.FC = () => {
     { id: 'sec-operadores', label: '3. Operadores de Planta', desc: 'Personal autorizado y asignación activa' },
     { id: 'sec-iniciar', label: '4. Iniciar Producción', desc: 'Tiradas, un solo lote y embalajes 0001-NNNN' },
     { id: 'sec-produccion', label: '5. Producción & Sábana', desc: 'Jerarquía por Lote y unidades de embalaje' },
-    { id: 'sec-certificados', label: '6. Certificados R-CAL-07', desc: 'Emisión para lotes en despacho y liberados' },
-    { id: 'sec-qr', label: '7. Consulta Pública QR', desc: 'Verificación externa sin login' },
-    { id: 'sec-config', label: '8. Configuración Global', desc: 'Tiempos de inactividad de sesión y RDS' },
-    { id: 'sec-usuarios', label: '9. Usuarios & Permisos', desc: 'Matriz de roles RBAC con nuevos módulos' },
-    { id: 'sec-faq', label: '10. Preguntas Frecuentes (FAQ)', desc: 'Protocolos de contingencia en planta' },
+    { id: 'sec-gestion-estados', label: '6. Gestión de Estados', desc: 'Pistola QR, cámara y flujo obligatorio' },
+    { id: 'sec-certificados', label: '7. Certificados R-CAL-07', desc: 'Emisión para lotes en despacho y liberados' },
+    { id: 'sec-qr', label: '8. Consulta Pública QR', desc: 'Verificación externa sin login' },
+    { id: 'sec-config', label: '9. Configuración Global', desc: 'Tiempos de inactividad de sesión y RDS' },
+    { id: 'sec-usuarios', label: '10. Usuarios & Permisos', desc: 'Matriz de roles RBAC con nuevos módulos' },
+    { id: 'sec-faq', label: '11. Preguntas Frecuentes (FAQ)', desc: 'Protocolos de contingencia en planta' },
   ];
 
   const scrollToSection = (id: string) => {
@@ -48,7 +49,7 @@ export const FaqManualView: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
             <span>Manual de Operaciones & FAQ</span>
             <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
-              MAN-SGI-01 · v3.1
+              MAN-SGI-01 · v3.2
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
@@ -78,7 +79,7 @@ export const FaqManualView: React.FC = () => {
                 Índice del Manual
               </h2>
             </div>
-            <span className="text-[10px] font-mono text-neutral-400">10 Módulos</span>
+            <span className="text-[10px] font-mono text-neutral-400">11 Módulos</span>
           </div>
 
           <div className="space-y-1.5">

@@ -13,6 +13,7 @@ const ALL_SYSTEM_MODULES = [
   { id: 'codigos-internos', label: 'Códigos Internos SAP', desc: 'Catálogo maestro de artículos y materias' },
   { id: 'iniciar', label: 'Iniciar Producción', desc: 'Emisión de tickets Zebra ZPL' },
   { id: 'produccion', label: 'Producción & Sábana', desc: 'Trazabilidad y estados' },
+  { id: 'gestion-estados', label: 'Gestión de Estados', desc: 'Lectura QR con pistola o cámara' },
   { id: 'certificados', label: 'Certificados', desc: 'Documento R-CAL-07 Oficial' },
   { id: 'operadores', label: 'Operadores', desc: 'Operadores autorizados de planta' },
   { id: 'usuarios', label: 'Usuarios & Permisos', desc: 'Gestión de colaboradores' },
