@@ -112,6 +112,39 @@ export interface ProductionBatchSummary {
   lotes: ProductionTicket[];
 }
 
+export interface LoteItemSummary {
+  lote: number;
+  codigo_interno: number;
+  codigosap?: string;
+  fecha: string;
+  articulo: string;
+  material: string;
+  color_bidon: string;
+  color_asa: string;
+  numero_maquina: number;
+  turno: number;
+  operador: number;
+  operador_nombre?: string;
+  cantidad_unitaria: number;
+  total_embalajes: number;
+  primer_embalaje: string;
+  ultimo_embalaje: string;
+  peso: string;
+  uid_estado: string;
+  estado_nombre?: string;
+  estado_color?: string;
+}
+
+export interface ProductionAppendUnitsCreate {
+  lote: number;
+  cantidad_lotes: number;
+  numero_maquina?: number;
+  turno?: number;
+  operador?: number;
+  operador_nombre?: string;
+  peso?: string;
+}
+
 export interface HistorialEstado {
   uid: string;
   production_uid: string;
@@ -376,6 +409,18 @@ export const api = {
     codigosap?: string;
   }) =>
     request<ProductionBatchSummary>('/production/batch', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getLotesActivos: (search?: string) => {
+    const q = new URLSearchParams();
+    if (search) q.append('search', search);
+    return request<LoteItemSummary[]>(`/production/lotes-activos?${q.toString()}`);
+  },
+
+  appendUnitsToBatch: (data: ProductionAppendUnitsCreate) =>
+    request<ProductionBatchSummary>('/production/batch/append-units', {
       method: 'POST',
       body: JSON.stringify(data),
     }),

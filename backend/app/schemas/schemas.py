@@ -119,6 +119,37 @@ class ProductionBatchCreate(BaseModel):
     color_asa: str = Field(..., description="Color del asa")
     codigosap: Optional[str] = Field(None, description="Código SAP / Código Interno unificado")
 
+class ProductionAppendUnitsCreate(BaseModel):
+    lote: int = Field(..., description="Número de lote existente al cual agregar unidades de embalaje")
+    cantidad_lotes: int = Field(..., ge=1, le=500, description="Cantidad de unidades de embalaje a emitir")
+    numero_maquina: Optional[int] = Field(None, ge=1, description="Número de máquina (opcional)")
+    turno: Optional[int] = Field(None, ge=1, le=3, description="Turno de trabajo (1-3)")
+    operador: Optional[int] = Field(None, ge=1, description="Código del operador")
+    operador_nombre: Optional[str] = Field(None, description="Nombre del operador")
+    peso: Optional[str] = Field(None, description="Unidad de peso en kilos o N/A")
+
+class LoteItemSummary(BaseModel):
+    lote: int
+    codigo_interno: int
+    codigosap: Optional[str] = None
+    fecha: datetime
+    articulo: str
+    material: str
+    color_bidon: str
+    color_asa: str
+    numero_maquina: int
+    turno: int
+    operador: int
+    operador_nombre: Optional[str] = None
+    cantidad_unitaria: int
+    total_embalajes: int
+    primer_embalaje: str
+    ultimo_embalaje: str
+    peso: str
+    uid_estado: UUID
+    estado_nombre: Optional[str] = None
+    estado_color: Optional[str] = None
+
 class ProductionOut(BaseModel):
     uid: UUID
     codigo_interno: int

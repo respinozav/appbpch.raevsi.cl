@@ -29,7 +29,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#15803D] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#15803D] animate-pulse" />
-            <span>Versión v3.6 Vigente</span>
+            <span>Versión v3.7 Vigente</span>
           </div>
         </div>
       </div>
@@ -70,7 +70,7 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
           {/* Col 3: Metadata Box */}
           <div className="col-span-3 p-2 text-[8.5px] font-mono space-y-1 flex flex-col justify-center bg-neutral-50">
             <div><strong>CÓDIGO:</strong> MAN-SGI-01</div>
-            <div><strong>REVISIÓN:</strong> v3.6</div>
+            <div><strong>REVISIÓN:</strong> v3.7</div>
             <div><strong>FECHA:</strong> 17-Nov-2026</div>
             <div><strong>PÁGINA:</strong> 1 de 1</div>
           </div>
@@ -142,13 +142,21 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
                 <td className="p-1 text-left px-2">Unificación total a Código Interno, Embudo de Operadores (Funnel Chart) en Dashboard, botón único Exportar a PDF y reescritura de manual para usuario final.</td>
               </tr>
+              <tr className="border-b border-neutral-200">
+                <td className="border-r border-black p-1 font-mono">v3.6</td>
+                <td className="border-r border-black p-1">17-Nov-2026</td>
+                <td className="border-r border-black p-1">Equipo TI</td>
+                <td className="border-r border-black p-1">Control de Calidad</td>
+                <td className="border-r border-black p-1">Gerencia Operaciones</td>
+                <td className="p-1 text-left px-2">Nueva pestaña "Configuración de Zebra" (dimensiones 100x200mm, mandril, DPI, sensores) y panel de advertencia técnica previa a imprimir en Iniciar Producción.</td>
+              </tr>
               <tr className="bg-emerald-50/50">
-                <td className="border-r border-black p-1 font-mono font-bold">v3.6</td>
+                <td className="border-r border-black p-1 font-mono font-bold">v3.7</td>
                 <td className="border-r border-black p-1 font-bold">17-Nov-2026</td>
                 <td className="border-r border-black p-1">Equipo TI</td>
                 <td className="border-r border-black p-1">Control de Calidad</td>
                 <td className="border-r border-black p-1">Gerencia Operaciones</td>
-                <td className="p-1 text-left px-2 font-medium">Nueva pestaña "Configuración de Zebra" (dimensiones 100x200mm, mandril, DPI, sensores) y panel de advertencia técnica previa a imprimir en Iniciar Producción.</td>
+                <td className="p-1 text-left px-2 font-medium">Incorporación del modo "Agregar Unidades de Embalaje a Lote Existente" con correlatividad garantizada (0001-NNNN) y buscador combobox en Iniciar Producción.</td>
               </tr>
             </tbody>
           </table>
@@ -260,28 +268,45 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
           </div>
 
           <p className="text-justify text-[11px] mb-3 text-neutral-700">
-            Este es el módulo principal del operador en la línea de soplado. Permite registrar una tirada de fabricación y generar las etiquetas térmicas Zebra con código QR que irán pegadas en cada pallet o paquete.
+            Este es el módulo principal del operador en la línea de soplado. Permite registrar tiradas de fabricación y generar las etiquetas térmicas Zebra con código QR que irán pegadas en cada pallet o paquete. Cuenta con dos modalidades de operación:
           </p>
 
-          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-2 text-[10.5px]">
-            <div className="font-bold text-neutral-900 underline">Paso a Paso para Emitir una Tirada:</div>
-            <ol className="list-decimal pl-5 space-y-1.5 text-neutral-700">
-              <li>
-                <strong>Paso 1 · Seleccionar el Código Interno:</strong> En la sección 1, despliega la lista y elige el artículo a fabricar. Notarás que el <em>Artículo</em>, <em>Materia Prima</em>, <em>Color</em> y <em>Color Asa</em> se completan automáticamente y quedan protegidos (no se pueden modificar a mano, evitando equivocaciones).
-              </li>
-              <li>
-                <strong>Paso 2 · Datos de la Máquina:</strong> Indica el número de máquina sopladora (ej. 7), el turno operacional (1, 2 o 3) y selecciona el nombre del operario responsable de la tirada.
-              </li>
-              <li>
-                <strong>Paso 3 · Cantidad y Embalajes:</strong> Define cuántos envases lleva cada bulto/pallet y cuántas unidades de embalaje vas a producir (ej. 10 embalajes numerados del 0001 al 0010). Puedes anotar el peso promedio si aplica.
-              </li>
-              <li>
-                <strong>Paso 4 · Emitir Tirada:</strong> El botón <em>"Emitir Tirada"</em> estará bloqueado hasta que selecciones un Código Interno válido. Al presionarlo, el sistema guarda la producción en la base de datos y <strong>limpia de inmediato la sección del artículo</strong> para que no se repita por error en la siguiente tirada.
-              </li>
-              <li>
-                <strong>Paso 5 · Imprimir Tickets:</strong> Se habilitará el botón verde <em>"Imprimir Tickets"</em> para enviar a imprimir las etiquetas en formato oficial Zebra ZPL con su código QR.
-              </li>
-            </ol>
+          <div className="border border-neutral-300 p-3 rounded bg-neutral-50 mb-3 space-y-3 text-[10.5px]">
+            <div>
+              <div className="font-bold text-neutral-900 underline mb-1">Modalidad 1 · Nueva Tirada (Nuevo Lote Correlativo):</div>
+              <ol className="list-decimal pl-5 space-y-1 text-neutral-700">
+                <li>
+                  <strong>Seleccionar Código Interno:</strong> Elige el artículo del catálogo oficial. La denominación, resina y colores se bloquean automáticamente en modo seguro.
+                </li>
+                <li>
+                  <strong>Parámetros de Máquina y Turno:</strong> Ingresa el número de sopladora, turno (1, 2 o 3) y operario responsable.
+                </li>
+                <li>
+                  <strong>Embalajes y Peso:</strong> Indica la cantidad por bulto y el total de tickets (ej: 10 embalajes del 0001 al 0010).
+                </li>
+                <li>
+                  <strong>Emitir e Imprimir:</strong> Al presionar <em>"Emitir Tirada"</em> se genera un nuevo número de lote correlativo (ej. Lote 10045) y se limpian los campos del envase.
+                </li>
+              </ol>
+            </div>
+
+            <div className="pt-2 border-t border-neutral-200">
+              <div className="font-bold text-neutral-900 underline mb-1">Modalidad 2 · Agregar Unidades a Lote Existente (Correlatividad Continua):</div>
+              <ol className="list-decimal pl-5 space-y-1 text-neutral-700">
+                <li>
+                  <strong>Seleccionar Pestaña:</strong> Haz clic en <em>"2. Agregar Unidades a Lote Existente"</em>.
+                </li>
+                <li>
+                  <strong>Buscador Combobox:</strong> Escribe el número de lote, código interno o nombre del artículo en el buscador y selecciona el lote deseado.
+                </li>
+                <li>
+                  <strong>Verificación Correlativa:</strong> El sistema cargará los datos técnicos y te mostrará el próximo correlativo a emitir (ej. si el lote tenía hasta el 0010, el próximo será el 0011).
+                </li>
+                <li>
+                  <strong>Indicar Cantidad Adicional:</strong> Escribe cuántos pallets o paquetes nuevos necesitas (ej. 5) y presiona <em>"Emitir Unidades"</em>. Se generarán exactamente las unidades 0011 a 0015 sin saltos.
+                </li>
+              </ol>
+            </div>
           </div>
         </section>
 
@@ -564,6 +589,15 @@ export const ManualDocument: React.FC<ManualDocumentProps> = ({ activeSectionId 
               </div>
               <p className="text-neutral-700 text-justify">
                 <strong>Respuesta:</strong> Ingresa a <em>Configuración</em> desde el menú lateral y haz clic en la pestaña <strong>"Configuración de Zebra"</strong>. Selecciona la tarjeta <strong>"100 x 200 mm"</strong> (o ajusta las medidas manuales en milímetros si utilizas un formato a medida), confirma que el mandril sea de 3" y presiona <strong>"Guardar Configuración Zebra"</strong>. Al volver a <em>Iniciar Producción</em>, verás el panel confirmando que el formato activo es 100 x 200 mm y las etiquetas se adaptarán automáticamente a ese tamaño.
+              </p>
+            </div>
+
+            <div className="border border-neutral-300 p-2.5 rounded bg-white">
+              <div className="font-bold text-neutral-900 mb-1">
+                P8: ¿Cómo agrego más unidades de embalaje a un lote que ya fue creado previamente?
+              </div>
+              <p className="text-neutral-700 text-justify">
+                <strong>Respuesta:</strong> En <em>Iniciar Producción</em>, haz clic en la pestaña <strong>"2. Agregar Unidades a Lote Existente"</strong>. Utiliza el buscador o combobox para encontrar el lote por su número, código interno o descripción. El sistema cargará su ficha y te mostrará la siguiente unidad correlativa a emitir (por ejemplo, si el lote tenía unidades hasta la 0010, te indicará que la próxima es la 0011). Ingresa la cantidad de paquetes o pallets adicionales y presiona <strong>"Emitir Unidades"</strong>. Las nuevas etiquetas mantendrán la correlatividad exacta y estarán listas para imprimir en la Zebra.
               </p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import uuid
+import re
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, cast, String
@@ -8,8 +9,9 @@ from datetime import datetime, timezone, timedelta
 from app.db.session import get_db
 from app.models.models import Production, Estado, HistorialEstado, User
 from app.schemas.schemas import (
-    ProductionBatchCreate, ProductionOut, ProductionBatchSummary,
-    ProductionBatchStateUpdate, EstadoOut, HistorialEstadoOut
+    ProductionBatchCreate, ProductionAppendUnitsCreate, LoteItemSummary,
+    ProductionOut, ProductionBatchSummary, ProductionBatchStateUpdate,
+    EstadoOut, HistorialEstadoOut
 )
 from app.core.security import get_current_user
 from app.core.config import settings
@@ -164,6 +166,220 @@ def create_production_batch(
 
     return ProductionBatchSummary(
         codigo_interno=next_codigo_interno,
+        codigosap=first_item.codigosap,
+        fecha=now,
+        articulo=first_item.articulo,
+        material=first_item.material,
+        color_bidon=first_item.color_bidon,
+        color_asa=first_item.color_asa,
+        numero_maquina=first_item.numero_maquina,
+        turno=first_item.turno,
+        operador=first_item.operador,
+        operador_nombre=first_item.operador_nombre,
+        cantidad_unitaria=first_item.cantidad,
+        total_lotes=len(created_productions),
+        lote_inicio=first_item.lote,
+        lote_fin=last_item.lote,
+        peso=first_item.peso,
+        uid_estado=estado_uid,
+        estado=EstadoOut.model_validate(estado_prod) if estado_prod else None,
+        lotes=lotes_out
+    )
+
+@router.get("/lotes-activos", response_model=List[LoteItemSummary])
+def get_lotes_activos(
+    search: Optional[str] = Query(None, description="Búsqueda por lote, código interno o artículo"),
+    limit: int = Query(100, ge=1, le=500),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retorna los lotes existentes agrupados para selección rápida en Combobox de adición de unidades.
+    """
+    query = db.query(
+        Production.lote,
+        func.max(Production.codigo_interno).label("codigo_interno"),
+        func.max(Production.codigosap).label("codigosap"),
+        func.max(Production.fecha).label("fecha"),
+        func.max(Production.articulo).label("articulo"),
+        func.max(Production.material).label("material"),
+        func.max(Production.color_bidon).label("color_bidon"),
+        func.max(Production.color_asa).label("color_asa"),
+        func.max(Production.numero_maquina).label("numero_maquina"),
+        func.max(Production.turno).label("turno"),
+        func.max(Production.operador).label("operador"),
+        func.max(Production.operador_nombre).label("operador_nombre"),
+        func.max(Production.cantidad).label("cantidad_unitaria"),
+        func.count(Production.uid).label("total_embalajes"),
+        func.min(Production.unidad_embalaje).label("primer_embalaje"),
+        func.max(Production.unidad_embalaje).label("ultimo_embalaje"),
+        func.max(Production.peso).label("peso"),
+        func.max(cast(Production.uid_estado, String)).label("uid_estado")
+    )
+
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            (cast(Production.lote, String).ilike(term)) |
+            (cast(Production.codigo_interno, String).ilike(term)) |
+            (Production.articulo.ilike(term)) |
+            (Production.codigosap.ilike(term))
+        )
+
+    results = query.group_by(Production.lote).order_by(desc(Production.lote)).limit(limit).all()
+
+    estados = {str(e.uid): e for e in db.query(Estado).all()}
+
+    output: List[LoteItemSummary] = []
+    for r in results:
+        est = estados.get(str(r.uid_estado)) if r.uid_estado else None
+        output.append(LoteItemSummary(
+            lote=r.lote,
+            codigo_interno=r.codigo_interno,
+            codigosap=r.codigosap,
+            fecha=r.fecha,
+            articulo=r.articulo,
+            material=r.material,
+            color_bidon=r.color_bidon,
+            color_asa=r.color_asa,
+            numero_maquina=r.numero_maquina,
+            turno=r.turno,
+            operador=r.operador,
+            operador_nombre=r.operador_nombre,
+            cantidad_unitaria=r.cantidad_unitaria,
+            total_embalajes=r.total_embalajes,
+            primer_embalaje=r.primer_embalaje or "0001",
+            ultimo_embalaje=r.ultimo_embalaje or "0001",
+            peso=r.peso or "N/A",
+            uid_estado=uuid.UUID(r.uid_estado) if r.uid_estado else uuid.uuid4(),
+            estado_nombre=est.nombre if est else None,
+            estado_color=est.color if est else None
+        ))
+    return output
+
+@router.post("/batch/append-units", response_model=ProductionBatchSummary, status_code=status.HTTP_201_CREATED)
+def append_units_to_batch(
+    data_in: ProductionAppendUnitsCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Agrega unidades de embalaje a un lote existente de forma estrictamente correlativa.
+    Ejemplo: si el lote ya tiene 0001 a 0010, crea desde 0011 en adelante.
+    """
+    prods = db.query(Production).filter(Production.lote == data_in.lote).all()
+    if not prods:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No se encontró el lote #{data_in.lote} para agregar unidades de embalaje."
+        )
+
+    base_prod = prods[0]
+
+    # Calcular la unidad de embalaje numérica máxima actual
+    max_emb_num = 0
+    for p in prods:
+        if p.unidad_embalaje:
+            nums = re.findall(r'\d+', str(p.unidad_embalaje))
+            if nums:
+                try:
+                    val = int(nums[-1])
+                    if val > max_emb_num:
+                        max_emb_num = val
+                except ValueError:
+                    pass
+
+    # Parámetros operativos
+    numero_maquina = data_in.numero_maquina if data_in.numero_maquina is not None else base_prod.numero_maquina
+    turno = data_in.turno if data_in.turno is not None else base_prod.turno
+    operador = data_in.operador if data_in.operador is not None else base_prod.operador
+    operador_nombre = data_in.operador_nombre.strip() if data_in.operador_nombre else base_prod.operador_nombre
+    peso = data_in.peso.strip() if data_in.peso and data_in.peso.strip() else base_prod.peso
+
+    estado_uid = base_prod.uid_estado
+    estado_prod = db.query(Estado).filter(Estado.uid == estado_uid).first()
+    if not estado_prod:
+        estado_prod = db.query(Estado).filter(Estado.nombre == "Producción").first()
+        if estado_prod:
+            estado_uid = estado_prod.uid
+
+    created_productions: List[Production] = []
+    now = datetime.now(timezone.utc)
+
+    for i in range(1, data_in.cantidad_lotes + 1):
+        emb_int = max_emb_num + i
+        unidad_emb = f"{emb_int:04d}"
+
+        new_prod = Production(
+            uid=uuid.uuid4(),
+            codigo_interno=base_prod.codigo_interno,
+            codigosap=base_prod.codigosap,
+            fecha=now,
+            numero_maquina=numero_maquina,
+            turno=turno,
+            operador=operador,
+            operador_nombre=operador_nombre,
+            cantidad=base_prod.cantidad,
+            lote=data_in.lote,
+            unidad_embalaje=unidad_emb,
+            peso=peso,
+            articulo=base_prod.articulo,
+            material=base_prod.material,
+            color_bidon=base_prod.color_bidon,
+            color_asa=base_prod.color_asa,
+            uid_estado=estado_uid,
+            usuario_creador_uid=current_user.uid
+        )
+        db.add(new_prod)
+        db.flush()
+
+        audit = HistorialEstado(
+            uid=uuid.uuid4(),
+            production_uid=new_prod.uid,
+            estado_anterior_uid=None,
+            estado_nuevo_uid=estado_uid,
+            usuario_uid=current_user.uid,
+            fecha_hora=now,
+            observaciones=f"Adición de embalaje a Tirada #{base_prod.codigo_interno} (Lote {data_in.lote} - Emb. {unidad_emb})"
+        )
+        db.add(audit)
+        created_productions.append(new_prod)
+
+    db.commit()
+
+    lotes_out: List[ProductionOut] = []
+    for p in created_productions:
+        db.refresh(p)
+        qr_url = f"{settings.PUBLIC_DOMAIN}/trazabilidad/{p.uid}"
+        p_out = ProductionOut(
+            uid=p.uid,
+            codigo_interno=p.codigo_interno,
+            codigosap=p.codigosap,
+            fecha=p.fecha,
+            numero_maquina=p.numero_maquina,
+            turno=p.turno,
+            operador=p.operador,
+            operador_nombre=p.operador_nombre,
+            cantidad=p.cantidad,
+            lote=p.lote,
+            unidad_embalaje=p.unidad_embalaje,
+            peso=p.peso,
+            articulo=p.articulo,
+            material=p.material,
+            color_bidon=p.color_bidon,
+            color_asa=p.color_asa,
+            uid_estado=p.uid_estado,
+            estado=EstadoOut.model_validate(p.estado) if p.estado else None,
+            created_at=p.created_at,
+            qr_url=qr_url
+        )
+        lotes_out.append(p_out)
+
+    first_item = created_productions[0]
+    last_item = created_productions[-1]
+
+    return ProductionBatchSummary(
+        codigo_interno=base_prod.codigo_interno,
         codigosap=first_item.codigosap,
         fecha=now,
         articulo=first_item.articulo,

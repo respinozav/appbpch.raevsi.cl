@@ -13,7 +13,7 @@ export const FaqManualView: React.FC = () => {
     { id: 'sec-dashboard', label: '1. Dashboard Ejecutivo', desc: 'KPIs, embudo de operadores y metas de planta' },
     { id: 'sec-codigos-sap', label: '2. Códigos Internos', desc: 'Catálogo de artículos y materias estándar' },
     { id: 'sec-operadores', label: '3. Operadores de Planta', desc: 'Personal autorizado y asignación activa' },
-    { id: 'sec-iniciar', label: '4. Iniciar Producción', desc: 'Tiradas, un solo lote y embalajes 0001-NNNN' },
+    { id: 'sec-iniciar', label: '4. Iniciar Producción', desc: 'Tirada nueva o adición de embalajes sobre lote existente' },
     { id: 'sec-produccion', label: '5. Producción & Sábana', desc: 'Jerarquía por Lote y unidades de embalaje' },
     { id: 'sec-gestion-estados', label: '6. Gestión de Estados', desc: 'Modo continuo, pistola QR, cámara y flujo obligatorio' },
     { id: 'sec-certificados', label: '7. Certificados R-CAL-07', desc: 'Emisión para lotes en despacho y liberados' },
@@ -49,7 +49,7 @@ export const FaqManualView: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-[#0D3B22] tracking-tight mt-1 flex items-center gap-3">
             <span>Manual de Operaciones & FAQ</span>
             <span className="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-[#EEF6F0] text-[#15803D] border border-[#15803D]/20">
-              MAN-SGI-01 · v3.6
+              MAN-SGI-01 · v3.7
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
