@@ -9,6 +9,13 @@ export function useSessionTimeout(
   const [showWarning, setShowWarning] = useState<boolean>(false);
   const [secondsRemaining, setSecondsRemaining] = useState<number>(60);
   const lastActivityRef = useRef<number>(Date.now());
+  const sessionStartedAtRef = useRef<number>(Date.now());
+
+  // Helper to reset activity timestamp
+  const resetActivity = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    setShowWarning(false);
+  }, []);
 
   // 1. Fetch current timeout setting from API
   const refreshTimeoutConfig = useCallback(async () => {
@@ -23,8 +30,12 @@ export function useSessionTimeout(
     }
   }, []);
 
+  // Reset activity whenever the user logs in
   useEffect(() => {
     if (isLoggedIn) {
+      lastActivityRef.current = Date.now();
+      sessionStartedAtRef.current = Date.now();
+      setShowWarning(false);
       refreshTimeoutConfig();
     }
   }, [isLoggedIn, refreshTimeoutConfig]);
@@ -32,10 +43,8 @@ export function useSessionTimeout(
   // 2. Activity listeners (resets lastActivityRef)
   const handleUserActivity = useCallback(() => {
     lastActivityRef.current = Date.now();
-    if (showWarning) {
-      setShowWarning(false);
-    }
-  }, [showWarning]);
+    setShowWarning((prev) => (prev ? false : prev));
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -65,31 +74,34 @@ export function useSessionTimeout(
 
     const interval = setInterval(() => {
       const now = Date.now();
+
+      // Grace period: never disconnect within the first 10 seconds of login
+      if (now - sessionStartedAtRef.current < 10000) {
+        return;
+      }
+
       const idleMs = now - lastActivityRef.current;
-      const totalAllowedMs = timeoutMinutes * 60 * 1000;
+      const effectiveTimeout = timeoutMinutes >= 5 ? timeoutMinutes : 30;
+      const totalAllowedMs = effectiveTimeout * 60 * 1000;
       const warningWindowMs = 60 * 1000; // 1 minute warning
 
       if (idleMs >= totalAllowedMs) {
         setShowWarning(false);
-        sessionStorage.setItem('inactivity_logout', 'true');
         onLogout('Sesión cerrada por inactividad');
       } else if (idleMs >= totalAllowedMs - warningWindowMs) {
         const remainingSec = Math.max(1, Math.ceil((totalAllowedMs - idleMs) / 1000));
         setSecondsRemaining(remainingSec);
         setShowWarning(true);
       } else {
-        if (showWarning) {
-          setShowWarning(false);
-        }
+        setShowWarning(false);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isLoggedIn, timeoutMinutes, showWarning, onLogout]);
+  }, [isLoggedIn, timeoutMinutes, onLogout]);
 
   const extendSession = () => {
-    lastActivityRef.current = Date.now();
-    setShowWarning(false);
+    resetActivity();
   };
 
   return {
@@ -99,5 +111,6 @@ export function useSessionTimeout(
     showWarning,
     secondsRemaining,
     extendSession,
+    resetActivity,
   };
 }

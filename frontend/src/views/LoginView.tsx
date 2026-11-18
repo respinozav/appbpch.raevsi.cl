@@ -22,6 +22,8 @@ export const LoginView: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setInactivityMsg(null);
+    sessionStorage.removeItem('inactivity_logout');
     setLoading(true);
     try {
       await login(correo, password);
